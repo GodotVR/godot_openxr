@@ -46,7 +46,7 @@ openhmd_data_struct *get_openhmd_data() {
 	if (openhmd_data == NULL) {
 		openhmd_data = api->godot_alloc(sizeof(openhmd_data_struct));
 		openhmd_data->use_count = 1;
-		openhmd_data->do_auto_init_device_zero = false;
+		openhmd_data->do_auto_init_device_zero = true;
 		openhmd_data->num_devices = 0;
 		openhmd_data->width = 0;
 		openhmd_data->height = 0;
@@ -104,7 +104,7 @@ void openhmd_close_hmd_device() {
 	} else if (openhmd_data->ohmd_ctx == NULL) {
 		// Not yet initialised!
 	} else if (openhmd_data->hmd_device != NULL) {
-		printf("Closing HMD OpenHMD device");
+		printf("Closing HMD OpenHMD device\n");
 
 		ohmd_close_device(openhmd_data->hmd_device);
 		openhmd_data->hmd_device = NULL;
@@ -161,7 +161,7 @@ void openhmd_close_tracking_device() {
 	} else if (openhmd_data->ohmd_ctx == NULL) {
 		// Not yet initialised!
 	} else if (openhmd_data->tracking_device != NULL) {
-		printf("Closing tracking OpenHMD device");
+		printf("Closing tracking OpenHMD device\n");
 
 		ohmd_close_device(openhmd_data->tracking_device);
 		openhmd_data->tracking_device = NULL;
@@ -206,7 +206,7 @@ void openhmd_close_controller_device(int p_index) {
 	} else if (openhmd_data->ohmd_ctx == NULL) {
 		// Not yet initialised!
 	} else if (openhmd_data->controller_tracker_mapping[p_index].device != NULL) {
-		printf("Closing controller OpenHMD device");
+		printf("Closing controller OpenHMD device\n");
 
 		ohmd_close_device(openhmd_data->controller_tracker_mapping[p_index].device);
 		openhmd_data->controller_tracker_mapping[p_index].device = NULL;
@@ -559,6 +559,7 @@ godot_transform GDN_EXPORT godot_arvr_get_transform_for_eye(void *p_data, godot_
 	} else if (openhmd_data->ohmd_ctx != NULL) {
 		if (openhmd_data->tracking_device != NULL) {
 			godot_transform hmd_transform;
+			
 			// Our tracker will only have location and position data, OHMD_LEFT_EYE_GL_MODELVIEW_MATRIX and OHMD_RIGHT_EYE_GL_MODELVIEW_MATRIX would return the same thing
 			openhmd_transform_from_rot_pos(&hmd_transform, openhmd_data->tracking_device, world_scale);
 
@@ -649,6 +650,9 @@ void GDN_EXPORT godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_r
 		};
 		*/
 
+//		api->godot_arvr_blit(p_eye, p_render_target, p_screen_rect);
+
+
 		///@TODO we should set our output to the window we opened for our HMD. For now, just output to our main window
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		godot_vector2 size = api->godot_rect2_get_size(p_screen_rect);
@@ -698,6 +702,10 @@ const godot_arvr_interface_gdnative interface_struct = {
 
 void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *p_options) {
 	api = p_options->api_struct;
+
+	if (!gladLoadGL()) {
+		printf("Error initializing GLAD\n");
+	}
 }
 
 void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_options *p_options) {
@@ -710,71 +718,65 @@ void GDN_EXPORT godot_gdnative_singleton() {
 
 void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 	{
-		godot_instance_create_func create = {};
+		godot_instance_create_func create = { NULL, NULL, NULL };
 		create.create_func = &openhmd_config_constructor;
 
-		godot_instance_destroy_func destroy = {};
+		godot_instance_destroy_func destroy = { NULL, NULL, NULL };
 		destroy.destroy_func = &openhmd_config_destructor;
 
 		api->godot_nativescript_register_class(p_handle, "OpenHMDConfig", "Reference", create, destroy);
 	}
 
 	{
-		godot_instance_method get_data = {};
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_scan_for_devices;
 
-		godot_method_attributes attributes = {};
-		attributes.rpc_type = GODOT_METHOD_RPC_MODE_DISABLED;
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
 		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "scan_for_devices", attributes, get_data);
 	}
 
 	{
-		godot_instance_method get_data = {};
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_init_hmd_device;
 
-		godot_method_attributes attributes = {};
-		attributes.rpc_type = GODOT_METHOD_RPC_MODE_DISABLED;
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
 		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_hmd_device", attributes, get_data);
 	}
 
 	{
-		godot_instance_method get_data = {};
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_close_hmd_device;
 
-		godot_method_attributes attributes = {};
-		attributes.rpc_type = GODOT_METHOD_RPC_MODE_DISABLED;
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
 		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "close_hmd_device", attributes, get_data);
 	}
 
 	{
-		godot_instance_method get_data = {};
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_init_tracking_device;
 
-		godot_method_attributes attributes = {};
-		attributes.rpc_type = GODOT_METHOD_RPC_MODE_DISABLED;
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
 		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_tracking_device", attributes, get_data);
 	}
 
 	{
-		godot_instance_method get_data = {};
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_close_tracking_device;
 
-		godot_method_attributes attributes = {};
-		attributes.rpc_type = GODOT_METHOD_RPC_MODE_DISABLED;
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
 		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "close_tracking_device", attributes, get_data);
 	}
 
 	{
-		godot_instance_method get_data = {};
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_init_controller_device;
 
-		godot_method_attributes attributes = {};
-		attributes.rpc_type = GODOT_METHOD_RPC_MODE_DISABLED;
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
 		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_controller_device", attributes, get_data);
 	}

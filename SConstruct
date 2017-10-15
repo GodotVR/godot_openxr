@@ -4,7 +4,7 @@ import os, subprocess
 # Local dependency paths, adapt them to your setup
 #godot_headers_path = ARGUMENTS.get("headers", "godot_headers/")
 godot_headers_path = ARGUMENTS.get("headers", "../../godot3-git/modules/gdnative/include")
-godot_glad_path = ARGUMENTS.get("headers", "../../godot3-git/thirdparty/glad")
+godot_glad_path = ARGUMENTS.get("headers", "glad")
 
 target = ARGUMENTS.get("target", "debug")
 
@@ -26,6 +26,8 @@ def add_sources(sources, directory):
         if file.endswith('.c'):
             sources.append(directory + '/' + file)
 
+sources = []
+
 if platform == "osx":
     env.Append(CCFLAGS = ['-g','-O3', '-arch', 'x86_64'])
     env.Append(LINKFLAGS = ['-arch', 'x86_64'])
@@ -40,9 +42,11 @@ if platform == "windows":
         env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MDd'])
     else:
         env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MD'])
-    env.Append(LIBS=["opengl32", "setupapi"])
+    env.Append(LIBS=["opengl32", "setupapi", "advapi32.lib"])
 
-sources = []
+####################################################################################################################################
+# Link in glad
+sources.append(godot_glad_path + "\glad.c")
 
 ####################################################################################################################################
 # Link in libusb, but for now just for linux

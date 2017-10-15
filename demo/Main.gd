@@ -14,10 +14,10 @@ func _ready():
 		# we'll soon add the ability to list the available devices
 		
 		# for now we hardcode
-		openhmd_config.init_hmd_device(3)
-		openhmd_config.init_tracking_device(0)
-		openhmd_config.init_controller_device(1)
-		openhmd_config.init_controller_device(2)
+#		openhmd_config.init_hmd_device(4)
+#		openhmd_config.init_tracking_device(1)
+#		openhmd_config.init_controller_device(2)
+#		openhmd_config.init_controller_device(3)
 		
 		# and tell our viewport to render
 		get_viewport().arvr = true

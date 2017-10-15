@@ -10,14 +10,10 @@
 #ifndef OPENHMD_SHADER_H
 #define OPENHMD_SHADER_H
 
+#include <glad/glad.h>
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#ifdef __APPLE__
-#include <OpenGL/gl.h>
-#else
-#include <GL/gl.h>
-#endif
 #include <openhmd.h>
 
 void openhmd_shader_set_device_parameters(ohmd_device *p_device);

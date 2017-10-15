@@ -1,16 +1,28 @@
 extends Spatial
 
-var arvr_interface = null
+var openhmd_config
 
 func _ready():
-	# we should move this code into a support file of sorts so it can be loaded in autoload
-	arvr_interface = ARVRInterfaceGDNative.new()
-	arvr_interface.set_gdnative_library(preload("res://godot_openhmd.tres"))
-
+	# get our configuration object
+	openhmd_config = preload("OpenHMDConfig.gdns").new()
+	
+	# we'll eventually be able to disable using the first device automatically
+	
 	# and then just find the interface
-	#	arvr_interface = ARVRServer.find_interface("godot_openhmd")
-	if arvr_interface and arvr_interface.initialize():
+	var arvr_interface = ARVRServer.find_interface("OpenHMD")
+	if arvr_interface and arvr_interface.initialize():		
+		# we'll soon add the ability to list the available devices
+		
+		# for now we hardcode
+		openhmd_config.init_hmd_device(3)
+		openhmd_config.init_tracking_device(0)
+		openhmd_config.init_controller_device(1)
+		openhmd_config.init_controller_device(2)
+		
+		# and tell our viewport to render
 		get_viewport().arvr = true
+		
+
 
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame

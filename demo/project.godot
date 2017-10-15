@@ -20,7 +20,7 @@ window/vsync/use_vsync=false
 
 [gdnative]
 
-singletons=[  ]
+singletons=[ "res://godot_openhmd.tres" ]
 
 [rendering]
 

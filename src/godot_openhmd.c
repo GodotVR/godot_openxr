@@ -46,7 +46,7 @@ openhmd_data_struct *get_openhmd_data() {
 	if (openhmd_data == NULL) {
 		openhmd_data = api->godot_alloc(sizeof(openhmd_data_struct));
 		openhmd_data->use_count = 1;
-		openhmd_data->do_auto_init_device_zero = true;
+		openhmd_data->do_auto_init_device_zero = false;
 		openhmd_data->num_devices = 0;
 		openhmd_data->width = 0;
 		openhmd_data->height = 0;
@@ -89,6 +89,11 @@ void openhmd_scan_for_devices() {
 		openhmd_data->num_devices = ohmd_ctx_probe(openhmd_data->ohmd_ctx);
 		if (openhmd_data->num_devices < 0) {
 			printf("OpenHMD: failed to get device count - %s\n", ohmd_ctx_get_error(openhmd_data->ohmd_ctx));
+		} else {
+			// just output them for now while we're debugging, this needs to become accessible from GDScript
+			for (int i = 0; i < openhmd_data->num_devices; i++) {
+				printf("OpenHMD: found %i %s - %s\n", i, ohmd_list_gets(openhmd_data->ohmd_ctx, i, OHMD_VENDOR), ohmd_list_gets(openhmd_data->ohmd_ctx, i, OHMD_PRODUCT));
+			};
 		};
 	};
 };
@@ -235,6 +240,8 @@ bool openhmd_init_controller_device(int p_device) {
 
 			sprintf(device_name,"%s_%i",ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_PRODUCT),i);
 			openhmd_data->controller_tracker_mapping[i].tracker = api->godot_arvr_add_controller(device_name, hand, true, true);
+
+			printf("OpenHMD: initialized controller %s - %s\n", ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_VENDOR), ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_PRODUCT));
 		};
 
 		return true;
@@ -367,7 +374,7 @@ void GDN_EXPORT godot_arvr_destructor(void *p_data) {
 	}
 }
 
-godot_string GDN_EXPORT godot_arvr_get_name(void *p_data) {
+godot_string GDN_EXPORT godot_arvr_get_name(const void *p_data) {
 	godot_string ret;
 
 	char name[] = "OpenHMD";
@@ -376,7 +383,7 @@ godot_string GDN_EXPORT godot_arvr_get_name(void *p_data) {
 	return ret;
 }
 
-godot_int GDN_EXPORT godot_arvr_get_capabilities(void *p_data) {
+godot_int GDN_EXPORT godot_arvr_get_capabilities(const void *p_data) {
 	godot_int ret;
 
 	// need to add 4 (ARVR_EXTERNAL) once we support direct output to the right monitor
@@ -385,7 +392,7 @@ godot_int GDN_EXPORT godot_arvr_get_capabilities(void *p_data) {
 	return ret;
 };
 
-godot_bool GDN_EXPORT godot_arvr_get_anchor_detection_is_enabled(void *p_data) {
+godot_bool GDN_EXPORT godot_arvr_get_anchor_detection_is_enabled(const void *p_data) {
 	godot_bool ret;
 
 	ret = false; // does not apply here
@@ -397,7 +404,7 @@ void GDN_EXPORT godot_arvr_set_anchor_detection_is_enabled(void *p_data, bool p_
 	// we ignore this, not supported in this interface!
 };
 
-godot_bool GDN_EXPORT godot_arvr_is_stereo(void *p_data) {
+godot_bool GDN_EXPORT godot_arvr_is_stereo(const void *p_data) {
 	godot_bool ret;
 
 	ret = true;
@@ -405,7 +412,7 @@ godot_bool GDN_EXPORT godot_arvr_is_stereo(void *p_data) {
 	return ret;
 };
 
-godot_bool GDN_EXPORT godot_arvr_is_initialized(void *p_data) {
+godot_bool GDN_EXPORT godot_arvr_is_initialized(const void *p_data) {
 	godot_bool ret = false;
 
 	if (p_data == NULL || p_data != openhmd_data) {
@@ -476,7 +483,7 @@ void GDN_EXPORT godot_arvr_uninitialize(void *p_data) {
 	};
 };
 
-godot_vector2 GDN_EXPORT godot_arvr_get_recommended_render_targetsize(void *p_data) {
+godot_vector2 GDN_EXPORT godot_arvr_get_recommended_render_targetsize(const void *p_data) {
 	godot_vector2 size;
 
 	if (p_data == NULL || p_data != openhmd_data) {
@@ -671,12 +678,34 @@ void GDN_EXPORT godot_arvr_process(void *p_data) {
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Library initialisation
 
+const godot_arvr_interface_gdnative interface_struct = {
+	godot_arvr_constructor,
+	godot_arvr_destructor,
+	godot_arvr_get_name,
+	godot_arvr_get_capabilities,
+	godot_arvr_get_anchor_detection_is_enabled,
+	godot_arvr_set_anchor_detection_is_enabled,
+	godot_arvr_is_stereo,
+	godot_arvr_is_initialized,
+	godot_arvr_initialize,
+	godot_arvr_uninitialize,
+	godot_arvr_get_recommended_render_targetsize,
+	godot_arvr_get_transform_for_eye,
+	godot_arvr_fill_projection_for_eye,
+	godot_arvr_commit_for_eye,
+	godot_arvr_process
+};
+
 void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *p_options) {
 	api = p_options->api_struct;
 }
 
 void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_options *p_options) {
 	api = NULL;
+}
+
+void GDN_EXPORT godot_gdnative_singleton() {
+	api->godot_arvr_register_interface(&interface_struct);
 }
 
 void GDN_EXPORT godot_nativescript_init(void *p_handle) {

@@ -2,6 +2,7 @@
 
 [resource]
 
+singleton_gdnative = true
 platform/X11_32bit = ""
 platform/X11_64bit = ""
 platform/Windows_32bit = ""

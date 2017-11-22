@@ -3,8 +3,6 @@
 //
 // Written by Bastiaan "Mux213" Olij, with loads of help from Thomas "Karroffel" Herzog
 
-
-// #include <gdnative_api_struct.h>
 #include <gdnative_api_struct.gen.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -12,7 +10,9 @@
 #include <openhmd.h>
 #include "openhmd_shader.h"
 
-const godot_gdnative_api_struct *api = NULL;
+const godot_gdnative_core_api_struct *api = NULL;
+const godot_gdnative_ext_arvr_api_struct *arvr_api = NULL;
+const godot_gdnative_ext_nativescript_api_struct *nativescript_api = NULL;
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // OpenHMD data container
@@ -211,7 +211,7 @@ void openhmd_close_controller_device(int p_index) {
 		ohmd_close_device(openhmd_data->controller_tracker_mapping[p_index].device);
 		openhmd_data->controller_tracker_mapping[p_index].device = NULL;
 
-		api->godot_arvr_remove_controller(openhmd_data->controller_tracker_mapping[p_index].tracker);
+		arvr_api->godot_arvr_remove_controller(openhmd_data->controller_tracker_mapping[p_index].tracker);
 		openhmd_data->controller_tracker_mapping[p_index].tracker = 0;
 	};
 };
@@ -239,7 +239,7 @@ bool openhmd_init_controller_device(int p_device) {
 			godot_int hand = 0;
 
 			sprintf(device_name,"%s_%i",ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_PRODUCT),i);
-			openhmd_data->controller_tracker_mapping[i].tracker = api->godot_arvr_add_controller(device_name, hand, true, true);
+			openhmd_data->controller_tracker_mapping[i].tracker = arvr_api->godot_arvr_add_controller(device_name, hand, true, true);
 
 			printf("OpenHMD: initialized controller %s - %s\n", ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_VENDOR), ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_PRODUCT));
 		};
@@ -362,11 +362,11 @@ GDCALLINGCONV godot_variant openhmd_config_init_controller_device(godot_object *
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 // Our GDNative OpenHMD module
 
-void GDN_EXPORT *godot_arvr_constructor(godot_object *p_instance) {
+void *godot_arvr_constructor(godot_object *p_instance) {
 	return get_openhmd_data();
 }
 
-void GDN_EXPORT godot_arvr_destructor(void *p_data) {
+void godot_arvr_destructor(void *p_data) {
 	if (p_data == NULL || openhmd_data != p_data) {
 		// this should never ever ever ever happen, just being paranoid....
 	} else {
@@ -374,7 +374,7 @@ void GDN_EXPORT godot_arvr_destructor(void *p_data) {
 	}
 }
 
-godot_string GDN_EXPORT godot_arvr_get_name(const void *p_data) {
+godot_string godot_arvr_get_name(const void *p_data) {
 	godot_string ret;
 
 	char name[] = "OpenHMD";
@@ -383,7 +383,7 @@ godot_string GDN_EXPORT godot_arvr_get_name(const void *p_data) {
 	return ret;
 }
 
-godot_int GDN_EXPORT godot_arvr_get_capabilities(const void *p_data) {
+godot_int godot_arvr_get_capabilities(const void *p_data) {
 	godot_int ret;
 
 	// need to add 4 (ARVR_EXTERNAL) once we support direct output to the right monitor
@@ -392,7 +392,7 @@ godot_int GDN_EXPORT godot_arvr_get_capabilities(const void *p_data) {
 	return ret;
 };
 
-godot_bool GDN_EXPORT godot_arvr_get_anchor_detection_is_enabled(const void *p_data) {
+godot_bool godot_arvr_get_anchor_detection_is_enabled(const void *p_data) {
 	godot_bool ret;
 
 	ret = false; // does not apply here
@@ -400,11 +400,11 @@ godot_bool GDN_EXPORT godot_arvr_get_anchor_detection_is_enabled(const void *p_d
 	return ret;
 };
 
-void GDN_EXPORT godot_arvr_set_anchor_detection_is_enabled(void *p_data, bool p_enable) {
+void godot_arvr_set_anchor_detection_is_enabled(void *p_data, bool p_enable) {
 	// we ignore this, not supported in this interface!
 };
 
-godot_bool GDN_EXPORT godot_arvr_is_stereo(const void *p_data) {
+godot_bool godot_arvr_is_stereo(const void *p_data) {
 	godot_bool ret;
 
 	ret = true;
@@ -412,7 +412,7 @@ godot_bool GDN_EXPORT godot_arvr_is_stereo(const void *p_data) {
 	return ret;
 };
 
-godot_bool GDN_EXPORT godot_arvr_is_initialized(const void *p_data) {
+godot_bool godot_arvr_is_initialized(const void *p_data) {
 	godot_bool ret = false;
 
 	if (p_data == NULL || p_data != openhmd_data) {
@@ -424,7 +424,7 @@ godot_bool GDN_EXPORT godot_arvr_is_initialized(const void *p_data) {
 	return ret;
 };
  
-godot_bool GDN_EXPORT godot_arvr_initialize(void *p_data) {
+godot_bool godot_arvr_initialize(void *p_data) {
 	godot_bool ret = false;
 
 	if (p_data == NULL || p_data != openhmd_data) {
@@ -459,7 +459,7 @@ godot_bool GDN_EXPORT godot_arvr_initialize(void *p_data) {
 	return ret;
 };
 
-void GDN_EXPORT godot_arvr_uninitialize(void *p_data) {
+void godot_arvr_uninitialize(void *p_data) {
 	if (p_data == NULL || p_data != openhmd_data) {
 		// this should never ever ever ever happen, just being paranoid....
 	} else if (openhmd_data->ohmd_ctx != NULL) {
@@ -483,7 +483,7 @@ void GDN_EXPORT godot_arvr_uninitialize(void *p_data) {
 	};
 };
 
-godot_vector2 GDN_EXPORT godot_arvr_get_recommended_render_targetsize(const void *p_data) {
+godot_vector2 godot_arvr_get_recommended_render_targetsize(const void *p_data) {
 	godot_vector2 size;
 
 	if (p_data == NULL || p_data != openhmd_data) {
@@ -546,12 +546,12 @@ void openhmd_transform_from_rot_pos(godot_transform *p_dest, ohmd_device *p_devi
 	};
 };
 
-godot_transform GDN_EXPORT godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, godot_transform *p_cam_transform) {
+godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, godot_transform *p_cam_transform) {
 	godot_transform transform_for_eye;
-	godot_transform reference_frame = api->godot_arvr_get_reference_frame();
+	godot_transform reference_frame = arvr_api->godot_arvr_get_reference_frame();
 	godot_transform ret;
 	godot_vector3 offset;
-	godot_real world_scale = api->godot_arvr_get_worldscale();
+	godot_real world_scale = arvr_api->godot_arvr_get_worldscale();
 
 	if (p_data == NULL || p_data != openhmd_data) {
 		// this should never ever ever ever happen, just being paranoid....
@@ -608,7 +608,7 @@ godot_transform GDN_EXPORT godot_arvr_get_transform_for_eye(void *p_data, godot_
 	return ret;
 };
 
-void GDN_EXPORT godot_arvr_fill_projection_for_eye(void *p_data, godot_real *p_projection, godot_int p_eye, godot_real p_aspect, godot_real p_z_near, godot_real p_z_far) {
+void godot_arvr_fill_projection_for_eye(void *p_data, godot_real *p_projection, godot_int p_eye, godot_real p_aspect, godot_real p_z_near, godot_real p_z_far) {
 	if (p_data == NULL || p_data != openhmd_data) {
 		// this should never ever ever ever happen, just being paranoid....
 	} else if (openhmd_data->ohmd_ctx == NULL || openhmd_data->hmd_device == NULL) {
@@ -630,7 +630,7 @@ void GDN_EXPORT godot_arvr_fill_projection_for_eye(void *p_data, godot_real *p_p
 	};
 };
 
-void GDN_EXPORT godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_render_target, godot_rect2 *p_screen_rect) {
+void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_render_target, godot_rect2 *p_screen_rect) {
 	// This function is responsible for outputting the final render buffer for each eye. 
 	// p_screen_rect will only have a value when we're outputting to the main viewport.
 
@@ -641,28 +641,28 @@ void GDN_EXPORT godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_r
 		// this should never ever ever ever happen, just being paranoid....
 	} else if (openhmd_data->ohmd_ctx == NULL || openhmd_data->hmd_device == NULL) {
 		// calling before initialised
-		api->godot_arvr_blit(p_eye, p_render_target, p_screen_rect);
+		arvr_api->godot_arvr_blit(p_eye, p_render_target, p_screen_rect);
 	} else {
 		/* Once we render in a secondairy window that is linked to our HMD, we can output for our spectator if we're using the main viewport
 		if (p_eye == 1 && !api->godot_rect2_has_no_area(p_screen_rect)) {
 			// blit as mono
-			api->godot_arvr_blit(0, p_render_target, p_screen_rect);
+			arvr_api->godot_arvr_blit(0, p_render_target, p_screen_rect);
 		};
 		*/
 
-//		api->godot_arvr_blit(p_eye, p_render_target, p_screen_rect);
+//		arvr_api->godot_arvr_blit(p_eye, p_render_target, p_screen_rect);
 
 
 		///@TODO we should set our output to the window we opened for our HMD. For now, just output to our main window
 		glBindFramebuffer(GL_FRAMEBUFFER, 0);
 		godot_vector2 size = api->godot_rect2_get_size(p_screen_rect);
 		glViewport(0, 0, api->godot_vector2_get_x(&size), api->godot_vector2_get_y(&size));
-		uint32_t texid = api->godot_arvr_get_texid(p_render_target);
+		uint32_t texid = arvr_api->godot_arvr_get_texid(p_render_target);
 		openhmd_shader_render_eye(texid, p_eye == 1 ? 0 : 1);
 	};
 };
 
-void GDN_EXPORT godot_arvr_process(void *p_data) {
+void godot_arvr_process(void *p_data) {
 	// this method gets called before every frame is rendered, here is where you should update tracking data, update controllers, etc.
 
 	if (p_data == NULL || p_data != openhmd_data) {
@@ -673,7 +673,7 @@ void GDN_EXPORT godot_arvr_process(void *p_data) {
 				godot_transform controller_transform;
 
 				openhmd_transform_from_rot_pos(&controller_transform, openhmd_data->controller_tracker_mapping[i].device, 1.0);
-				api->godot_arvr_set_controller_transform(openhmd_data->controller_tracker_mapping[i].tracker, &controller_transform, true, true);
+				arvr_api->godot_arvr_set_controller_transform(openhmd_data->controller_tracker_mapping[i].tracker, &controller_transform, true, true);
 			};
 		};		
 	};
@@ -701,7 +701,22 @@ const godot_arvr_interface_gdnative interface_struct = {
 };
 
 void GDN_EXPORT godot_gdnative_init(godot_gdnative_init_options *p_options) {
+	// get our main API struct
 	api = p_options->api_struct;
+
+	// now find our arvr extension
+	for (int i = 0; i < api->num_extensions; i++) {
+		// todo: add version checks
+		switch (api->extensions[i]->type) {
+			case GDNATIVE_EXT_ARVR: {
+				arvr_api = (godot_gdnative_ext_arvr_api_struct *)api->extensions[i];
+			}; break;
+			case GDNATIVE_EXT_NATIVESCRIPT: {
+				nativescript_api = (godot_gdnative_ext_nativescript_api_struct *)api->extensions[i];
+			}; break;
+			default: break;
+		};
+	};
 
 	if (!gladLoadGL()) {
 		printf("Error initializing GLAD\n");
@@ -713,7 +728,7 @@ void GDN_EXPORT godot_gdnative_terminate(godot_gdnative_terminate_options *p_opt
 }
 
 void GDN_EXPORT godot_gdnative_singleton() {
-	api->godot_arvr_register_interface(&interface_struct);
+	arvr_api->godot_arvr_register_interface(&interface_struct);
 }
 
 void GDN_EXPORT godot_nativescript_init(void *p_handle) {
@@ -724,7 +739,7 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 		godot_instance_destroy_func destroy = { NULL, NULL, NULL };
 		destroy.destroy_func = &openhmd_config_destructor;
 
-		api->godot_nativescript_register_class(p_handle, "OpenHMDConfig", "Reference", create, destroy);
+		nativescript_api->godot_nativescript_register_class(p_handle, "OpenHMDConfig", "Reference", create, destroy);
 	}
 
 	{
@@ -733,7 +748,7 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
-		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "scan_for_devices", attributes, get_data);
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "scan_for_devices", attributes, get_data);
 	}
 
 	{
@@ -742,7 +757,7 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
-		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_hmd_device", attributes, get_data);
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_hmd_device", attributes, get_data);
 	}
 
 	{
@@ -751,7 +766,7 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
-		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "close_hmd_device", attributes, get_data);
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "close_hmd_device", attributes, get_data);
 	}
 
 	{
@@ -760,7 +775,7 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
-		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_tracking_device", attributes, get_data);
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_tracking_device", attributes, get_data);
 	}
 
 	{
@@ -769,7 +784,7 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
-		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "close_tracking_device", attributes, get_data);
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "close_tracking_device", attributes, get_data);
 	}
 
 	{
@@ -778,6 +793,6 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
 
-		api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_controller_device", attributes, get_data);
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_controller_device", attributes, get_data);
 	}
 }

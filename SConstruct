@@ -2,9 +2,11 @@
 import os, subprocess
 
 # Local dependency paths, adapt them to your setup
-#godot_headers_path = ARGUMENTS.get("headers", "godot_headers/")
-godot_headers_path = ARGUMENTS.get("headers", "../../godot3-git/modules/gdnative/include")
 godot_glad_path = ARGUMENTS.get("headers", "glad")
+godot_headers_path = ARGUMENTS.get("headers", os.getenv("GODOT_HEADERS", "godot_headers/"))
+libusb_path = ARGUMENTS.get("libusb", os.getenv("LIBUSB_PATH", "libusb/"))
+hidapi_path = ARGUMENTS.get("hidapi", os.getenv("HIDAPI_PATH", "hidapi/"))
+openhmd_path = ARGUMENTS.get("openhmd", os.getenv("OPENHMD_PATH", "openhmd/"))
 
 target = ARGUMENTS.get("target", "debug")
 
@@ -25,19 +27,27 @@ def add_sources(sources, directory):
     for file in os.listdir(directory):
         if file.endswith('.c'):
             sources.append(directory + '/' + file)
+        elif file.endswith('.cpp'):
+            sources.append(directory + '/' + file)
 
 sources = []
 
+platform_dir = ''
 if platform == "osx":
+    platform_dir = 'osx'
     env.Append(CCFLAGS = ['-g','-O3', '-arch', 'x86_64'])
     env.Append(LINKFLAGS = ['-arch', 'x86_64'])
     env.Append(LINKFLAGS=['-framework', 'Cocoa', '-framework', 'OpenGL', '-framework', 'IOKit'])
     env.Append(LIBS=['pthread'])
 
 if platform == "linux":
+    platform_dir = 'linux'
     env.Append(CCFLAGS = ['-fPIC', '-g','-O3', '-std=c++14'])
+    env.Append(CXXFLAGS='-std=c++0x')
+    env.Append(LINKFLAGS = ['-Wl,-R,\'$$ORIGIN\''])
 
 if platform == "windows":
+    platform_dir = 'win'
     if target == "debug":
         env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MDd'])
     else:
@@ -51,8 +61,8 @@ sources.append(godot_glad_path + "\glad.c")
 ####################################################################################################################################
 # Link in libusb, but for now just for linux
 if platform == 'linux':
-    env.Append(CPPPATH=["libusb/libusb"])
-    env.Append(CPPPATH=["libusb/libusb/os"])
+    env.Append(CPPPATH=[libusb_path + "libusb"])
+    env.Append(CPPPATH=[libusb_path + "libusb/os"])
 
     libusb_sources = [
         "core.c",
@@ -63,41 +73,41 @@ if platform == 'linux':
         "sync.c"
     ]
 
-    sources.append(["libusb/libusb/" + file for file in libusb_sources])
+    sources.append([libusb_path + "libusb/" + file for file in libusb_sources])
 
     if platform == 'x11':
-        sources.append("libusb/libusb/os/linux_netlink.c")
-        sources.append("libusb/libusb/os/linux_usbfs.c")
-        sources.append("/libusb/libusb/os/poll_posix.c")
-        sources.append("libusb/libusb/os/threads_posix.c")
+        sources.append(libusb_path + "libusb/os/linux_netlink.c")
+        sources.append(libusb_path + "libusb/os/linux_usbfs.c")
+        sources.append(libusb_path + "libusb/os/poll_posix.c")
+        sources.append(libusb_path + "libusb/os/threads_posix.c")
         env.Append(CPPDEFINES=["OS_LINUX"])
 #    elif platform == 'windows':
-#        sources.append("libusb/libusb/os/windows_nt_common.c")
-#        sources.append("libusb/libusb/os/windows_usbdk.c")
-#        sources.append("libusb/libusb/os/windows_winusb.c")
-#        sources.append("libusb/libusb/os/poll_windows.c")
-#        sources.append("libusb/libusb/os/threads_windows.c")
+#        sources.append(libusb_path + "libusb/os/windows_nt_common.c")
+#        sources.append(libusb_path + "libusb/os/windows_usbdk.c")
+#        sources.append(libusb_path + "libusb/os/windows_winusb.c")
+#        sources.append(libusb_path + "libusb/os/poll_windows.c")
+#        sources.append(libusb_path + "libusb/os/threads_windows.c")
 #        env,Append(CPPDEFINES=["OS_WINDOWS"])
 #    elif platform == 'osx':
-#        sources.append("libusb/libusb/os/darwin_usb.c")
-#        sources.append("libusb/libusb/os/poll_posix.c")
-#        sources.append("libusb/libusb/os/threads_posix.c")
+#        sources.append(libusb_path + "libusb/os/darwin_usb.c")
+#        sources.append(libusb_path + "libusb/os/poll_posix.c")
+#        sources.append(libusb_path + "libusb/os/threads_posix.c")
 #        env.Append(CPPDEFINES=["OS_DARWIN"])
 
 ####################################################################################################################################
 # Link in hidapi
-hidapi_headers = "hidapi/hidapi/"
+hidapi_headers = hidapi_path + "hidapi/"
 env.Append(CPPPATH=[hidapi_headers])
 
 if platform == 'windows':
-    sources.append("hidapi/windows/hid.c" )
+    sources.append(hidapi_path + "windows/hid.c" )
 elif platform == 'x11':
     # If we can use the libusb version it should allow us to undo our detect.py changes
     # See thirdparty/hidapi/linux/README.txt and thirdparty/hidapi/udev/99-hid-rules for more info
     # env_openhmd.add_source_files(env.modules_sources, [ "#thirdparty/hidapi/linux/hid.c" ])
-    sources.append("hidapi/libusb/hid.c")
+    sources.append(hidapi_path + "libusb/hid.c")
 elif platform == 'osx':
-    sources.append("hidapi/mac/hid.c")
+    sources.append(hidapi_path + "mac/hid.c")
 
 ####################################################################################################################################
 # Link in openhmd, we're linking in static.
@@ -118,23 +128,21 @@ env.Append(CFLAGS=["-DDRIVER_NOLO"])
 # miniz is already compiled within Godot so just want the headers here...
 # env_openhmd.Append(CFLAGS=["-DMINIZ_HEADER_FILE_ONLY"])
 
-openhmd_headers = "openhmd/include/"
+openhmd_headers = openhmd_path + "include/"
 env.Append(CPPPATH=[openhmd_headers])
-
-openhmd_dir = "openhmd/src/"
 
 openhmd_sources = [
     "fusion.c",
     "omath.c",
     "openhmd.c",
-    "queue.c",
+#    "queue.c",
     "shaders.c",
     "ext_deps/mjson.c",
 #    "drv_android/android.c",
     "drv_deepoon/deepoon.c",
     "drv_deepoon/packet.c",
     "drv_dummy/dummy.c",
- #   "drv_external/external.c",
+#    "drv_external/external.c",
     "drv_htc_vive/packet.c",
     "drv_htc_vive/vive.c",
     "drv_oculus_rift/packet.c",
@@ -145,12 +153,12 @@ openhmd_sources = [
     "drv_nolo/packet.c"
 ]
 
-sources.append([openhmd_dir + file for file in openhmd_sources])
+sources.append([openhmd_path + "src/" + file for file in openhmd_sources])
 
 if platform == 'windows':
-    sources.append("openhmd/src/platform-win32.c" )
+    sources.append(openhmd_path + "src/platform-win32.c" )
 else:
-    sources.append("openhmd/src/platform-posix.c" )
+    sources.append(openhmd_path + "src/platform-posix.c" )
 
 ####################################################################################################################################
 # and add our main project

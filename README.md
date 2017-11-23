@@ -14,9 +14,10 @@ Clone this repository using `git clone --recursive` so all the needed packages w
 After that build libusb, openhmd and hidapi, using the following commands: 
 
 ```
-cd libusb ; ./bootstrap.sh ; ./configure ; make ; cd ..
-cd hidapi ; ./bootstrap ; ./configure ; make ; cd ..
-cd OpenHMD ; ./autogen.sh ; ./configure ; make ; cd ..
+export CORES=$(grep processor /proc/cpuinfo | wc -l)
+cd libusb ; ./bootstrap.sh ; ./configure ; make -j $CORES ; cd ..
+cd hidapi ; ./bootstrap ; ./configure ; make -j $CORES ; cd ..
+cd OpenHMD ; ./autogen.sh ; ./configure ; make -j $CORES ; cd ..
 ```
 
 To make things easier, set the `GODOT_ROOT` environment variable with the folder that holds the GODOT source code, for example, like this: 
@@ -27,7 +28,7 @@ export GODOT_ROOT=../godot.git
 
 The you can build by issuing the followin command: 
 
-```GODOT_HEADERS=$GODOT_ROOT/modules/gdnative/include/  /bin/scons```
+```GODOT_HEADERS=$GODOT_ROOT/modules/gdnative/include/  /bin/scons -j $CORES```
 
 Last, you can test your build by issuing:
 

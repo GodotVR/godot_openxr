@@ -6,7 +6,7 @@ godot_glad_path = ARGUMENTS.get("headers", "glad")
 godot_headers_path = ARGUMENTS.get("headers", os.getenv("GODOT_HEADERS", "godot_headers/"))
 libusb_path = ARGUMENTS.get("libusb", os.getenv("LIBUSB_PATH", "libusb/"))
 hidapi_path = ARGUMENTS.get("hidapi", os.getenv("HIDAPI_PATH", "hidapi/"))
-openhmd_path = ARGUMENTS.get("openhmd", os.getenv("OPENHMD_PATH", "openhmd/"))
+openhmd_path = ARGUMENTS.get("openhmd", os.getenv("OPENHMD_PATH", "OpenHMD/"))
 
 target = ARGUMENTS.get("target", "debug")
 
@@ -56,11 +56,12 @@ if platform == "windows":
 
 ####################################################################################################################################
 # Link in glad
-sources.append(godot_glad_path + "\glad.c")
+sources.append(godot_glad_path + "/glad.c")
 
 ####################################################################################################################################
 # Link in libusb, but for now just for linux
 if platform == 'linux':
+    env.Append(CPPPATH=[libusb_path])
     env.Append(CPPPATH=[libusb_path + "libusb"])
     env.Append(CPPPATH=[libusb_path + "libusb/os"])
 

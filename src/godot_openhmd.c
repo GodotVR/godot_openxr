@@ -669,6 +669,7 @@ void godot_arvr_process(void *p_data) {
 	if (p_data == NULL || p_data != openhmd_data) {
 		// this should never ever ever ever happen, just being paranoid....
 	} else {
+		ohmd_ctx_update(openhmd_data->ohmd_ctx);
 		for (int i = 0; i < OPENHMD_MAX_CONTROLLERS; i++) {
 			if (openhmd_data->controller_tracker_mapping[i].device != NULL) {
 				godot_transform controller_transform;

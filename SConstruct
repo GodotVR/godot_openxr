@@ -42,7 +42,7 @@ if platform == "osx":
 
 if platform == "linux":
     platform_dir = 'linux'
-    env.Append(CCFLAGS = ['-fPIC', '-g','-O3', '-std=c++14'])
+    env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
     env.Append(CXXFLAGS='-std=c++0x')
     env.Append(LINKFLAGS = ['-Wl,-R,\'$$ORIGIN\''])
 
@@ -76,24 +76,26 @@ if platform == 'linux':
 
     sources.append([libusb_path + "libusb/" + file for file in libusb_sources])
 
-    if platform == 'x11':
-        sources.append(libusb_path + "libusb/os/linux_netlink.c")
-        sources.append(libusb_path + "libusb/os/linux_usbfs.c")
-        sources.append(libusb_path + "libusb/os/poll_posix.c")
-        sources.append(libusb_path + "libusb/os/threads_posix.c")
-        env.Append(CPPDEFINES=["OS_LINUX"])
-#    elif platform == 'windows':
-#        sources.append(libusb_path + "libusb/os/windows_nt_common.c")
-#        sources.append(libusb_path + "libusb/os/windows_usbdk.c")
-#        sources.append(libusb_path + "libusb/os/windows_winusb.c")
-#        sources.append(libusb_path + "libusb/os/poll_windows.c")
-#        sources.append(libusb_path + "libusb/os/threads_windows.c")
-#        env,Append(CPPDEFINES=["OS_WINDOWS"])
-#    elif platform == 'osx':
-#        sources.append(libusb_path + "libusb/os/darwin_usb.c")
-#        sources.append(libusb_path + "libusb/os/poll_posix.c")
-#        sources.append(libusb_path + "libusb/os/threads_posix.c")
-#        env.Append(CPPDEFINES=["OS_DARWIN"])
+if platform == 'linux':
+#    sources.append(libusb_path + "libusb/os/linux_netlink.c")
+    sources.append(libusb_path + "libusb/os/linux_usbfs.c")
+    sources.append(libusb_path + "libusb/os/linux_udev.c")
+    sources.append(libusb_path + "libusb/os/poll_posix.c")
+    sources.append(libusb_path + "libusb/os/threads_posix.c")
+    env.Append(CPPDEFINES=["OS_LINUX", "USE_UDEV", "HAVE_LIBUDEV"])
+    env.Append(LIBS = ['udev'])
+#elif platform == 'windows':
+#    sources.append(libusb_path + "libusb/os/windows_nt_common.c")
+#    sources.append(libusb_path + "libusb/os/windows_usbdk.c")
+#    sources.append(libusb_path + "libusb/os/windows_winusb.c")
+#    sources.append(libusb_path + "libusb/os/poll_windows.c")
+#    sources.append(libusb_path + "libusb/os/threads_windows.c")
+#    env,Append(CPPDEFINES=["OS_WINDOWS"])
+#elif platform == 'osx':
+#    sources.append(libusb_path + "libusb/os/darwin_usb.c")
+#    sources.append(libusb_path + "libusb/os/poll_posix.c")
+#    sources.append(libusb_path + "libusb/os/threads_posix.c")
+#   env.Append(CPPDEFINES=["OS_DARWIN"])
 
 ####################################################################################################################################
 # Link in hidapi
@@ -102,7 +104,7 @@ env.Append(CPPPATH=[hidapi_headers])
 
 if platform == 'windows':
     sources.append(hidapi_path + "windows/hid.c" )
-elif platform == 'x11':
+elif platform == 'linux':
     # If we can use the libusb version it should allow us to undo our detect.py changes
     # See thirdparty/hidapi/linux/README.txt and thirdparty/hidapi/udev/99-hid-rules for more info
     # env_openhmd.add_source_files(env.modules_sources, [ "#thirdparty/hidapi/linux/hid.c" ])
@@ -123,11 +125,9 @@ env.Append(CFLAGS=["-DDRIVER_DEEPOON"])
 env.Append(CFLAGS=["-DDRIVER_HTC_VIVE"])
 env.Append(CFLAGS=["-DDRIVER_PSVR"])
 env.Append(CFLAGS=["-DDRIVER_NOLO"])
+env.Append(CFLAGS=["-DOPENHMD_DRIVER_WMR"])
 #env.Append(CFLAGS=["-DDRIVER_EXTERNAL"])
 #env.Append(CFLAGS=["-DDRIVER_ANDROID"])
-
-# miniz is already compiled within Godot so just want the headers here...
-# env_openhmd.Append(CFLAGS=["-DMINIZ_HEADER_FILE_ONLY"])
 
 openhmd_headers = openhmd_path + "include/"
 env.Append(CPPPATH=[openhmd_headers])
@@ -151,7 +151,9 @@ openhmd_sources = [
     "drv_psvr/packet.c",
     "drv_psvr/psvr.c",
     "drv_nolo/nolo.c",
-    "drv_nolo/packet.c"
+    "drv_nolo/packet.c",
+    "drv_wmr/wmr.c",
+    "drv_wmr/packet.c"
 ]
 
 sources.append([openhmd_path + "src/" + file for file in openhmd_sources])

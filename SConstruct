@@ -14,6 +14,9 @@ target = ARGUMENTS.get("target", "debug")
 platform = ARGUMENTS.get("p", "linux")
 platform = ARGUMENTS.get("platform", platform)
 
+# destination path
+godot_openhmd_path = 'demo/addons/godot-openhmd/bin/'
+
 # This makes sure to keep the session environment variables on windows, 
 # that way you can run scons in a vs 2017 prompt and it will find all the required tools
 env = Environment()
@@ -35,6 +38,7 @@ sources = []
 platform_dir = ''
 if platform == "osx":
     platform_dir = 'osx'
+    godot_openhmd_path = godot_openhmd_path + 'osx/'
     env.Append(CCFLAGS = ['-g','-O3', '-arch', 'x86_64'])
     env.Append(LINKFLAGS = ['-arch', 'x86_64'])
     env.Append(LINKFLAGS=['-framework', 'Cocoa', '-framework', 'OpenGL', '-framework', 'IOKit'])
@@ -42,12 +46,14 @@ if platform == "osx":
 
 if platform == "linux":
     platform_dir = 'linux'
+    godot_openhmd_path = godot_openhmd_path + 'linux/'
     env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
     env.Append(CXXFLAGS='-std=c++0x')
     env.Append(LINKFLAGS = ['-Wl,-R,\'$$ORIGIN\''])
 
 if platform == "windows":
     platform_dir = 'win'
+    godot_openhmd_path = godot_openhmd_path + 'win64/'
     if target == "debug":
         env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MDd'])
     else:
@@ -169,5 +175,5 @@ env.Append(CPPPATH=['.', godot_headers_path, godot_glad_path])
 
 add_sources(sources, "src")
 
-library = env.SharedLibrary(target='demo/bin/godot_openhmd', source=sources)
+library = env.SharedLibrary(target=godot_openhmd_path + 'godot_openhmd', source=sources)
 Default(library)

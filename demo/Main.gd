@@ -4,7 +4,7 @@ var openhmd_config
 
 func _ready():
 	# get our configuration object
-	openhmd_config = preload("res://bin/OpenHMDConfig.gdns").new()
+	openhmd_config = preload("res://addons/godot-openhmd/OpenHMDConfig.gdns").new()
 	
 	# we'll eventually be able to disable using the first device automatically
 	

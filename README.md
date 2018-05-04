@@ -2,10 +2,11 @@
 
 I'll add more info here soon, this is still a work in progress and likely to change drastically.
 
-# License
-The source code for the module is released under unlicense (see license file), note that the related products used, hidapi, libusb, openhmd and Godot itself all have their own licenses.
+The leading version of this repository now lives at:
+https://github.com/GodotVR/godot_openhmd
 
-# Building this module
+Building this module
+--------------------
 In order to compile this module you will have to clone the source code to disk. You will need a C/C++ compiler, python and scons installed. This is the same toolchain you will need in order to compile Godot from master. The documentation on Godot is a very good place to read up on this. It is too much information to duplicate here.
 
 When cloning this repository make sure you also install all the submodules.
@@ -18,12 +19,30 @@ after cloning.
 
 If you're pulling a newer version (re)execute the `git submodules update` command to make sure the modules are up to date. If you're interested in using different branches of the 3rd party modules just CD into their subfolder and you can execute git commands on those repositories. 
 
-## Compiling
+*Compiling*
 If everything into place compiling should be pretty straight forward
 
 For Linux: ```scons platform=linux```
 For OSX: ```scons platform=osx```
 For Windows: ```scons platform=windows```
+
+License
+-------
+The source code for the module is released under MIT license (see license file).
+Note that the related products used, hidapi, libusb, openhmd and Godot itself all have their own licenses.
+
+About this repository
+---------------------
+This repository was created by and is maintained by Bastiaan Olij a.k.a. Mux213
+
+You can follow me on twitter for regular updates here:
+https://twitter.com/mux213
+
+Videos about my work with Godot including tutorials on working with VR in Godot can by found on my youtube page:
+https://www.youtube.com/channel/UCrbLJYzJjDf2p-vJC011lYw
+
+
+
 
 # PARKED FOR NOW... PLEASE IGNORE
 
@@ -64,4 +83,3 @@ Last, you can test your build by issuing:
 ## Windows
 
 ## OSX
-

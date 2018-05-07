@@ -6,7 +6,7 @@
 	url = https://github.com/OpenHMD/OpenHMD
 [submodule "hidapi"]
 	path = hidapi
-	url = https://github.com/signal11/hidapi
+	url = https://github.com/OpenHMD/hidapi
 [submodule "libusb"]
 	path = libusb
 	url = https://github.com/libusb/libusb

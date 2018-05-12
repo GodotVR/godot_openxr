@@ -437,9 +437,10 @@ godot_bool godot_arvr_initialize(void *p_data) {
 		// should we build this once and just remember it? or keep building it like this?
 		openhmd_data->ohmd_settings = ohmd_device_settings_create(openhmd_data->ohmd_ctx);
 
-		// we turn our automatic updates off, we're calling this from our process call which is called from our main render thread
-		// which guarantees this gets called atleast once every frame and as close to our rendering as possible.
-		int auto_update = 0;
+		// automatic polling of the HMD should always be enabled, will make sure that even when the application can not keep up, 
+		// the tracking will stay correct and not only update per rendered frame.
+
+		int auto_update = 1;
 		ohmd_device_settings_seti(openhmd_data->ohmd_settings, OHMD_IDS_AUTOMATIC_UPDATE, &auto_update);
 
 		// create our lens distortion shader

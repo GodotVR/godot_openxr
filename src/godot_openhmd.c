@@ -58,6 +58,15 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 	{
 		godot_instance_method get_data = { NULL, NULL, NULL };
+		get_data.method = &openhmd_config_list_devices;
+
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
+
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "list_devices", attributes, get_data);
+	}
+
+	{
+		godot_instance_method get_data = { NULL, NULL, NULL };
 		get_data.method = &openhmd_config_init_hmd_device;
 
 		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };

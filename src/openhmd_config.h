@@ -15,5 +15,7 @@ GDCALLINGCONV godot_variant openhmd_config_close_hmd_device(godot_object *p_inst
 GDCALLINGCONV godot_variant openhmd_config_init_tracking_device(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args);
 GDCALLINGCONV godot_variant openhmd_config_close_tracking_device(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args);
 GDCALLINGCONV godot_variant openhmd_config_init_controller_device(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args);
+GDCALLINGCONV godot_variant openhmd_config_get_oversample(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args);
+GDCALLINGCONV godot_variant openhmd_config_set_oversample(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args);
 
 #endif /* !OPENHMD_CONFIG_H */

@@ -16,7 +16,7 @@ openhmd_data_struct *get_openhmd_data() {
 		openhmd_data->num_devices = 0;
 		openhmd_data->width = 0;
 		openhmd_data->height = 0;
-		openhmd_data->oversample_scale = 2;
+		openhmd_data->oversample = 2.0;
 		openhmd_data->ohmd_ctx = NULL;
 		openhmd_data->ohmd_settings = NULL;
 		openhmd_data->hmd_device = NULL;
@@ -254,3 +254,20 @@ bool openhmd_init_controller_device(int p_device) {
 		return true;
 	};
 };
+
+float openhmd_get_oversample() {
+	if (openhmd_data == NULL) {
+		// Not yet initialised!
+		return 1.0;
+	} else {
+		return openhmd_data->oversample;
+	}
+}
+
+void openhmd_set_oversample(float p_new_value) {
+	if (openhmd_data == NULL) {
+		// Not yet initialised!
+	} else {
+		openhmd_data->oversample = p_new_value;		
+	}
+}

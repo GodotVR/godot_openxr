@@ -22,6 +22,10 @@ func _ready():
 #		openhmd_config.init_tracking_device(1)
 #		openhmd_config.init_controller_device(2)
 #		openhmd_config.init_controller_device(3)
+
+		# check oversample
+		print("Oversample was: " + str(openhmd_config.get_oversample()))
+		openhmd_config.set_oversample(1.5)
 		
 		# and tell our viewport to render
 		get_viewport().arvr = true

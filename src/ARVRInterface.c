@@ -133,7 +133,14 @@ godot_vector2 godot_arvr_get_render_targetsize(const void *p_data) {
 		// this should never ever ever ever happen, just being paranoid....
 	} else if (openhmd_data->ohmd_ctx != NULL) {
 			if (openhmd_data->hmd_device != NULL) {
-				api->godot_vector2_new(&size, openhmd_data->width * openhmd_data->oversample_scale, openhmd_data->height * openhmd_data->oversample_scale);
+				// use floats so we can multiply
+				float width = openhmd_data->width;
+				float height = openhmd_data->height;
+
+				width = floor(width * openhmd_data->oversample);
+				height = floor(height * openhmd_data->oversample);
+
+				api->godot_vector2_new(&size, (int) width, (int) height);
 			} else {
 				/* just return something so we can show something instead of crashing */
 				api->godot_vector2_new(&size, 600, 900);

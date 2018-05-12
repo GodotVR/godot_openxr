@@ -19,7 +19,7 @@ typedef struct openhmd_data_struct {
 	bool do_auto_init_device_zero;
 	int num_devices;
 	int width, height;
-	int oversample_scale;
+	float oversample;
 	ohmd_context *ohmd_ctx; /* OpenHMD context we're using */
 	ohmd_device_settings *ohmd_settings; /* Settings we're using */
 	ohmd_device *hmd_device; /* HMD device we're rendering to */
@@ -41,6 +41,8 @@ void openhmd_close_tracking_device();
 bool openhmd_init_tracking_device(int p_device);
 void openhmd_close_controller_device(int p_index);
 bool openhmd_init_controller_device(int p_device);
+float openhmd_get_oversample();
+void openhmd_set_oversample(float p_new_value);
 
 #endif /* !OPENHMD_DATA_H */
 

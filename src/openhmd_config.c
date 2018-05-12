@@ -184,3 +184,34 @@ GDCALLINGCONV godot_variant openhmd_config_init_controller_device(godot_object *
 
 	return ret;
 };
+
+GDCALLINGCONV godot_variant openhmd_config_get_oversample(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args) {
+	godot_variant ret;
+
+	if (p_user_data == NULL || openhmd_data != p_user_data) {
+		// this should never ever ever ever happen, just being paranoid....
+		api->godot_variant_new_real(&ret, 1.0);
+	} else {
+		api->godot_variant_new_real(&ret, openhmd_get_oversample());
+	}
+
+	return ret;
+}
+
+GDCALLINGCONV godot_variant openhmd_config_set_oversample(godot_object *p_instance, void *p_method_data, void *p_user_data, int p_num_args, godot_variant **p_args) {
+	godot_variant ret;
+
+	if (p_user_data == NULL || openhmd_data != p_user_data) {
+		// this should never ever ever ever happen, just being paranoid....
+		api->godot_variant_new_bool(&ret, false);
+	} else if (p_num_args == 0) {
+		// no arguments given
+		api->godot_variant_new_bool(&ret, false);
+	} else {
+		float new_value = api->godot_variant_as_real(p_args[0]);
+		openhmd_set_oversample(new_value);
+		api->godot_variant_new_bool(&ret, true);
+	}
+
+	return ret;
+}

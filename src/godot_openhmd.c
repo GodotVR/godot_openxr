@@ -109,4 +109,23 @@ void GDN_EXPORT godot_nativescript_init(void *p_handle) {
 
 		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "init_controller_device", attributes, get_data);
 	}
+
+	{
+		godot_instance_method get_data = { NULL, NULL, NULL };
+		get_data.method = &openhmd_config_get_oversample;
+
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
+
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "get_oversample", attributes, get_data);
+	}
+
+	{
+		godot_instance_method get_data = { NULL, NULL, NULL };
+		get_data.method = &openhmd_config_set_oversample;
+
+		godot_method_attributes attributes = { GODOT_METHOD_RPC_MODE_DISABLED };
+
+		nativescript_api->godot_nativescript_register_method(p_handle, "OpenHMDConfig", "set_oversample", attributes, get_data);
+	}
+
 }

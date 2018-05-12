@@ -55,14 +55,55 @@ void openhmd_scan_for_devices() {
 		openhmd_data->num_devices = ohmd_ctx_probe(openhmd_data->ohmd_ctx);
 		if (openhmd_data->num_devices < 0) {
 			printf("OpenHMD: failed to get device count - %s\n", ohmd_ctx_get_error(openhmd_data->ohmd_ctx));
-		} else {
-			// just output them for now while we're debugging, this needs to become accessible from GDScript
-			for (int i = 0; i < openhmd_data->num_devices; i++) {
-				printf("OpenHMD: found %i %s - %s\n", i, ohmd_list_gets(openhmd_data->ohmd_ctx, i, OHMD_VENDOR), ohmd_list_gets(openhmd_data->ohmd_ctx, i, OHMD_PRODUCT));
-			};
-		};
-	};
-};
+//		} else {
+//			printf("OpenHMD: found %i devices\n", openhmd_data->num_devices);
+		}
+	}
+}
+
+int openhmd_device_count() {
+	if (openhmd_data == NULL) {
+		// Not yet initialised!
+		return 0;
+	} else if (openhmd_data->ohmd_ctx == NULL) {
+		// Not yet initialised!
+		return 0;
+	} else {
+		return openhmd_data->num_devices;
+	}	
+}
+
+const char * openhmd_get_device_vendor(int p_device) {
+	static char empty[] = "";
+	if (openhmd_data == NULL) {
+		// Not yet initialised!
+		return empty;
+	} else if (openhmd_data->ohmd_ctx == NULL) {
+		// Not yet initialised!
+		return empty;
+	} else if (p_device >= openhmd_data->num_devices) {
+		// Out of bounds!
+		return empty;
+	} else {
+		return ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_VENDOR);
+	}
+}
+
+const char * openhmd_get_device_product(int p_device) {
+	static char empty[] = "";
+	if (openhmd_data == NULL) {
+		// Not yet initialised!
+		return empty;
+	} else if (openhmd_data->ohmd_ctx == NULL) {
+		// Not yet initialised!
+		return empty;
+	} else if (p_device >= openhmd_data->num_devices) {
+		// Out of bounds!
+		return empty;
+	} else {
+		return ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_PRODUCT);
+	}
+}
 
 void openhmd_close_hmd_device() {
 	if (openhmd_data == NULL) {

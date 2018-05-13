@@ -6,7 +6,6 @@
 
 #include "GodotCalls.h"
 #include "openhmd_data.h"
-#include "openhmd_shader.h"
 
 extern const godot_arvr_interface_gdnative interface_struct;
 

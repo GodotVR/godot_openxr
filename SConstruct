@@ -142,7 +142,6 @@ openhmd_sources = [
     "fusion.c",
     "omath.c",
     "openhmd.c",
-#    "queue.c",
     "shaders.c",
     "ext_deps/mjson.c",
 #    "drv_android/android.c",

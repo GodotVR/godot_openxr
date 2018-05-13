@@ -6,6 +6,7 @@
 
 #include "GodotCalls.h"
 #include <openhmd.h>
+#include "openhmd_shader.h"
 
 #define OPENHMD_MAX_CONTROLLERS 16
 

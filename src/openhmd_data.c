@@ -16,7 +16,7 @@ openhmd_data_struct *get_openhmd_data() {
 		openhmd_data->num_devices = 0;
 		openhmd_data->width = 0;
 		openhmd_data->height = 0;
-		openhmd_data->oversample = 2.0;
+		openhmd_data->oversample = 1.2;
 		openhmd_data->ohmd_ctx = NULL;
 		openhmd_data->ohmd_settings = NULL;
 		openhmd_data->hmd_device = NULL;
@@ -137,6 +137,15 @@ bool openhmd_init_hmd_device(int p_device) {
 
 		printf("Initialising device no %i as the HMD device\n", p_device);
 
+		// what type of device is this?
+		int device_class;
+		ohmd_list_geti(openhmd_data->ohmd_ctx, p_device, OHMD_DEVICE_CLASS, &device_class);
+		if (device_class != OHMD_DEVICE_CLASS_HMD) {
+			// this is not a controller!
+			printf("OpenHMD: Device ID %i is not an HMD!\n", p_device);
+			return false;
+		}
+
 		// create our device instance
 		openhmd_data->hmd_device = ohmd_list_open_device_s(openhmd_data->ohmd_ctx, p_device, openhmd_data->ohmd_settings);
 		if (openhmd_data->hmd_device == NULL) {
@@ -192,6 +201,8 @@ bool openhmd_init_tracking_device(int p_device) {
 			return false;
 		};
 
+		// we don't check the class here, anything can be a tracker in theory :)
+
 		printf("Initialising device no %i as the tracking device\n", p_device);
 
 		// create our device instance
@@ -231,6 +242,22 @@ bool openhmd_init_controller_device(int p_device) {
 		// Not yet initialised!
 		return false;
 	} else {
+		if (openhmd_data->num_devices <= p_device) {
+			printf("OpenHMD: Device ID out of bounds\n");
+			return false;
+		};
+
+		// what type of device is this?
+		int device_class, device_type;
+		ohmd_list_geti(openhmd_data->ohmd_ctx, p_device, OHMD_DEVICE_CLASS, &device_class);
+		ohmd_list_geti(openhmd_data->ohmd_ctx, p_device, OHMD_DEVICE_FLAGS, &device_type);
+
+		if (device_class != OHMD_DEVICE_CLASS_CONTROLLER) {
+			// this is not a controller!
+			printf("OpenHMD: Device ID %i is not a controller!\n", p_device);
+			return false;
+		}
+
 		// find an empty slot...
 		int i = 0;
 		while (i < OPENHMD_MAX_CONTROLLERS && openhmd_data->controller_tracker_mapping[i].device != NULL) {
@@ -244,6 +271,16 @@ bool openhmd_init_controller_device(int p_device) {
 		if (openhmd_data->controller_tracker_mapping[i].device != NULL) {
 			char device_name[256];
 			godot_int hand = 0;
+
+			// do we know what hand our controller is in?
+			if (device_type & OHMD_DEVICE_FLAGS_LEFT_CONTROLLER) {
+				hand = 1;
+			} else if (device_type & OHMD_DEVICE_FLAGS_RIGHT_CONTROLLER) {
+				hand = 2;
+			} else if (i < 2) {
+				// for our first two controllers, if untyped we will default our first controller to left, and our second to right
+				hand = i + 1;
+			}
 
 			sprintf(device_name,"%s_%i",ohmd_list_gets(openhmd_data->ohmd_ctx, p_device, OHMD_PRODUCT),i);
 			openhmd_data->controller_tracker_mapping[i].tracker = arvr_api->godot_arvr_add_controller(device_name, hand, true, true);

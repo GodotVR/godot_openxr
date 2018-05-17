@@ -325,6 +325,32 @@ void godot_arvr_process(void *p_data) {
 
 				openhmd_transform_from_rot_pos(&controller_transform, openhmd_data->controller_tracker_mapping[i].device, 1.0);
 				arvr_api->godot_arvr_set_controller_transform(openhmd_data->controller_tracker_mapping[i].tracker, &controller_transform, true, true);
+
+
+				// Set controller buttons
+				int control_count = 0;
+				ohmd_device_geti(openhmd_data->controller_tracker_mapping[i].device, OHMD_CONTROL_COUNT, &control_count);
+
+				float control_state[256];
+				ohmd_device_getf(openhmd_data->controller_tracker_mapping[i].device, OHMD_CONTROLS_STATE, control_state);
+
+				int control_function[64];
+				ohmd_device_geti(openhmd_data->controller_tracker_mapping[i].device, OHMD_CONTROLS_HINTS, control_function);
+
+				for(int j = 0; j < control_count; j++)
+				{
+					int button = 0;
+					if (control_function[j] == OHMD_TRIGGER_CLICK)
+						button = 15;
+					else if (control_function[j] == OHMD_MENU)
+						button = 1;
+					else
+						button = j;
+					if (control_state[j] > 0)
+						arvr_api->godot_arvr_set_controller_button(openhmd_data->controller_tracker_mapping[i].tracker, button, true);
+					else
+						arvr_api->godot_arvr_set_controller_button(openhmd_data->controller_tracker_mapping[i].tracker, button, false);
+				}
 			};
 		};		
 	};

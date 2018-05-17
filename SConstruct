@@ -2,7 +2,7 @@
 import os, subprocess
 
 # Local dependency paths, adapt them to your setup
-godot_glad_path = ARGUMENTS.get("headers", "glad")
+godot_glad_path = ARGUMENTS.get("glad", "glad")
 godot_headers_path = ARGUMENTS.get("headers", "godot_headers/")
 libusb_path = ARGUMENTS.get("libusb", os.getenv("LIBUSB_PATH", "libusb/"))
 hidapi_path = ARGUMENTS.get("hidapi", os.getenv("HIDAPI_PATH", "hidapi/"))

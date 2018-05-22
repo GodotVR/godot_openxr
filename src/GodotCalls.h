@@ -9,6 +9,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <math.h>
 
 // forward declarations
 extern const godot_gdnative_core_api_struct *api;

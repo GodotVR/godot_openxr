@@ -15,8 +15,6 @@
 
 // declare our public functions for our ARVR Interface
 
-void GDN_EXPORT godot_oculus_gdnative_init(godot_gdnative_init_options *p_options);
-void GDN_EXPORT godot_oculus_gdnative_terminate(godot_gdnative_terminate_options *p_options);
 void GDN_EXPORT godot_oculus_gdnative_singleton();
 void GDN_EXPORT godot_oculus_nativescript_init(void *p_handle);
 

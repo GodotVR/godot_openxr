@@ -143,7 +143,7 @@ openhmd_sources = [
     "omath.c",
     "openhmd.c",
     "shaders.c",
-    "ext_deps/mjson.c",
+    "ext_deps/nxjson.c",
 #    "drv_android/android.c",
     "drv_deepoon/deepoon.c",
     "drv_deepoon/packet.c",

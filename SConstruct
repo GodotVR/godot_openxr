@@ -132,6 +132,7 @@ env.Append(CFLAGS=["-DDRIVER_HTC_VIVE"])
 env.Append(CFLAGS=["-DDRIVER_PSVR"])
 env.Append(CFLAGS=["-DDRIVER_NOLO"])
 env.Append(CFLAGS=["-DOPENHMD_DRIVER_WMR"])
+env.Append(CFLAGS=["-DDRIVER_XGVR"])
 #env.Append(CFLAGS=["-DDRIVER_EXTERNAL"])
 #env.Append(CFLAGS=["-DDRIVER_ANDROID"])
 
@@ -158,7 +159,9 @@ openhmd_sources = [
     "drv_nolo/nolo.c",
     "drv_nolo/packet.c",
     "drv_wmr/wmr.c",
-    "drv_wmr/packet.c"
+    "drv_wmr/packet.c",
+    "drv_3glasses/xgvr.c",
+    "drv_3glasses/packet.c"
 ]
 
 sources.append([openhmd_path + "src/" + file for file in openhmd_sources])

@@ -100,7 +100,6 @@ flags_use_point_size = false
 flags_world_triplanar = false
 flags_fixed_size = false
 flags_albedo_tex_force_srgb = false
-flags_do_not_receive_shadows = false
 vertex_color_use_as_albedo = false
 vertex_color_is_srgb = false
 params_diffuse_mode = 1
@@ -146,18 +145,20 @@ _sections_unfolded = [ "Albedo" ]
 
 material = SubResource( 3 )
 custom_aabb = AABB( 0, 0, 0, 0, 0, 0 )
-flip_faces = false
 size = Vector2( 10, 10 )
 subdivide_width = 10
 subdivide_depth = 10
 
 [node name="Main" type="Spatial" index="0"]
+
 script = ExtResource( 1 )
 
 [node name="WorldEnvironment" type="WorldEnvironment" parent="." index="0"]
+
 environment = SubResource( 2 )
 
 [node name="DirectionalLight" type="DirectionalLight" parent="." index="1"]
+
 transform = Transform( 0.623013, -0.733525, 0.271654, 0.321394, 0.55667, 0.766044, -0.713134, -0.389948, 0.582563, 0, 100, 0 )
 layers = 1
 light_color = Color( 1, 1, 1, 1 )
@@ -185,11 +186,13 @@ directional_shadow_max_distance = 200.0
 _sections_unfolded = [ "Transform" ]
 
 [node name="ARVROrigin" type="ARVROrigin" parent="." index="2"]
+
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0 )
 world_scale = 1.0
 _sections_unfolded = [ "Transform" ]
 
 [node name="ARVRCamera" type="ARVRCamera" parent="ARVROrigin" index="0"]
+
 keep_aspect = 1
 cull_mask = 1048575
 environment = null
@@ -205,6 +208,7 @@ far = 100.0
 _sections_unfolded = [ "Transform" ]
 
 [node name="Ground" type="MeshInstance" parent="." index="3"]
+
 transform = Transform( 100, 0, 0, 0, 100, 0, 0, 0, 100, 0, 0, 0 )
 layers = 1
 material_override = null
@@ -221,4 +225,5 @@ material/0 = null
 _sections_unfolded = [ "Transform" ]
 
 [node name="Table" parent="." index="4" instance=ExtResource( 3 )]
+
 

@@ -5,6 +5,12 @@ I'll add more info here soon, this is still a work in progress and likely to cha
 The leading version of this repository now lives at:
 https://github.com/GodotVR/godot_openhmd
 
+Versions
+--------
+Note that due to a breaking change in Godot 3.1 the current master of this repository creates a GDNative module that can only be used with Godot 3.1 or later.
+
+If you want to build this module for Godot 3.0 please checkout the 3.0 branch.
+
 Building this module
 --------------------
 In order to compile this module you will have to clone the source code to disk. You will need a C/C++ compiler, python and scons installed. This is the same toolchain you will need in order to compile Godot from master. The documentation on Godot is a very good place to read up on this. It is too much information to duplicate here.

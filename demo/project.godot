@@ -15,7 +15,7 @@ _global_script_class_icons={
 
 [application]
 
-config/name="Godot OpenHMD demo"
+config/name="Godot OpenXR demo"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
@@ -25,7 +25,7 @@ window/vsync/use_vsync=false
 
 [gdnative]
 
-singletons=[ "res://addons/godot-openhmd/godot_openhmd.gdnlib" ]
+singletons=[ "res://addons/godot-openxr/godot_openxr.gdnlib" ]
 
 [rendering]
 

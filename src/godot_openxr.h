@@ -1,0 +1,21 @@
+////////////////////////////////////////////////////////////////////////////
+// Oculus GDNative module for Godot
+//
+// Based on code written by Bastiaan "Mux213" Olij,
+// with loads of help from Thomas "Karroffel" Herzog
+
+#ifndef GODOT_OPENXR_H
+#define GODOT_OPENXR_H
+
+#include "GodotCalls.h"
+#include <openxr/openxr.h>
+#include "ARVRInterface.h"
+
+// declare our public functions for our ARVR Interface
+
+void GDN_EXPORT
+godot_openxr_gdnative_singleton();
+void GDN_EXPORT
+godot_openxr_nativescript_init(void *p_handle);
+
+#endif /* !GODOT_OPENXR_H */

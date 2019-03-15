@@ -5,11 +5,9 @@
 [ext_resource path="res://Table.tscn" type="PackedScene" id=3]
 
 [sub_resource type="PanoramaSky" id=1]
-
 panorama = ExtResource( 2 )
 
 [sub_resource type="Environment" id=2]
-
 background_mode = 2
 background_sky = SubResource( 1 )
 background_color = Color( 0, 0.53833, 0.703125, 1 )
@@ -17,13 +15,11 @@ ambient_light_color = Color( 0.328125, 0.328125, 0.328125, 1 )
 ssao_blur = 1
 
 [sub_resource type="SpatialMaterial" id=3]
-
 params_diffuse_mode = 1
 albedo_color = Color( 0.0342134, 0.992188, 0.116539, 1 )
 roughness = 0.0
 
 [sub_resource type="PlaneMesh" id=4]
-
 material = SubResource( 3 )
 size = Vector2( 10, 10 )
 subdivide_width = 10
@@ -39,14 +35,13 @@ environment = SubResource( 2 )
 transform = Transform( 0.623013, -0.733525, 0.271654, 0.321394, 0.55667, 0.766044, -0.713134, -0.389948, 0.582563, 0, 100, 0 )
 
 [node name="ARVROrigin" type="ARVROrigin" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.85, 0 )
 
 [node name="ARVRCamera" type="ARVRCamera" parent="ARVROrigin"]
 fov = 65.0
 near = 0.1
 
 [node name="Ground" type="MeshInstance" parent="."]
-transform = Transform( 100, 0, 0, 0, 100, 0, 0, 0, 100, 0, 0, 0 )
+transform = Transform( 100, 0, 0, 0, 100, 0, 0, 0, 100, 0.32517, 0.00884533, 0.172135 )
 mesh = SubResource( 4 )
 material/0 = null
 

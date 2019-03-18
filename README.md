@@ -5,6 +5,8 @@ Versions
 
 Requires Godot 3.1.
 
+Note: Currently this plugin only supports Linux/X11.
+
 Building this module
 --------------------
 In order to compile this module you will have to clone the source code to disk. You will need a C/C++ compiler, python and scons installed. This is the same toolchain you will need in order to compile Godot from master. The documentation on Godot is a very good place to read up on this. It is too much information to duplicate here.

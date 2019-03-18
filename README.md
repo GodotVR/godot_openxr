@@ -5,7 +5,13 @@ Versions
 
 Requires Godot 3.1.
 
-Note: Currently this plugin only supports Linux/X11.
+Status
+------
+
+* This plugin only supports Linux/X11.
+* HMD poses and HMD rendering work.
+* Controller/Actions are unimplemented.
+* The code structure could be improved.
 
 Building this module
 --------------------

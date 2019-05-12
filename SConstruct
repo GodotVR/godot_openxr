@@ -18,6 +18,11 @@ godot_openxr_path = 'demo/addons/godot-openxr/bin/'
 # This makes sure to keep the session environment variables on windows,
 # that way you can run scons in a vs 2017 prompt and it will find all the required tools
 env = Environment()
+
+# uncomment this to use an OpenXR-SDK/build dir adjacent to godot_openxr
+# env.Append(LIBPATH = ['../OpenXR-SDK/build/src/loader'])
+# env.Append(CPPPATH='../OpenXR-SDK/build/include')
+
 if platform == "windows":
     env = Environment(ENV = os.environ)
 
@@ -42,14 +47,14 @@ if platform == "osx":
     env.Append(LINKFLAGS=['-framework', 'Cocoa', '-framework', 'OpenGL', '-framework', 'IOKit'])
     env.Append(LIBS=['pthread'])
 
-if platform == "linux":
+elif platform == "linux":
     platform_dir = 'linux'
     godot_openxr_path = godot_openxr_path + 'linux/'
     env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
     env.Append(CXXFLAGS='-std=c++0x')
     env.Append(LINKFLAGS = ['-Wl,-R,\'$$ORIGIN\''])
 
-if platform == "windows":
+elif platform == "windows":
     platform_dir = 'win'
     godot_openxr_path = godot_openxr_path + 'win64/'
     if target == "debug":
@@ -57,6 +62,10 @@ if platform == "windows":
     else:
         env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MD'])
     env.Append(LIBS=["opengl32", "setupapi", "advapi32.lib"])
+
+else:
+    print "Error: platform must be linux, osx or windows"
+    Exit(2)
 
 
 ####################################################################################################################################

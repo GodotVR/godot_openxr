@@ -2,6 +2,7 @@
 // Helper calls and singleton container for accessing openxr
 
 #include "OXRCalls.h"
+#include <stdint.h>
 
 openxr_data_struct* openxr_data_singleton = NULL;
 
@@ -335,10 +336,10 @@ init_openxr()
 	self->graphics_binding_gl.glxContext = glXGetCurrentContext();
 	self->graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
 
-	printf("Graphics: Display %p, Context %d, Drawable %d\n",
+	printf("Graphics: Display %p, Context %" PRIxPTR ", Drawable %" PRIxPTR "\n",
 	       self->graphics_binding_gl.xDisplay,
-	       self->graphics_binding_gl.glxContext,
-	       self->graphics_binding_gl.glxDrawable);
+	       (uintptr_t) self->graphics_binding_gl.glxContext,
+	       (uintptr_t) self->graphics_binding_gl.glxDrawable);
 
 	printf("Using OpenGL version: %s\n", glGetString(GL_VERSION));
 	printf("Using OpenGL Renderer: %s\n", glGetString(GL_RENDERER));

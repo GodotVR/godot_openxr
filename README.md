@@ -5,6 +5,16 @@ Versions
 
 Requires Godot 3.1.
 
+Note: The godot engine (the full engine, not this plugin) must be compiled in release_debug mode, i.e. with
+
+    scons platform=x11 target=release_debug
+
+If godot engine is compiled with `target=debug` instead, you might get a (bogus) error from monado
+
+    client_gl_compositor_init - Needed extension GL_EXT_memory_object_fd not supported
+
+On the other hand the godot_openxr plugin can be compiled in debug mode without issues.
+
 Status
 ------
 

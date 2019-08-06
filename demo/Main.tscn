@@ -46,4 +46,3 @@ mesh = SubResource( 4 )
 material/0 = null
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
-

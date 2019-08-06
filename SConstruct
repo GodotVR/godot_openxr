@@ -64,7 +64,7 @@ elif platform == "windows":
     env.Append(LIBS=["opengl32", "setupapi", "advapi32.lib"])
 
 else:
-    print "Error: platform must be linux, osx or windows"
+    print("Error: platform must be linux, osx or windows")
     Exit(2)
 
 

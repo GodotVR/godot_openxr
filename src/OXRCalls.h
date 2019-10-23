@@ -36,6 +36,8 @@ render_openxr(OPENXR_API_HANDLE _self, int eye, uint32_t texid);
 void
 fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix);
 void
+update_controllers(OPENXR_API_HANDLE _self);
+void
 recommended_rendertarget_size(OPENXR_API_HANDLE _self,
                               uint32_t *width,
                               uint32_t *height);

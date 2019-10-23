@@ -79,6 +79,16 @@ openxr_get_data()
 
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
+#include <gdnative/gdnative.h>
+
+#define HANDCOUNT 2
+#define HAND_LEFT 0
+#define HAND_RIGHT 1
+
+#define POSE_ACTION_INDEX 0
+#define GRAB_ACTION_INDEX 1
+#define MENU_ACTION_INDEX 2
+#define LAST_ACTION_INDEX 3 // array size
 
 typedef struct xr_api
 {
@@ -100,6 +110,13 @@ typedef struct xr_api
 
 	XrView* views;
 	XrCompositionLayerProjectionView* projection_views;
+	
+	XrActionSet actionSet;
+	XrAction actions[LAST_ACTION_INDEX];
+	XrPath handPaths[HANDCOUNT];
+	XrSpace handSpaces[HANDCOUNT];
+
+	godot_int godot_controllers[2];
 } xr_api;
 
 bool
@@ -197,6 +214,66 @@ deinit_openxr(OPENXR_API_HANDLE _self)
 		xrDestroySession(self->session);
 	}
 	xrDestroyInstance(self->instance);
+}
+
+static XrAction _createAction(xr_api* self, XrActionType actionType, char* actionName, char *localizedActionName) {
+	XrActionCreateInfo actionInfo = {
+		.type = XR_TYPE_ACTION_CREATE_INFO,
+		.next = NULL,
+		.actionType = actionType,
+		.countSubactionPaths = HANDCOUNT,
+		.subactionPaths = self->handPaths
+	};
+	strcpy(actionInfo.actionName, actionName);
+	strcpy(actionInfo.localizedActionName, localizedActionName);
+
+	XrAction action;
+	XrResult result = xrCreateAction(self->actionSet, &actionInfo, &action);
+	if (!xr_result(self->instance, result, "failed to create %s action", actionName))
+		return NULL;
+
+	return action;
+}
+
+static XrResult _getActionStates(xr_api* self, XrAction action, XrStructureType actionStateType, void *states)
+{
+
+	for (int i = 0; i < HANDCOUNT; i++) {
+		XrActionStateGetInfo getInfo = {
+			.type = XR_TYPE_ACTION_STATE_GET_INFO,
+			.next = NULL,
+			.action = action,
+			.subactionPath = self->handPaths[i]
+		};
+
+		switch (actionStateType) {
+			case XR_TYPE_ACTION_STATE_FLOAT:
+			{
+				XrActionStateFloat *resultStates = states;
+				resultStates[i].type = XR_TYPE_ACTION_STATE_FLOAT,
+				resultStates[i].next = NULL;
+				XrResult result = xrGetActionStateFloat(self->session, &getInfo, &resultStates[i]);
+				if (!xr_result(self->instance, result, "failed to get grab value for hand %d!", i))
+					resultStates[i].isActive = false;
+				break;
+			}
+			case XR_TYPE_ACTION_STATE_POSE:
+			{
+				XrActionStatePose *resultStates = states;
+				resultStates[i].type = XR_TYPE_ACTION_STATE_POSE;
+				resultStates[i].next = NULL;
+				XrResult result = xrGetActionStatePose(self->session, &getInfo, &resultStates[i]);
+				if (!xr_result(self->instance, result, "failed to get pose value for hand %d!", i))
+					resultStates[i].isActive = false;
+				break;
+			}
+
+			default:
+				return XR_ERROR_ACTION_TYPE_MISMATCH; // TOOD
+		}
+	}
+
+	return XR_SUCCESS;
 }
 
 OPENXR_API_HANDLE
@@ -326,18 +403,6 @@ init_openxr()
 	    .type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
 	};
 
-	/*
-	  if (!initGL(&self->graphics_binding_gl.xDisplay,
-	              &self->graphics_binding_gl.visualid,
-	              &self->graphics_binding_gl.glxFBConfig,
-	              &self->graphics_binding_gl.glxDrawable,
-	              &self->graphics_binding_gl.glxContext,
-	              self->configuration_views[0].recommendedImageRectWidth,
-	              self->configuration_views[0].recommendedImageRectHeight)) {
-	    printf("GL init failed!\n");
-	    return 1;
-	  }
-	  */
 	self->graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
 	self->graphics_binding_gl.glxContext = glXGetCurrentContext();
 	self->graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
@@ -506,6 +571,119 @@ init_openxr()
 		self->projection_views[i].next = NULL;
 	};
 
+	XrActionSetCreateInfo actionSetInfo = {
+		.type = XR_TYPE_ACTION_SET_CREATE_INFO,
+		.next = NULL,
+		.priority = 0
+	};
+	strcpy(actionSetInfo.actionSetName, "godotset");
+	strcpy(actionSetInfo.localizedActionSetName, "Action Set Used by Godot");
+
+
+	result = xrCreateActionSet(self->instance, &actionSetInfo, &self->actionSet);
+	if (!xr_result(self->instance, result, "failed to create actionset"))
+		return NULL;
+
+	xrStringToPath(self->instance, "/user/hand/left", &self->handPaths[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right", &self->handPaths[HAND_RIGHT]);
+
+
+	// TODO: add action editor to godot and create actions dynamically
+	self->actions[GRAB_ACTION_INDEX] = _createAction(
+		self,
+		XR_ACTION_TYPE_FLOAT_INPUT,
+		"triggergrab",
+		"Grab Object with Trigger Button"
+	);
+	if (self->actions[GRAB_ACTION_INDEX] == NULL)
+		return NULL;
+
+	self->actions[POSE_ACTION_INDEX] = _createAction(
+		self,
+		XR_ACTION_TYPE_POSE_INPUT,
+		"handpose",
+		"Hand Pose"
+	);
+	if (self->actions[POSE_ACTION_INDEX] == NULL)
+		return NULL;
+
+
+	XrPath selectClickPath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/select/click", &selectClickPath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/select/click", &selectClickPath[HAND_RIGHT]);
+
+	XrPath posePath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/grip/pose", &posePath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/grip/pose", &posePath[HAND_RIGHT]);
+
+	XrPath khrSimpleInteractionProfilePath;
+	result = xrStringToPath(self->instance, "/interaction_profiles/khr/simple_controller", &khrSimpleInteractionProfilePath);
+	if (!xr_result(self->instance, result, "failed to get interaction profile"))
+		return NULL;
+
+	 const XrActionSuggestedBinding bindings[4] = {
+		{
+			.action = self->actions[POSE_ACTION_INDEX],
+			.binding = posePath[HAND_LEFT]
+		},
+		{
+			.action = self->actions[POSE_ACTION_INDEX],
+			.binding = posePath[HAND_RIGHT]
+		},
+		{
+			.action = self->actions[GRAB_ACTION_INDEX],
+			.binding = selectClickPath[HAND_LEFT]
+		},
+		{
+			.action = self->actions[GRAB_ACTION_INDEX],
+			.binding = selectClickPath[HAND_RIGHT]
+		}
+	};
+
+	const XrInteractionProfileSuggestedBinding suggestedBindings = {
+		.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
+		.next = NULL,
+		.interactionProfile = khrSimpleInteractionProfilePath,
+		.countSuggestedBindings = 4,
+		.suggestedBindings = bindings
+	};
+
+	xrSuggestInteractionProfileBindings(self->instance, &suggestedBindings);
+	if (!xr_result(self->instance, result, "failed to suggest bindings"))
+		return  NULL;
+
+	XrActionSpaceCreateInfo actionSpaceInfo = {
+		.type = XR_TYPE_ACTION_SPACE_CREATE_INFO,
+		.next = NULL,
+		.action = self->actions[POSE_ACTION_INDEX],
+		.poseInActionSpace.orientation.w = 1.f,
+		.subactionPath = self->handPaths[0]
+	};
+
+	result = xrCreateActionSpace(self->session, &actionSpaceInfo, &self->handSpaces[0]);
+	if (!xr_result(self->instance, result, "failed to create left hand pose space"))
+		return NULL;
+
+	actionSpaceInfo.subactionPath = self->handPaths[1];
+	result = xrCreateActionSpace(self->session, &actionSpaceInfo, &self->handSpaces[1]);
+	if (!xr_result(self->instance, result, "failed to create right hand pose space"))
+		return NULL;
+
+	XrSessionActionSetsAttachInfo attachInfo = {
+		.type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO,
+		.next = NULL,
+		.countActionSets = 1,
+		.actionSets = &self->actionSet
+	};
+	result = xrAttachSessionActionSets(self->session, &attachInfo);
+	if (!xr_result(self->instance, result, "failed to attach action set"))
+		return NULL;
+
+	self->godot_controllers[0] = arvr_api->godot_arvr_add_controller("lefthand", 1, true, true);
+	self->godot_controllers[1] = arvr_api->godot_arvr_add_controller("righthand", 2, true, true);
+
+	printf("initialized controllers %d %d\n", self->godot_controllers[0], self->godot_controllers[1]);
+
 	return (OPENXR_API_HANDLE)self;
 }
 
@@ -593,7 +771,7 @@ render_openxr(OPENXR_API_HANDLE _self, int eye, uint32_t texid)
 		    .displayTime = self->frameState->predictedDisplayTime,
 		    .space = self->local_space};
 		XrViewState viewState = {.type = XR_TYPE_VIEW_STATE, .next = NULL};
-		int32_t viewCountOutput;
+		uint32_t viewCountOutput;
 		result = xrLocateViews(self->session, &viewLocateInfo, &viewState,
 		                       self->view_count, &viewCountOutput, self->views);
 		if (!xr_result(self->instance, result, "Could not locate views"))
@@ -715,6 +893,85 @@ fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f* matrix)
 		// printf("Fill projection matrix for eye %d / %d\n", eye, self->view_count
 		// - 1);
 	}
+}
+
+void _transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location, float p_world_scale) {
+	godot_quat q;
+	godot_basis basis;
+	godot_vector3 origin;
+	float ohmd_q[4];
+	float ohmd_v[4];
+
+	// convert orientation quad to position, should add helper function for this :)
+	api->godot_quat_new(&q, location->pose.orientation.x, location->pose.orientation.y, location->pose.orientation.z, location->pose.orientation.w);
+	api->godot_basis_new_with_euler_quat(&basis, &q);
+	
+	api->godot_vector3_new(&origin, location->pose.position.x * p_world_scale, location->pose.position.y * p_world_scale, location->pose.position.z * p_world_scale);
+	api->godot_transform_new(p_dest, &basis, &origin);
+};
+
+void
+update_controllers(OPENXR_API_HANDLE _self)
+{
+	xr_api* self = (xr_api*)_self;
+	XrResult result;
+	
+	const XrActiveActionSet activeActionSet = {
+		.actionSet = self->actionSet,
+		.subactionPath = XR_NULL_PATH
+	};
+
+	XrActionsSyncInfo syncInfo = {
+		.type = XR_TYPE_ACTIONS_SYNC_INFO,
+		.countActiveActionSets = 1,
+		.activeActionSets = &activeActionSet
+	};
+	result = xrSyncActions(self->session, &syncInfo);
+	xr_result(self->instance, result, "failed to sync actions!");
+
+	XrActionStateFloat grabStates[HANDCOUNT];
+	_getActionStates(self, self->actions[GRAB_ACTION_INDEX], XR_TYPE_ACTION_STATE_FLOAT, (void**)grabStates);
+
+	XrActionStatePose poseStates[HANDCOUNT];
+	_getActionStates(self, self->actions[POSE_ACTION_INDEX], XR_TYPE_ACTION_STATE_POSE, (void**)poseStates);
+
+	//printf("Grab active %d, current %f, changed %d\n", grabValue.isActive, grabValue.currentState, grabValue.changedSinceLastSync);
+
+	XrSpaceLocation spaceLocation[HANDCOUNT];
+
+	for (int i = 0; i < HANDCOUNT; i++) {
+		if (!poseStates[i].isActive) {
+			printf("Pose for hand %d is not active %d\n", i, poseStates[i].isActive);
+			continue;
+		}
+
+		spaceLocation[i].type = XR_TYPE_SPACE_LOCATION;
+		spaceLocation[i].next = NULL;
+
+		result = xrLocateSpace(self->handSpaces[i], self->local_space, self->frameState->predictedDisplayTime, &spaceLocation[i]);
+		xr_result(self->instance, result, "failed to locate space %d!", i);
+		bool spaceLocationValid =
+			//(spaceLocation[i].locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
+			(spaceLocation[i].locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0;
+			
+		godot_transform controller_transform;
+		if (!spaceLocationValid) {
+			printf("Space location not valid for hand %d\n", i);
+			continue;
+			//printf("Setting identity for controller %d\n", i);
+		} else {
+			_transform_from_rot_pos(&controller_transform, &spaceLocation[i], 1.0);
+		}
+		
+		/*
+		printf("pose for controller %d - %f %f %f - %f %f %f\n", i,
+			spaceLocation[i].pose.position.x, spaceLocation[i].pose.position.y, spaceLocation[i].pose.position.z,
+			spaceLocation[i].pose.orientation.x, spaceLocation[i].pose.orientation.y, spaceLocation[i].pose.orientation.z, spaceLocation[i].pose.orientation.w
+		);
+		*/
+		
+		arvr_api->godot_arvr_set_controller_transform(self->godot_controllers[i], &controller_transform, true, true);
+	};
 }
 
 void

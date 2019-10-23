@@ -274,23 +274,6 @@ godot_arvr_commit_for_eye(void *p_data,
 	if (arvr_data->oxr != NULL) {
 		uint32_t texid = arvr_api->godot_arvr_get_texid(p_render_target);
 		render_openxr(arvr_data->oxr->api, p_eye - 1, texid);
-		/* TODO: OPENXR
-		vr::VRTextureBounds_t bounds;
-		bounds.uMin = 0.0;
-		bounds.uMax = 1.0;
-		bounds.vMin = 0.0;
-		bounds.vMax = 1.0;
-
-		uint32_t texid = arvr_api->godot_arvr_get_texid(p_render_target);
-
-		vr::Texture_t eyeTexture = { (void *)(uintptr_t)texid,
-		  vr::TextureType_OpenGL, vr::ColorSpace_Gamma };
-		vr::EVRCompositorError vrerr = vr::VRCompositor()->Submit(
-		    p_eye == 1 ? vr::Eye_Left : vr::Eye_Right, &eyeTexture, &bounds);
-		if (vrerr != vr::VRCompositorError_None) {
-		  printf("OpenVR reports: %i\n", vrerr);
-		}
-		*/
 	};
 };
 
@@ -302,6 +285,7 @@ godot_arvr_process(void *p_data)
 	// this method gets called before every frame is rendered, here is where you
 	// should update tracking data, update controllers, etc.
 	if (arvr_data->oxr != NULL) {
+		update_controllers(arvr_data->oxr->api);
 	}
 };
 

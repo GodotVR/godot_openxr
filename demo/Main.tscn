@@ -1,4 +1,4 @@
-[gd_scene load_steps=8 format=2]
+[gd_scene load_steps=10 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Milkyway.png" type="Texture" id=2]
@@ -14,13 +14,19 @@ background_color = Color( 0, 0.53833, 0.703125, 1 )
 ambient_light_color = Color( 0.328125, 0.328125, 0.328125, 1 )
 ssao_blur = 1
 
-[sub_resource type="SpatialMaterial" id=3]
+[sub_resource type="CubeMesh" id=3]
+size = Vector3( 0.1, 0.5, 0.1 )
+
+[sub_resource type="CubeMesh" id=6]
+size = Vector3( 0.1, 0.5, 0.1 )
+
+[sub_resource type="SpatialMaterial" id=4]
 params_diffuse_mode = 1
 albedo_color = Color( 0.0342134, 0.992188, 0.116539, 1 )
 roughness = 0.0
 
-[sub_resource type="PlaneMesh" id=4]
-material = SubResource( 3 )
+[sub_resource type="PlaneMesh" id=5]
+material = SubResource( 4 )
 size = Vector2( 10, 10 )
 subdivide_width = 10
 subdivide_depth = 10
@@ -40,9 +46,23 @@ transform = Transform( 0.623013, -0.733525, 0.271654, 0.321394, 0.55667, 0.76604
 fov = 65.0
 near = 0.1
 
+[node name="ARVRController" type="ARVRController" parent="ARVROrigin"]
+controller_id = 1
+
+[node name="MeshInstance" type="MeshInstance" parent="ARVROrigin/ARVRController"]
+mesh = SubResource( 3 )
+material/0 = null
+
+[node name="ARVRController2" type="ARVRController" parent="ARVROrigin"]
+controller_id = 2
+
+[node name="MeshInstance" type="MeshInstance" parent="ARVROrigin/ARVRController2"]
+mesh = SubResource( 6 )
+material/0 = null
+
 [node name="Ground" type="MeshInstance" parent="."]
-transform = Transform( 100, 0, 0, 0, 100, 0, 0, 0, 100, 0.32517, 0.00884533, 0.172135 )
-mesh = SubResource( 4 )
+transform = Transform( 100, 0, 0, 0, 100, 0, 0, 0, 100, 8.55563, -0.7305, 5.1287 )
+mesh = SubResource( 5 )
 material/0 = null
 
 [node name="Table" parent="." instance=ExtResource( 3 )]

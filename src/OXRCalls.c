@@ -439,9 +439,15 @@ init_openxr()
 	}
 
 	self->images = malloc(sizeof(XrSwapchainImageOpenGLKHR*) * self->view_count);
-	for (uint32_t i = 0; i < self->view_count; i++)
+	for (uint32_t i = 0; i < self->view_count; i++) {
 		self->images[i] =
 		    malloc(sizeof(XrSwapchainImageOpenGLKHR) * maxSwapchainLength);
+
+		for (int j = 0; j < maxSwapchainLength; j++) {
+			self->images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+			self->images[i][j].next = NULL;
+		}
+    }
 
 	// self->framebuffers = malloc(sizeof(GLuint*) * self->view_count);
 	// for (uint32_t i = 0; i < self->view_count; i++)

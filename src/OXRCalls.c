@@ -58,6 +58,7 @@ openxr_get_data()
 };
 
 
+#define XR_MND_BALL_ON_STICK_EXTENSION_NAME "TODO_BALL_ON_STICK"
 
 #define XR_USE_PLATFORM_XLIB
 #define XR_USE_GRAPHICS_API_OPENGL
@@ -86,9 +87,10 @@ openxr_get_data()
 #define HAND_RIGHT 1
 
 #define POSE_ACTION_INDEX 0
-#define GRAB_ACTION_INDEX 1
-#define MENU_ACTION_INDEX 2
-#define LAST_ACTION_INDEX 3 // array size
+#define TRIGGER_ACTION_INDEX 1
+#define GRAB_ACTION_INDEX 2
+#define MENU_ACTION_INDEX 3
+#define LAST_ACTION_INDEX 4 // array size
 
 typedef struct xr_api
 {
@@ -117,6 +119,8 @@ typedef struct xr_api
 	XrSpace handSpaces[HANDCOUNT];
 
 	godot_int godot_controllers[2];
+
+	bool monado_stick_on_ball_ext;
 } xr_api;
 
 bool
@@ -253,7 +257,17 @@ static XrResult _getActionStates(xr_api* self, XrAction action, XrStructureType 
 				resultStates[i].type = XR_TYPE_ACTION_STATE_FLOAT,
 				resultStates[i].next = NULL;
 				XrResult result = xrGetActionStateFloat(self->session, &getInfo, &resultStates[i]);
-				if (!xr_result(self->instance, result, "failed to get grab value for hand %d!", i))
+				if (!xr_result(self->instance, result, "failed to get float value for hand %d!", i))
+					resultStates[i].isActive = false;
+				break;
+			}
+			case XR_TYPE_ACTION_STATE_BOOLEAN:
+			{
+				XrActionStateBoolean *resultStates = states;
+				resultStates[i].type = XR_TYPE_ACTION_STATE_BOOLEAN,
+				resultStates[i].next = NULL;
+				XrResult result = xrGetActionStateBoolean(self->session, &getInfo, &resultStates[i]);
+				if (!xr_result(self->instance, result, "failed to get boolean value for hand %d!", i))
 					resultStates[i].isActive = false;
 				break;
 			}
@@ -280,6 +294,8 @@ OPENXR_API_HANDLE
 init_openxr()
 {
 	xr_api* self = malloc(sizeof(xr_api));
+	self->monado_stick_on_ball_ext = false;
+
 	XrResult result;
 
 	uint32_t extensionCount = 0;
@@ -308,13 +324,25 @@ init_openxr()
 		return NULL;
 	}
 
-	const char* const enabledExtensions[] = {XR_KHR_OPENGL_ENABLE_EXTENSION_NAME};
+	if (isExtensionSupported(XR_MND_BALL_ON_STICK_EXTENSION_NAME,
+	                         extensionProperties, extensionCount)) {
+		self->monado_stick_on_ball_ext = true;
+	}
+
+	const char* enabledExtensions[extensionCount];
+
+	int enabledExtensionCount = 0;
+	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
+
+	if (self->monado_stick_on_ball_ext) {
+		enabledExtensions[enabledExtensionCount++] = XR_MND_BALL_ON_STICK_EXTENSION_NAME;
+	}
+
 	XrInstanceCreateInfo instanceCreateInfo = {
 	    .type = XR_TYPE_INSTANCE_CREATE_INFO,
 	    .next = NULL,
 	    .createFlags = 0,
-	    .enabledExtensionCount =
-	        sizeof(enabledExtensions) / sizeof(enabledExtensions[0]),
+	    .enabledExtensionCount = enabledExtensionCount,
 	    .enabledExtensionNames = enabledExtensions,
 	    .enabledApiLayerCount = 0,
 	    .applicationInfo =
@@ -589,11 +617,29 @@ init_openxr()
 
 
 	// TODO: add action editor to godot and create actions dynamically
-	self->actions[GRAB_ACTION_INDEX] = _createAction(
+	self->actions[TRIGGER_ACTION_INDEX] = _createAction(
 		self,
 		XR_ACTION_TYPE_FLOAT_INPUT,
-		"triggergrab",
-		"Grab Object with Trigger Button"
+		"trigger",
+		"Trigger Button"
+	);
+	if (self->actions[TRIGGER_ACTION_INDEX] == NULL)
+		return NULL;
+
+	self->actions[GRAB_ACTION_INDEX] = _createAction(
+		self,
+		XR_ACTION_TYPE_BOOLEAN_INPUT,
+		"grab",
+		"Grab Button"
+	);
+	if (self->actions[GRAB_ACTION_INDEX] == NULL)
+		return NULL;
+
+	self->actions[MENU_ACTION_INDEX] = _createAction(
+		self,
+		XR_ACTION_TYPE_BOOLEAN_INPUT,
+		"menu",
+		"Menu Button"
 	);
 	if (self->actions[GRAB_ACTION_INDEX] == NULL)
 		return NULL;
@@ -621,7 +667,7 @@ init_openxr()
 	if (!xr_result(self->instance, result, "failed to get interaction profile"))
 		return NULL;
 
-	 const XrActionSuggestedBinding bindings[4] = {
+	 const XrActionSuggestedBinding simpleBindings[4] = {
 		{
 			.action = self->actions[POSE_ACTION_INDEX],
 			.binding = posePath[HAND_LEFT]
@@ -631,26 +677,90 @@ init_openxr()
 			.binding = posePath[HAND_RIGHT]
 		},
 		{
-			.action = self->actions[GRAB_ACTION_INDEX],
+			.action = self->actions[TRIGGER_ACTION_INDEX],
 			.binding = selectClickPath[HAND_LEFT]
 		},
 		{
-			.action = self->actions[GRAB_ACTION_INDEX],
+			.action = self->actions[TRIGGER_ACTION_INDEX],
 			.binding = selectClickPath[HAND_RIGHT]
 		}
 	};
 
-	const XrInteractionProfileSuggestedBinding suggestedBindings = {
+	const XrInteractionProfileSuggestedBinding simpleSuggestedBindings = {
 		.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
 		.next = NULL,
 		.interactionProfile = khrSimpleInteractionProfilePath,
 		.countSuggestedBindings = 4,
-		.suggestedBindings = bindings
+		.suggestedBindings = simpleBindings
 	};
 
-	xrSuggestInteractionProfileBindings(self->instance, &suggestedBindings);
-	if (!xr_result(self->instance, result, "failed to suggest bindings"))
+	xrSuggestInteractionProfileBindings(self->instance, &simpleSuggestedBindings);
+	if (!xr_result(self->instance, result, "failed to suggest simple bindings"))
 		return  NULL;
+
+	if (/* TODO: remove when ext exists */ true || self->monado_stick_on_ball_ext) {
+		XrPath triggerPath[HANDCOUNT];
+		xrStringToPath(self->instance, "/user/hand/left/input/trigger", &triggerPath[HAND_LEFT]);
+		xrStringToPath(self->instance, "/user/hand/right/input/trigger", &triggerPath[HAND_RIGHT]);
+
+		XrPath menuPath[HANDCOUNT];
+		xrStringToPath(self->instance, "/user/hand/left/input/menu/click", &menuPath[HAND_LEFT]);
+		xrStringToPath(self->instance, "/user/hand/right/input/menu/click", &menuPath[HAND_RIGHT]);
+
+		XrPath squarePath[HANDCOUNT];
+		xrStringToPath(self->instance, "/user/hand/left/input/square_mnd/click", &squarePath[HAND_LEFT]);
+		xrStringToPath(self->instance, "/user/hand/right/input/square_mnd/click", &squarePath[HAND_RIGHT]);
+
+		const XrActionSuggestedBinding ballOnStickBindings[8] = {
+			{
+				.action = self->actions[POSE_ACTION_INDEX],
+				.binding = posePath[HAND_LEFT]
+			},
+			{
+				.action = self->actions[POSE_ACTION_INDEX],
+				.binding = posePath[HAND_RIGHT]
+			},
+			{
+				.action = self->actions[TRIGGER_ACTION_INDEX],
+				.binding = triggerPath[HAND_LEFT]
+			},
+			{
+				.action = self->actions[TRIGGER_ACTION_INDEX],
+				.binding = triggerPath[HAND_RIGHT]
+			},
+			{
+				.action = self->actions[GRAB_ACTION_INDEX],
+				.binding = squarePath[HAND_LEFT]
+			},
+			{
+				.action = self->actions[GRAB_ACTION_INDEX],
+				.binding = squarePath[HAND_RIGHT]
+			},
+			{
+				.action = self->actions[MENU_ACTION_INDEX],
+				.binding = menuPath[HAND_LEFT]
+			},
+			{
+				.action = self->actions[MENU_ACTION_INDEX],
+				.binding = menuPath[HAND_RIGHT]
+			}
+		};
+
+		XrPath ballOnStickInteractionProfilePath;
+		result = xrStringToPath(self->instance, "/interaction_profiles/mnd/ball_on_stick_controller", &ballOnStickInteractionProfilePath);
+
+		const XrInteractionProfileSuggestedBinding ballOnStickSuggestedBindings = {
+			.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
+			.next = NULL,
+			.interactionProfile = ballOnStickInteractionProfilePath,
+			.countSuggestedBindings = 8,
+			.suggestedBindings = ballOnStickBindings
+		};
+		xrSuggestInteractionProfileBindings(self->instance, &ballOnStickSuggestedBindings);
+		if (!xr_result(self->instance, result, "failed to suggest ball on stick bindings"))
+			return  NULL;
+
+	}
 
 	XrActionSpaceCreateInfo actionSpaceInfo = {
 		.type = XR_TYPE_ACTION_SPACE_CREATE_INFO,
@@ -929,8 +1039,14 @@ update_controllers(OPENXR_API_HANDLE _self)
 	result = xrSyncActions(self->session, &syncInfo);
 	xr_result(self->instance, result, "failed to sync actions!");
 
-	XrActionStateFloat grabStates[HANDCOUNT];
-	_getActionStates(self, self->actions[GRAB_ACTION_INDEX], XR_TYPE_ACTION_STATE_FLOAT, (void**)grabStates);
+	XrActionStateFloat triggerStates[HANDCOUNT];
+	_getActionStates(self, self->actions[TRIGGER_ACTION_INDEX], XR_TYPE_ACTION_STATE_FLOAT, (void**)triggerStates);
+
+	XrActionStateBoolean grabStates[HANDCOUNT];
+	_getActionStates(self, self->actions[GRAB_ACTION_INDEX], XR_TYPE_ACTION_STATE_BOOLEAN, (void**)grabStates);
+
+	XrActionStateBoolean menuStates[HANDCOUNT];
+	_getActionStates(self, self->actions[MENU_ACTION_INDEX], XR_TYPE_ACTION_STATE_BOOLEAN, (void**)menuStates);
 
 	XrActionStatePose poseStates[HANDCOUNT];
 	_getActionStates(self, self->actions[POSE_ACTION_INDEX], XR_TYPE_ACTION_STATE_POSE, (void**)poseStates);
@@ -971,6 +1087,34 @@ update_controllers(OPENXR_API_HANDLE _self)
 		*/
 		
 		arvr_api->godot_arvr_set_controller_transform(self->godot_controllers[i], &controller_transform, true, true);
+
+
+
+		// TODO: dynamic binding
+		const int triggerButton = 15;
+		const int grabButton = 2;
+		const int menuButton = 1;
+
+#if DEBUG_INPUT
+		printf("%d: trigger active %d changed %d state %f\n",
+			i, triggerStates[i].isActive, triggerStates[i].changedSinceLastSync, triggerStates[i].currentState);
+
+		printf("%d: grab active %d changed %d state %d\n",
+			i, grabStates[i].isActive, grabStates[i].changedSinceLastSync, grabStates[i].currentState);
+
+		printf("%d: menu active %d changed %d state %d\n",
+			i, menuStates[i].isActive, menuStates[i].changedSinceLastSync, menuStates[i].currentState);
+#endif
+
+		if (triggerStates[i].isActive && triggerStates[i].changedSinceLastSync) {
+			arvr_api->godot_arvr_set_controller_button(self->godot_controllers[i], triggerButton, triggerStates[i].currentState);
+		}
+		if (grabStates[i].isActive && grabStates[i].changedSinceLastSync) {
+			arvr_api->godot_arvr_set_controller_button(self->godot_controllers[i], grabButton, grabStates[i].currentState);
+		}
+		if (menuStates[i].isActive && menuStates[i].changedSinceLastSync) {
+			arvr_api->godot_arvr_set_controller_button(self->godot_controllers[i], menuButton, menuStates[i].currentState);
+		}
 	};
 }
 

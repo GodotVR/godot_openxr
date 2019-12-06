@@ -44,6 +44,19 @@ Testing
 -------
 Start Godot, open the godot_openxr/demo project and click play.
 
+Using this module in your own project
+-------------------------------------
+
+Example: Converting a godot-openvr project
+
+1. Remove the `addons/godot-openvr` directory from the project.
+2. Copy the `godot-openxr/demo/addons/godot-openxr` directory to `your_project/addons/`.
+3. If your project was already set up to use OpenVR, find `ARVRServer.find_interface("OpenVR")` and replace `"OpenVR"` with `"OpenXR"`.
+
+Since the module is laid out like godot-openvr, the basic documentation for integrating OpenVR into a project also applies to OpenXR.
+
+The only differences should be: Since there is no OpenXR asset on the store, the godot-openxr directory has to be manually put into the project's addon/ directory and in the project's gdscript the `OpenXR` string has to be used in the `find_interface()` call.
+
 License
 -------
 The source code for the module is released under MIT license (see license file).

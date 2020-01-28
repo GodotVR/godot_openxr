@@ -50,7 +50,10 @@ if platform == "osx":
 elif platform == "linux":
     platform_dir = 'linux'
     godot_openxr_path = godot_openxr_path + 'linux/'
-    env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
+    if target == "debug":
+        env.Append(CCFLAGS = ['-fPIC', '-ggdb','-O0'])
+    else:
+        env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
     env.Append(CXXFLAGS='-std=c++0x')
     env.Append(LINKFLAGS = ['-Wl,-R,\'$$ORIGIN\''])
 

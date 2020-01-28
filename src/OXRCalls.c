@@ -290,6 +290,50 @@ static XrResult _getActionStates(xr_api* self, XrAction action, XrStructureType 
 	return XR_SUCCESS;
 }
 
+static bool
+_suggestActions(xr_api* self, char *interaction_profile, XrAction *actions, XrPath **paths, int num_actions)
+{
+	XrPath interactionProfilePath;
+	XrResult result = xrStringToPath(self->instance, interaction_profile, &interactionProfilePath);
+	if (!xr_result(self->instance, result, "failed to get interaction profile path"))
+		return false;
+
+	int num_bindings = num_actions * HANDCOUNT;
+	printf("Suggesting actions for %s, %d bindings\n", interaction_profile, num_bindings);
+
+	XrActionSuggestedBinding bindings[num_bindings];
+	for (int action_count = 0; action_count < num_actions; action_count ++) {
+		for (int handCount = 0; handCount < HANDCOUNT; handCount++) {
+			int binding_index = action_count * HANDCOUNT + handCount;
+
+			bindings[binding_index].action = actions[action_count];
+			bindings[binding_index].binding = paths[action_count][handCount];
+
+#if 0
+			for (int k = 0; k < LAST_ACTION_INDEX; k++) {
+				if (self->actions[k] == actions[action_count]) {
+					printf("Binding %d, Action %d => %d\n", binding_index, k, handCount);
+				}
+			}
+#endif
+
+		}
+	}
+	const XrInteractionProfileSuggestedBinding suggestedBindings = {
+		.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
+		.next = NULL,
+		.interactionProfile = interactionProfilePath,
+		.countSuggestedBindings = num_bindings,
+		.suggestedBindings = bindings
+	};
+
+	xrSuggestInteractionProfileBindings(self->instance, &suggestedBindings);
+	if (!xr_result(self->instance, result, "failed to suggest simple bindings"))
+		return false;
+
+	return true;
+}
+
 OPENXR_API_HANDLE
 init_openxr()
 {
@@ -658,108 +702,81 @@ init_openxr()
 	xrStringToPath(self->instance, "/user/hand/left/input/select/click", &selectClickPath[HAND_LEFT]);
 	xrStringToPath(self->instance, "/user/hand/right/input/select/click", &selectClickPath[HAND_RIGHT]);
 
-	XrPath posePath[HANDCOUNT];
-	xrStringToPath(self->instance, "/user/hand/left/input/grip/pose", &posePath[HAND_LEFT]);
-	xrStringToPath(self->instance, "/user/hand/right/input/grip/pose", &posePath[HAND_RIGHT]);
+	XrPath aimPosePath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/aim/pose", &aimPosePath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/aim/pose", &aimPosePath[HAND_RIGHT]);
 
-	XrPath khrSimpleInteractionProfilePath;
-	result = xrStringToPath(self->instance, "/interaction_profiles/khr/simple_controller", &khrSimpleInteractionProfilePath);
-	if (!xr_result(self->instance, result, "failed to get interaction profile"))
-		return NULL;
+	XrPath triggerPath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/trigger", &triggerPath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/trigger", &triggerPath[HAND_RIGHT]);
 
-	 const XrActionSuggestedBinding simpleBindings[4] = {
-		{
-			.action = self->actions[POSE_ACTION_INDEX],
-			.binding = posePath[HAND_LEFT]
-		},
-		{
-			.action = self->actions[POSE_ACTION_INDEX],
-			.binding = posePath[HAND_RIGHT]
-		},
-		{
-			.action = self->actions[TRIGGER_ACTION_INDEX],
-			.binding = selectClickPath[HAND_LEFT]
-		},
-		{
-			.action = self->actions[TRIGGER_ACTION_INDEX],
-			.binding = selectClickPath[HAND_RIGHT]
-		}
-	};
+	XrPath menuPath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/menu/click", &menuPath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/menu/click", &menuPath[HAND_RIGHT]);
 
-	const XrInteractionProfileSuggestedBinding simpleSuggestedBindings = {
-		.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
-		.next = NULL,
-		.interactionProfile = khrSimpleInteractionProfilePath,
-		.countSuggestedBindings = 4,
-		.suggestedBindings = simpleBindings
-	};
+	XrPath aPath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/a/click", &aPath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/a/click", &aPath[HAND_RIGHT]);
 
-	xrSuggestInteractionProfileBindings(self->instance, &simpleSuggestedBindings);
-	if (!xr_result(self->instance, result, "failed to suggest simple bindings"))
-		return  NULL;
+	XrPath bPath[HANDCOUNT];
+	xrStringToPath(self->instance, "/user/hand/left/input/b/click", &bPath[HAND_LEFT]);
+	xrStringToPath(self->instance, "/user/hand/right/input/b/click", &bPath[HAND_RIGHT]);
 
+	// khr simple controller
+	{
+		XrAction actions[] = {
+			self->actions[POSE_ACTION_INDEX],
+			self->actions[TRIGGER_ACTION_INDEX]
+		};
+		XrPath *paths[] = {
+			aimPosePath,
+			selectClickPath
+		};
+		int num_actions = sizeof(actions) / sizeof(actions[0]);
+		if (!_suggestActions(self, "/interaction_profiles/khr/simple_controller", actions, paths, num_actions))
+			return NULL;
+	}
+
+	// valve index controller
+	{
+		XrAction actions[] = {
+			self->actions[POSE_ACTION_INDEX],
+			self->actions[TRIGGER_ACTION_INDEX],
+			self->actions[GRAB_ACTION_INDEX],
+			self->actions[MENU_ACTION_INDEX],
+		};
+		XrPath *paths[] = {
+			aimPosePath,
+			triggerPath,
+			aPath,
+			bPath
+		};
+		int num_actions = sizeof(actions) / sizeof(actions[0]);
+		if (!_suggestActions(self, "/interaction_profiles/valve/index_controller", actions, paths, num_actions))
+			return NULL;
+	}
+
+	// monado ext: ball on stick controller (psmv)
 	if (/* TODO: remove when ext exists */ true || self->monado_stick_on_ball_ext) {
-		XrPath triggerPath[HANDCOUNT];
-		xrStringToPath(self->instance, "/user/hand/left/input/trigger", &triggerPath[HAND_LEFT]);
-		xrStringToPath(self->instance, "/user/hand/right/input/trigger", &triggerPath[HAND_RIGHT]);
-
-		XrPath menuPath[HANDCOUNT];
-		xrStringToPath(self->instance, "/user/hand/left/input/menu/click", &menuPath[HAND_LEFT]);
-		xrStringToPath(self->instance, "/user/hand/right/input/menu/click", &menuPath[HAND_RIGHT]);
-
 		XrPath squarePath[HANDCOUNT];
 		xrStringToPath(self->instance, "/user/hand/left/input/square_mnd/click", &squarePath[HAND_LEFT]);
 		xrStringToPath(self->instance, "/user/hand/right/input/square_mnd/click", &squarePath[HAND_RIGHT]);
 
-		const XrActionSuggestedBinding ballOnStickBindings[8] = {
-			{
-				.action = self->actions[POSE_ACTION_INDEX],
-				.binding = posePath[HAND_LEFT]
-			},
-			{
-				.action = self->actions[POSE_ACTION_INDEX],
-				.binding = posePath[HAND_RIGHT]
-			},
-			{
-				.action = self->actions[TRIGGER_ACTION_INDEX],
-				.binding = triggerPath[HAND_LEFT]
-			},
-			{
-				.action = self->actions[TRIGGER_ACTION_INDEX],
-				.binding = triggerPath[HAND_RIGHT]
-			},
-			{
-				.action = self->actions[GRAB_ACTION_INDEX],
-				.binding = squarePath[HAND_LEFT]
-			},
-			{
-				.action = self->actions[GRAB_ACTION_INDEX],
-				.binding = squarePath[HAND_RIGHT]
-			},
-			{
-				.action = self->actions[MENU_ACTION_INDEX],
-				.binding = menuPath[HAND_LEFT]
-			},
-			{
-				.action = self->actions[MENU_ACTION_INDEX],
-				.binding = menuPath[HAND_RIGHT]
-			}
+		XrAction actions[] = {
+			self->actions[POSE_ACTION_INDEX],
+			self->actions[TRIGGER_ACTION_INDEX],
+			self->actions[GRAB_ACTION_INDEX],
+			self->actions[MENU_ACTION_INDEX],
 		};
-
-		XrPath ballOnStickInteractionProfilePath;
-		result = xrStringToPath(self->instance, "/interaction_profiles/mnd/ball_on_stick_controller", &ballOnStickInteractionProfilePath);
-
-		const XrInteractionProfileSuggestedBinding ballOnStickSuggestedBindings = {
-			.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
-			.next = NULL,
-			.interactionProfile = ballOnStickInteractionProfilePath,
-			.countSuggestedBindings = 8,
-			.suggestedBindings = ballOnStickBindings
+		XrPath *paths[] = {
+			aimPosePath,
+			triggerPath,
+			squarePath,
+			menuPath
 		};
-		xrSuggestInteractionProfileBindings(self->instance, &ballOnStickSuggestedBindings);
-		if (!xr_result(self->instance, result, "failed to suggest ball on stick bindings"))
-			return  NULL;
-
+		int num_actions = sizeof(actions) / sizeof(actions[0]);
+		if (!_suggestActions(self, "/interaction_profiles/mnd/ball_on_stick_controller", actions, paths, num_actions))
+			return NULL;
 	}
 
 	XrActionSpaceCreateInfo actionSpaceInfo = {
@@ -1079,12 +1096,13 @@ update_controllers(OPENXR_API_HANDLE _self)
 			_transform_from_rot_pos(&controller_transform, &spaceLocation[i], 1.0);
 		}
 		
-		/*
-		printf("pose for controller %d - %f %f %f - %f %f %f\n", i,
+#if 0
+		printf("pose for controller %d - %f %f %f - %f %f %f %f\n", i,
 			spaceLocation[i].pose.position.x, spaceLocation[i].pose.position.y, spaceLocation[i].pose.position.z,
 			spaceLocation[i].pose.orientation.x, spaceLocation[i].pose.orientation.y, spaceLocation[i].pose.orientation.z, spaceLocation[i].pose.orientation.w
 		);
-		*/
+#endif
+
 		
 		arvr_api->godot_arvr_set_controller_transform(self->godot_controllers[i], &controller_transform, true, true);
 

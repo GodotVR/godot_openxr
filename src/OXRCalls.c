@@ -1026,8 +1026,6 @@ void _transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location,
 	godot_quat q;
 	godot_basis basis;
 	godot_vector3 origin;
-	float ohmd_q[4];
-	float ohmd_v[4];
 
 	// convert orientation quad to position, should add helper function for this :)
 	api->godot_quat_new(&q, location->pose.orientation.x, location->pose.orientation.y, location->pose.orientation.z, location->pose.orientation.w);

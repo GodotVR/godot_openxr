@@ -304,8 +304,12 @@ init_openxr()
 	{
 		XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
 		    .type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR, .next = NULL};
-		result = xrGetOpenGLGraphicsRequirementsKHR(self->instance, systemId,
-		                                            &opengl_reqs);
+
+		PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = NULL;
+		result = xrGetInstanceProcAddr(self->instance, "xrGetOpenGLGraphicsRequirementsKHR",
+		                               (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
+		result = pfnGetOpenGLGraphicsRequirementsKHR(self->instance, systemId, &opengl_reqs);
+
 		if (!xr_result(self->instance, result,
 		               "Failed to get OpenGL graphics requirements!"))
 			return NULL;

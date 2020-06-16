@@ -24,10 +24,13 @@ godot_openxr_gdnative_init(godot_gdnative_init_options *p_options)
 			if (api->extensions[i]->version.major > 1 ||
 			    (api->extensions[i]->version.major == 1 &&
 			     api->extensions[i]->version.minor >= 1)) {
-				arvr_api = (godot_gdnative_ext_arvr_api_struct *)api->extensions[i];
+				arvr_api =
+				    (godot_gdnative_ext_arvr_api_struct *)
+				        api->extensions[i];
 			} else {
 				printf(
-				    "ARVR API version %i.%i isn't supported, need version 1.1 or "
+				    "ARVR API version %i.%i isn't supported, "
+				    "need version 1.1 or "
 				    "higher\n",
 				    api->extensions[i]->version.major,
 				    api->extensions[i]->version.minor);
@@ -38,10 +41,12 @@ godot_openxr_gdnative_init(godot_gdnative_init_options *p_options)
 			    (api->extensions[i]->version.major == 1 &&
 			     api->extensions[i]->version.minor >= 0)) {
 				nativescript_api =
-				    (godot_gdnative_ext_nativescript_api_struct *)api->extensions[i];
+				    (godot_gdnative_ext_nativescript_api_struct
+				         *)api->extensions[i];
 			} else {
 				printf(
-				    "Native script API version %i.%i isn't supported, need version 1.0 "
+				    "Native script API version %i.%i isn't "
+				    "supported, need version 1.0 "
 				    "or higher\n",
 				    api->extensions[i]->version.major,
 				    api->extensions[i]->version.minor);

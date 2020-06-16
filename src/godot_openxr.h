@@ -7,9 +7,9 @@
 #ifndef GODOT_OPENXR_H
 #define GODOT_OPENXR_H
 
+#include "ARVRInterface.h"
 #include "GodotCalls.h"
 #include <openxr/openxr.h>
-#include "ARVRInterface.h"
 
 // declare our public functions for our ARVR Interface
 

@@ -11,6 +11,7 @@ func _ready():
 		get_viewport().arvr = true
 		print("Started ARVR")
 		
+		Engine.iterations_per_second = 144
 
 
 func _process(delta):

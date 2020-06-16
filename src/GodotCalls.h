@@ -60,11 +60,11 @@ typedef union {
 #endif
 
 #include <gdnative_api_struct.gen.h>
+#include <math.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
 // forward declarations
 extern const godot_gdnative_core_api_struct *api;

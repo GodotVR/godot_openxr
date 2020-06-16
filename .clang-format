@@ -1,0 +1,50 @@
+---
+# SPDX-LicenseIdentifier: CC0-1.0
+# SPDX-FileCopyrightText: 2019, Collabora, Ltd.
+Language:             Cpp
+BasedOnStyle:         LLVM
+Standard:             Auto
+
+# Includes
+SortIncludes:         false
+
+# Spacing and Blank Lines
+DerivePointerAlignment: false
+PointerAlignment:       Right
+#AlignEscapedNewlines:   DontAlign
+#AlignConsecutiveDeclarations: false
+#AlignConsecutiveAssignments: false
+MaxEmptyLinesToKeep:    3
+
+# Indentation
+IndentWidth:          8
+TabWidth:             8
+UseTab:               ForIndentation
+AccessModifierOffset: -8
+IndentCaseLabels: false
+NamespaceIndentation: Inner
+
+# Line length/reflow
+ColumnLimit:          80
+ReflowComments:       true
+
+
+# Line breaks
+AlwaysBreakAfterReturnType: All
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: false
+AllowShortCaseLabelsOnASingleLine: true
+AlwaysBreakBeforeMultilineStrings: true
+BreakBeforeBraces:    Custom
+BraceWrapping:
+  AfterEnum:          true
+  AfterStruct:        true
+  AfterClass:         true
+  SplitEmptyFunction: false
+  AfterFunction:      true
+  AfterNamespace:     false
+
+# false means either "all on one line" or "each on their own",
+# won't put more than one on a line if they don't all fit.
+BinPackArguments:     true
+BinPackParameters:    false

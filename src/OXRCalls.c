@@ -941,7 +941,7 @@ render_openxr(OPENXR_API_HANDLE _self, int eye, uint32_t texid)
 		self->projection_views[eye].fov = self->views[eye].fov;
 
 		self->projection_views[eye].subImage.swapchain = self->swapchains[eye];
-		self->projection_views[eye].subImage.imageArrayIndex = bufferIndex;
+		self->projection_views[eye].subImage.imageArrayIndex = 0;
 		self->projection_views[eye].subImage.imageRect.offset.x = 0;
 		self->projection_views[eye].subImage.imageRect.offset.y = 0;
 		self->projection_views[eye].subImage.imageRect.extent.width =

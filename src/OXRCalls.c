@@ -1022,10 +1022,16 @@ fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f* matrix)
 	}
 }
 
-void _transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location, float p_world_scale) {
+bool _transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location, float p_world_scale) {
 	godot_quat q;
 	godot_basis basis;
 	godot_vector3 origin;
+
+	if (location->pose.orientation.x == 0 &&
+		location->pose.orientation.y == 0 &&
+		location->pose.orientation.z == 0 &&
+		location->pose.orientation.w == 0)
+		return false;
 
 	// convert orientation quad to position, should add helper function for this :)
 	api->godot_quat_new(&q, location->pose.orientation.x, location->pose.orientation.y, location->pose.orientation.z, location->pose.orientation.w);
@@ -1033,6 +1039,8 @@ void _transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location,
 	
 	api->godot_vector3_new(&origin, location->pose.position.x * p_world_scale, location->pose.position.y * p_world_scale, location->pose.position.z * p_world_scale);
 	api->godot_transform_new(p_dest, &basis, &origin);
+
+	return true;
 };
 
 void
@@ -1072,7 +1080,7 @@ update_controllers(OPENXR_API_HANDLE _self)
 
 	for (int i = 0; i < HANDCOUNT; i++) {
 		if (!poseStates[i].isActive) {
-			printf("Pose for hand %d is not active %d\n", i, poseStates[i].isActive);
+			//printf("Pose for hand %d is not active %d\n", i, poseStates[i].isActive);
 			continue;
 		}
 
@@ -1091,7 +1099,10 @@ update_controllers(OPENXR_API_HANDLE _self)
 			continue;
 			//printf("Setting identity for controller %d\n", i);
 		} else {
-			_transform_from_rot_pos(&controller_transform, &spaceLocation[i], 1.0);
+			if (!_transform_from_rot_pos(&controller_transform, &spaceLocation[i], 1.0)) {
+				printf("Pose for hand %d is active but invalid\n", i);
+				continue;
+			}
 		}
 		
 #if 0

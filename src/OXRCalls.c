@@ -552,10 +552,26 @@ init_openxr()
 	               "Failed to enumerate swapchain formats"))
 		return NULL;
 
-	int64_t swapchainFormatToUse = swapchainFormats[0];
-	self->swapchains = malloc(sizeof(XrSwapchain) * self->view_count);
-	uint32_t swapchainLength[self->view_count];
-	for (uint32_t i = 0; i < self->view_count; i++) {
+        const bool SRGB_SWAPCHAIN = false;
+
+        int64_t swapchainFormatToUse = swapchainFormats[0];
+
+        printf("Swapchain Formats\n");
+        for (int i = 0; i < swapchainFormatCount; i++) {
+          printf("%lX\n", swapchainFormats[i]);
+          if (SRGB_SWAPCHAIN && swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
+            swapchainFormatToUse = swapchainFormats[i];
+            printf("Using SRGB swapchain!\n");
+          }
+          if (!SRGB_SWAPCHAIN && swapchainFormats[i] == GL_RGBA8_EXT) {
+            swapchainFormatToUse = swapchainFormats[i];
+            printf("Using RGBA swapchain!\n");
+          }
+        }
+
+        self->swapchains = malloc(sizeof(XrSwapchain) * self->view_count);
+        uint32_t swapchainLength[self->view_count];
+        for (uint32_t i = 0; i < self->view_count; i++) {
 		XrSwapchainCreateInfo swapchainCreateInfo = {
 		    .type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
 		    .usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT |

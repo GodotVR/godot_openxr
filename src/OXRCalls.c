@@ -134,7 +134,7 @@ xr_result(XrInstance instance, XrResult result, const char* format, ...)
 
 	size_t len1 = strlen(format);
 	size_t len2 = strlen(resultString) + 1;
-	char formatRes[len1 + len2 + 4]; // + " []\n"
+	char formatRes[len1 + len2 + 5]; // + " []\n"
 	sprintf(formatRes, "%s [%s]\n", format, resultString);
 
 	va_list args;

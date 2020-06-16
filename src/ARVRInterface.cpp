@@ -7,6 +7,8 @@
 typedef struct arvr_data_struct
 {
 	openxr_data_struct *oxr;
+
+        bool has_external_texture_support;
 } arvr_data_struct;
 
 godot_string
@@ -273,8 +275,9 @@ godot_arvr_commit_for_eye(void *p_data,
 
 	if (arvr_data->oxr != NULL) {
 		uint32_t texid = arvr_api->godot_arvr_get_texid(p_render_target);
-		render_openxr(arvr_data->oxr->api, p_eye - 1, texid);
-	};
+                render_openxr(arvr_data->oxr->api, p_eye - 1, texid,
+                              &arvr_data->has_external_texture_support);
+        };
 };
 
 void
@@ -316,21 +319,28 @@ godot_arvr_destructor(void *p_data)
 	};
 }
 
+int godot_arvr_get_external_texture_for_eye(void *p_data, int p_eye) {
+  arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
+
+  // this only gets called from Godot 3.2 and newer, allows us to use OpenXR
+  // swapchain directly.
+
+  return get_external_texture_for_eye(arvr_data->oxr->api, p_eye - 1,
+                                      &arvr_data->has_external_texture_support);
+}
+
+void godot_arvr_notification(void *p_data, int p_what) {
+  // nothing to do here for now but we should implement this.
+}
+
 const godot_arvr_interface_gdnative interface_struct = {
-    GODOTVR_API_MAJOR,
-    GODOTVR_API_MINOR,
-    godot_arvr_constructor,
-    godot_arvr_destructor,
-    godot_arvr_get_name,
-    godot_arvr_get_capabilities,
+    GODOTVR_API_MAJOR, GODOTVR_API_MINOR, godot_arvr_constructor,
+    godot_arvr_destructor, godot_arvr_get_name, godot_arvr_get_capabilities,
     godot_arvr_get_anchor_detection_is_enabled,
-    godot_arvr_set_anchor_detection_is_enabled,
-    godot_arvr_is_stereo,
-    godot_arvr_is_initialized,
-    godot_arvr_initialize,
-    godot_arvr_uninitialize,
-    godot_arvr_get_render_targetsize,
-    godot_arvr_get_transform_for_eye,
-    godot_arvr_fill_projection_for_eye,
-    godot_arvr_commit_for_eye,
-    godot_arvr_process};
+    godot_arvr_set_anchor_detection_is_enabled, godot_arvr_is_stereo,
+    godot_arvr_is_initialized, godot_arvr_initialize, godot_arvr_uninitialize,
+    godot_arvr_get_render_targetsize, godot_arvr_get_transform_for_eye,
+    godot_arvr_fill_projection_for_eye, godot_arvr_commit_for_eye,
+    godot_arvr_process,
+    // only available in Godot 3.2+
+    godot_arvr_get_external_texture_for_eye, godot_arvr_notification};

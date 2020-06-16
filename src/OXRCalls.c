@@ -108,9 +108,13 @@ typedef struct xr_api
 	XrCompositionLayerProjection* projectionLayer;
 	XrFrameState* frameState;
 	bool running;
-	bool visible;
 
-	XrView* views;
+        XrSessionState state;
+        bool should_render;
+
+        uint32_t buffer_index;
+
+        XrView* views;
 	XrCompositionLayerProjectionView* projection_views;
 	
 	XrActionSet actionSet;
@@ -338,7 +342,11 @@ OPENXR_API_HANDLE
 init_openxr()
 {
 	xr_api* self = malloc(sizeof(xr_api));
-	self->monado_stick_on_ball_ext = false;
+
+        self->state = XR_SESSION_STATE_UNKNOWN;
+        self->should_render = false;
+
+        self->monado_stick_on_ball_ext = false;
 
 	XrResult result;
 
@@ -590,11 +598,6 @@ init_openxr()
 		}
     }
 
-	// self->framebuffers = malloc(sizeof(GLuint*) * self->view_count);
-	// for (uint32_t i = 0; i < self->view_count; i++)
-	//	self->framebuffers[i] = malloc(sizeof(GLuint) * maxSwapchainLength);
-
-
 	for (uint32_t i = 0; i < self->view_count; i++) {
 		result = xrEnumerateSwapchainImages(
 		    self->swapchains[i], swapchainLength[i], &swapchainLength[i],
@@ -602,10 +605,7 @@ init_openxr()
 		if (!xr_result(self->instance, result,
 		               "Failed to enumerate swapchain images"))
 			return NULL;
-
-		//	glGenFramebuffers(swapchainLength[i], self->framebuffers[i]);
 	}
-
 
 	// only used for OpenGL depth testing
 	/*
@@ -629,9 +629,8 @@ init_openxr()
 	self->frameState->type = XR_TYPE_FRAME_STATE;
 	self->frameState->next = NULL;
 
-	// we will be made visiblke by runtime events
-	self->visible = false;
-	self->running = true;
+        // we will be made visible by runtime events
+        self->running = true;
 
 	self->views = malloc(sizeof(XrView) * self->view_count);
 	self->projection_views =
@@ -814,178 +813,179 @@ init_openxr()
 	return (OPENXR_API_HANDLE)self;
 }
 
-void
-render_openxr(OPENXR_API_HANDLE _self, int eye, uint32_t texid)
-{
-	xr_api* self = (xr_api*)_self;
-	// printf("Render eye %d texture %d\n", eye, texid);
-	XrResult result;
+void render_openxr(OPENXR_API_HANDLE _self, int eye, uint32_t texid,
+                   bool has_external_texture_support) {
+  xr_api *self = (xr_api *)_self;
+  // printf("Render eye %d texture %d\n", eye, texid);
+  XrResult result;
 
-	// if eye == 0, begin frame and do set up, render left eye.
-	// if eye == 1, render right eye and endframe.
-	// TODO: HMDs with more than 2 views.
+  // if eye == 0, begin frame and do set up, render left eye.
+  // if eye == 1, render right eye and endframe.
+  // TODO: HMDs with more than 2 views.
 
-	if (eye == 0) {
-		XrFrameWaitInfo frameWaitInfo = {.type = XR_TYPE_FRAME_WAIT_INFO,
-		                                 .next = NULL};
-		result = xrWaitFrame(self->session, &frameWaitInfo, self->frameState);
-		if (!xr_result(self->instance, result,
-		               "xrWaitFrame() was not successful, exiting..."))
-			return;
+  if (eye == 0) {
+    XrFrameWaitInfo frameWaitInfo = {.type = XR_TYPE_FRAME_WAIT_INFO,
+                                     .next = NULL};
+    result = xrWaitFrame(self->session, &frameWaitInfo, self->frameState);
+    if (!xr_result(self->instance, result,
+                   "xrWaitFrame() was not successful, exiting..."))
+      return;
 
-		XrEventDataBuffer runtimeEvent = {.type = XR_TYPE_EVENT_DATA_BUFFER,
-		                                  .next = NULL};
-		XrResult pollResult = xrPollEvent(self->instance, &runtimeEvent);
-		if (pollResult == XR_SUCCESS) {
-			switch (runtimeEvent.type) {
-			case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
-				printf("EVENT: events data lost!\n");
-				XrEventDataEventsLost* event = (XrEventDataEventsLost*)&runtimeEvent;
-				// do we care if the runtmime loses events?
-				break;
-			}
-			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
-				printf("EVENT: instance loss pending!\n");
-				XrEventDataInstanceLossPending* event =
-				    (XrEventDataInstanceLossPending*)&runtimeEvent;
-				self->running = false;
-				return;
-			}
-			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-				printf("EVENT: session state changed ");
-				XrEventDataSessionStateChanged* event =
-				    (XrEventDataSessionStateChanged*)&runtimeEvent;
-				XrSessionState state = event->state;
+    XrEventDataBuffer runtimeEvent = {.type = XR_TYPE_EVENT_DATA_BUFFER,
+                                      .next = NULL};
+    XrResult pollResult = xrPollEvent(self->instance, &runtimeEvent);
+    if (pollResult == XR_SUCCESS) {
+      switch (runtimeEvent.type) {
+      case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
+        printf("EVENT: events data lost!\n");
+        XrEventDataEventsLost *event = (XrEventDataEventsLost *)&runtimeEvent;
+        // do we care if the runtmime loses events?
+        break;
+      }
+      case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
+        printf("EVENT: instance loss pending!\n");
+        XrEventDataInstanceLossPending *event =
+            (XrEventDataInstanceLossPending *)&runtimeEvent;
+        self->running = false;
+        return;
+      }
+      case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
+        printf("EVENT: session state changed ");
+        XrEventDataSessionStateChanged *event =
+            (XrEventDataSessionStateChanged *)&runtimeEvent;
+        XrSessionState state = event->state;
 
-				// it would be better to handle each state change
-				self->visible = event->state <= XR_SESSION_STATE_FOCUSED;
-				printf("to %d. Visible: %d", state, self->visible);
-				if (event->state >= XR_SESSION_STATE_STOPPING) {
-					printf("Abort Mission!");
-					self->running = false;
-				}
-				printf("\n");
-				return;
-			}
-			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
-				printf("EVENT: reference space change pengind!\n");
-				XrEventDataReferenceSpaceChangePending* event =
-				    (XrEventDataReferenceSpaceChangePending*)&runtimeEvent;
-				// TODO: do something
-				break;
-			}
-			case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
-				printf("EVENT: interaction profile changed!\n");
-				XrEventDataInteractionProfileChanged* event =
-				    (XrEventDataInteractionProfileChanged*)&runtimeEvent;
-				// TODO: do something
-				break;
-			}
-			default: printf("Unhandled event type %d\n", runtimeEvent.type); break;
-			}
-		} else if (pollResult == XR_EVENT_UNAVAILABLE) {
-			// this is the usual case
-		} else {
-			printf("Failed to poll events!\n");
-			return;
-		}
+        // it would be better to handle each state change
+        self->state = event->state;
+        printf("to %d", state);
+        if (event->state >= XR_SESSION_STATE_STOPPING) {
+          printf("\nAbort Mission!\n");
+          self->running = false;
+          return;
+        }
+        printf("\n");
+      }
+      case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
+        printf("EVENT: reference space change pengind!\n");
+        XrEventDataReferenceSpaceChangePending *event =
+            (XrEventDataReferenceSpaceChangePending *)&runtimeEvent;
+        // TODO: do something
+        break;
+      }
+      case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
+        printf("EVENT: interaction profile changed!\n");
+        XrEventDataInteractionProfileChanged *event =
+            (XrEventDataInteractionProfileChanged *)&runtimeEvent;
+        // TODO: do something
+        break;
+      }
+      default:
+        printf("Unhandled event type %d\n", runtimeEvent.type);
+        break;
+      }
+    } else if (pollResult == XR_EVENT_UNAVAILABLE) {
+      // this is the usual case
+    } else {
+      printf("Failed to poll events!\n");
+      return;
+    }
 
-		if (!self->running || !self->visible)
-			return;
+    // TODO: save resources in some states where we don't need to do anything
+    if (!self->running || self->state >= XR_SESSION_STATE_STOPPING)
+      return;
 
-		XrViewLocateInfo viewLocateInfo = {
-		    .type = XR_TYPE_VIEW_LOCATE_INFO,
-		    .displayTime = self->frameState->predictedDisplayTime,
-		    .space = self->local_space};
-		XrViewState viewState = {.type = XR_TYPE_VIEW_STATE, .next = NULL};
-		uint32_t viewCountOutput;
-		result = xrLocateViews(self->session, &viewLocateInfo, &viewState,
-		                       self->view_count, &viewCountOutput, self->views);
-		if (!xr_result(self->instance, result, "Could not locate views"))
-			return;
+    XrViewLocateInfo viewLocateInfo = {
+        .type = XR_TYPE_VIEW_LOCATE_INFO,
+        .displayTime = self->frameState->predictedDisplayTime,
+        .space = self->local_space};
+    XrViewState viewState = {.type = XR_TYPE_VIEW_STATE, .next = NULL};
+    uint32_t viewCountOutput;
+    result = xrLocateViews(self->session, &viewLocateInfo, &viewState,
+                           self->view_count, &viewCountOutput, self->views);
+    if (!xr_result(self->instance, result, "Could not locate views"))
+      return;
 
-		XrFrameBeginInfo frameBeginInfo = {.type = XR_TYPE_FRAME_BEGIN_INFO,
-		                                   .next = NULL};
+    XrFrameBeginInfo frameBeginInfo = {.type = XR_TYPE_FRAME_BEGIN_INFO,
+                                       .next = NULL};
 
-		result = xrBeginFrame(self->session, &frameBeginInfo);
-		if (!xr_result(self->instance, result, "failed to begin frame!"))
-			return;
-	}
+    result = xrBeginFrame(self->session, &frameBeginInfo);
+    if (!xr_result(self->instance, result, "failed to begin frame!"))
+      return;
+  }
 
-	// common render code
-	if (eye == 0 || eye == 1) {
-		XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
-		    .type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = NULL};
-		uint32_t bufferIndex;
-		result = xrAcquireSwapchainImage(self->swapchains[eye],
-		                                 &swapchainImageAcquireInfo, &bufferIndex);
-		if (!xr_result(self->instance, result,
-		               "failed to acquire swapchain image!"))
-			return;
+  // common render code
+  if (eye == 0 || eye == 1) {
+    XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
+        .type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = NULL};
+    result = xrAcquireSwapchainImage(
+        self->swapchains[eye], &swapchainImageAcquireInfo, &self->buffer_index);
+    if (!xr_result(self->instance, result,
+                   "failed to acquire swapchain image!"))
+      return;
 
-		XrSwapchainImageWaitInfo swapchainImageWaitInfo = {
-		    .type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO,
-		    .next = NULL,
-		    .timeout = 1000};
-		result =
-		    xrWaitSwapchainImage(self->swapchains[eye], &swapchainImageWaitInfo);
-		if (!xr_result(self->instance, result,
-		               "failed to wait for swapchain image!"))
-			return;
+    XrSwapchainImageWaitInfo swapchainImageWaitInfo = {
+        .type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO,
+        .next = NULL,
+        .timeout = 1000};
+    result =
+        xrWaitSwapchainImage(self->swapchains[eye], &swapchainImageWaitInfo);
+    if (!xr_result(self->instance, result,
+                   "failed to wait for swapchain image!"))
+      return;
 
+    self->projection_views[eye].type =
+        XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
+    self->projection_views[eye].next = NULL;
+    self->projection_views[eye].pose = self->views[eye].pose;
+    self->projection_views[eye].fov = self->views[eye].fov;
 
-		self->projection_views[eye].type =
-		    XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
-		self->projection_views[eye].next = NULL;
-		self->projection_views[eye].pose = self->views[eye].pose;
-		self->projection_views[eye].fov = self->views[eye].fov;
+    self->projection_views[eye].subImage.swapchain = self->swapchains[eye];
+    self->projection_views[eye].subImage.imageArrayIndex = 0;
+    self->projection_views[eye].subImage.imageRect.offset.x = 0;
+    self->projection_views[eye].subImage.imageRect.offset.y = 0;
+    self->projection_views[eye].subImage.imageRect.extent.width =
+        self->configuration_views[eye].recommendedImageRectWidth;
+    self->projection_views[eye].subImage.imageRect.extent.height =
+        self->configuration_views[eye].recommendedImageRectHeight;
 
-		self->projection_views[eye].subImage.swapchain = self->swapchains[eye];
-		self->projection_views[eye].subImage.imageArrayIndex = 0;
-		self->projection_views[eye].subImage.imageRect.offset.x = 0;
-		self->projection_views[eye].subImage.imageRect.offset.y = 0;
-		self->projection_views[eye].subImage.imageRect.extent.width =
-		    self->configuration_views[eye].recommendedImageRectWidth;
-		self->projection_views[eye].subImage.imageRect.extent.height =
-		    self->configuration_views[eye].recommendedImageRectHeight;
+    XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
+        .type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, .next = NULL};
+    result = xrReleaseSwapchainImage(self->swapchains[eye],
+                                     &swapchainImageReleaseInfo);
+    if (!xr_result(self->instance, result,
+                   "failed to release swapchain image!"))
+      return;
 
-		XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-		    .type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, .next = NULL};
-		result = xrReleaseSwapchainImage(self->swapchains[eye],
-		                                 &swapchainImageReleaseInfo);
-		if (!xr_result(self->instance, result,
-		               "failed to release swapchain image!"))
-			return;
+    if (!has_external_texture_support) {
+      glBindTexture(GL_TEXTURE_2D, texid);
+      glCopyTextureSubImage2D(
+          self->images[eye][self->buffer_index].image, 0, 0, 0, 0, 0,
+          self->configuration_views[eye].recommendedImageRectWidth,
+          self->configuration_views[eye].recommendedImageRectHeight);
+      glBindTexture(GL_TEXTURE_2D, 0);
+      // printf("Copy godot texture %d into XR texture %d\n", texid,
+      // self->images[eye][bufferIndex].image);
+    } else {
+      // printf("Godot already rendered into our textures\n");
+    }
+  }
 
-		// we can't tell godot to render into our texture, so we just copy godot's
-		// texture to our texture
-		// besides, godot always uses the same texture
-		glBindTexture(GL_TEXTURE_2D, texid);
-		glCopyTextureSubImage2D(
-		    self->images[eye][bufferIndex].image, 0, 0, 0, 0, 0,
-		    self->configuration_views[eye].recommendedImageRectWidth,
-		    self->configuration_views[eye].recommendedImageRectHeight);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		// printf("Copy godot texture %d into XR texture %d\n", texid,
-		// self->images[eye][bufferIndex].image);
-	}
+  if (eye == 1) {
+    self->projectionLayer->views = self->projection_views;
 
-	if (eye == 1) {
-		self->projectionLayer->views = self->projection_views;
-
-		const XrCompositionLayerBaseHeader* const projectionlayers[1] = {
-		    (const XrCompositionLayerBaseHeader* const)self->projectionLayer};
-		XrFrameEndInfo frameEndInfo = {
-		    .type = XR_TYPE_FRAME_END_INFO,
-		    .displayTime = self->frameState->predictedDisplayTime,
-		    .layerCount = 1,
-		    .layers = projectionlayers,
-		    .environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-		    .next = NULL};
-		result = xrEndFrame(self->session, &frameEndInfo);
-		if (!xr_result(self->instance, result, "failed to end frame!"))
-			return;
-	}
+    const XrCompositionLayerBaseHeader *const projectionlayers[1] = {
+        (const XrCompositionLayerBaseHeader *const)self->projectionLayer};
+    XrFrameEndInfo frameEndInfo = {
+        .type = XR_TYPE_FRAME_END_INFO,
+        .displayTime = self->frameState->predictedDisplayTime,
+        .layerCount = 1,
+        .layers = projectionlayers,
+        .environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
+        .next = NULL};
+    result = xrEndFrame(self->session, &frameEndInfo);
+    if (!xr_result(self->instance, result, "failed to end frame!"))
+      return;
+  }
 }
 
 void
@@ -998,12 +998,12 @@ fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f* matrix)
 		views[i].next = NULL;
 	};
 
-	XrViewLocateInfo viewLocateInfo = {
-	    .type = XR_TYPE_VIEW_LOCATE_INFO,
-	    .displayTime = 0, // TODO!!! frameState.predictedDisplayTime,
-	    .space = self->local_space};
+        XrViewLocateInfo viewLocateInfo = {
+            .type = XR_TYPE_VIEW_LOCATE_INFO,
+            .displayTime = self->frameState->predictedDisplayTime,
+            .space = self->local_space};
 
-	XrViewState viewState = {.type = XR_TYPE_VIEW_STATE, .next = NULL};
+        XrViewState viewState = {.type = XR_TYPE_VIEW_STATE, .next = NULL};
 	uint32_t viewCountOutput;
 	XrResult result = xrLocateViews(self->session, &viewLocateInfo, &viewState,
 	                                self->view_count, &viewCountOutput, views);
@@ -1074,8 +1074,6 @@ update_controllers(OPENXR_API_HANDLE _self)
 	XrActionStatePose poseStates[HANDCOUNT];
 	_getActionStates(self, self->actions[POSE_ACTION_INDEX], XR_TYPE_ACTION_STATE_POSE, (void**)poseStates);
 
-	//printf("Grab active %d, current %f, changed %d\n", grabValue.isActive, grabValue.currentState, grabValue.changedSinceLastSync);
-
 	XrSpaceLocation spaceLocation[HANDCOUNT];
 
 	for (int i = 0; i < HANDCOUNT; i++) {
@@ -1097,7 +1095,6 @@ update_controllers(OPENXR_API_HANDLE _self)
 		if (!spaceLocationValid) {
 			printf("Space location not valid for hand %d\n", i);
 			continue;
-			//printf("Setting identity for controller %d\n", i);
 		} else {
 			if (!_transform_from_rot_pos(&controller_transform, &spaceLocation[i], 1.0)) {
 				printf("Pose for hand %d is active but invalid\n", i);
@@ -1168,8 +1165,24 @@ get_view_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f* matrix)
 	    &viewMatrix, &self->views[eye].pose.position,
 	    &self->views[eye].pose.orientation, &uniformScale);
 
-	// Calculates the inverse of a rigid body transform.
-	XrMatrix4x4f inverseViewMatrix;
 	XrMatrix4x4f_InvertRigidBody(matrix, &viewMatrix);
 	return true;
+}
+
+int get_external_texture_for_eye(OPENXR_API_HANDLE _self, int eye,
+                                 bool *has_support) {
+  xr_api *self = (xr_api *)_self;
+
+  // this only gets called from Godot 3.2 and newer, allows us to use OpenXR
+  // swapchain directly.
+
+  // process should be called by now but just in case...
+  if (self->state > XR_SESSION_STATE_UNKNOWN) {
+    // make sure we know that we're rendering directly to our texture chain
+    *has_support = true;
+    // printf("eye %d: get texture %d\n", eye, self->buffer_index);
+    return self->images[eye][self->buffer_index].image;
+  }
+
+  return 0;
 }

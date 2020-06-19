@@ -530,8 +530,16 @@ init_openxr()
 		    desired_opengl_version <
 		        opengl_reqs.minApiVersionSupported) {
 			printf(
-			    "Runtime does not support OpenGL Version 4.5.0!\n");
-			return NULL;
+			    "OpenXR Runtime only supports OpenGL version %d.%d "
+			    "- %d.%d!\n",
+			    XR_VERSION_MAJOR(
+			        opengl_reqs.minApiVersionSupported),
+			    XR_VERSION_MINOR(
+			        opengl_reqs.minApiVersionSupported),
+			    XR_VERSION_MAJOR(
+			        opengl_reqs.maxApiVersionSupported),
+			    XR_VERSION_MINOR(
+			        opengl_reqs.maxApiVersionSupported));
 		}
 	}
 

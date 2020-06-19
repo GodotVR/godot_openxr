@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////////////////////////
-// Helper calls and singleton container for accessing openvr
+// Helper calls and singleton container for accessing openxr
 
 #ifndef OXR_CALLS_H
 #define OXR_CALLS_H

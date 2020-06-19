@@ -1,5 +1,5 @@
 ////////////////////////////////////////////////////////////////////////////
-// Oculus GDNative module for Godot
+// OpenXR GDNative module for Godot
 //
 // Based on code written by Bastiaan "Mux213" Olij,
 // with loads of help from Thomas "Karroffel" Herzog

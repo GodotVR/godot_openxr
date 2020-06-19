@@ -1,12 +1,8 @@
 ////////////////////////////////////////////////////////////////////////////
-// OpenVR GDNative module for Godot
+// OpenXR GDNative module for Godot
 //
 // Based on code written by Bastiaan "Mux213" Olij,
 // with loads of help from Thomas "Karroffel" Herzog
-
-// Note, even though this is pure C code, we're using the C++ compiler as
-// Microsoft never updated their C compiler to understand more modern dialects
-// and openvr uses pesky things such as namespaces
 
 #include "godot_openxr.h"
 

@@ -63,4 +63,7 @@ The source code for the module is released under MIT license (see license file).
 
 About this repository
 ---------------------
-This repository is a fork of godot_openhmd which was created and is maintained by Bastiaan Olij a.k.a. Mux213
+This repository is a fork of godot_openhmd which was created and is maintained by [Bastiaan Olij](https://github.com/BastiaanOlij) a.k.a. Mux213
+OpenXR implementation was created by [Christoph Haag](https://github.com/ChristophHaag/)
+
+Originally hosted on https://gitlab.freedesktop.org/monado/demos/godot_openxr now lives on https://github.com/GodotVR/godot_openxr

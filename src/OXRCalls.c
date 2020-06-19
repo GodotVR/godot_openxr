@@ -543,10 +543,15 @@ init_openxr()
 		}
 	}
 
+	// TODO: support wayland
+	// TODO: support windows
+	// TODO: maybe support xcb separately?
+	// TODO: support vulkan
 	self->graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 	    .type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
 	};
 
+	// TODO: get this from godot engine
 	self->graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
 	self->graphics_binding_gl.glxContext = glXGetCurrentContext();
 	self->graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
@@ -569,8 +574,6 @@ init_openxr()
 	                         &self->session);
 	if (!xr_result(self->instance, result, "Failed to create session"))
 		return NULL;
-
-	printf("Created session\n");
 
 	XrReferenceSpaceType playSpace = XR_REFERENCE_SPACE_TYPE_LOCAL;
 	if (!isReferenceSpaceSupported(self->instance, self->session,

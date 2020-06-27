@@ -1235,29 +1235,36 @@ process_openxr(OPENXR_API_HANDLE _self)
 	XrEventDataBuffer runtimeEvent = {.type = XR_TYPE_EVENT_DATA_BUFFER,
 	                                  .next = NULL};
 	XrResult pollResult = xrPollEvent(self->instance, &runtimeEvent);
-	if (pollResult == XR_SUCCESS) {
+	while (pollResult == XR_SUCCESS) {
 		switch (runtimeEvent.type) {
 		case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
-			printf("EVENT: events data lost!\n");
 			XrEventDataEventsLost *event =
 			    (XrEventDataEventsLost *)&runtimeEvent;
-			// do we care if the runtmime loses events?
-			break;
-		}
+
+			printf("EVENT: %d event data lost!\n",
+			       event->lostEventCount);
+			// we probably didn't poll fast enough'
+		} break;
+		case XR_TYPE_EVENT_DATA_VISIBILITY_MASK_CHANGED_KHR: {
+			XrEventDataVisibilityMaskChangedKHR *event =
+			    (XrEventDataVisibilityMaskChangedKHR
+			         *)&runtimeEvent;
+			printf("EVENT: STUB: visibility mask changed\n");
+		} break;
 		case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
-			printf("EVENT: instance loss pending!\n");
 			XrEventDataInstanceLossPending *event =
 			    (XrEventDataInstanceLossPending *)&runtimeEvent;
+			printf("EVENT: instance loss pending at %lu!\n",
+			       event->lossTime);
 			self->running = false;
 			return;
-		}
+		} break;
 		case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
 			printf("EVENT: session state changed ");
 			XrEventDataSessionStateChanged *event =
 			    (XrEventDataSessionStateChanged *)&runtimeEvent;
 			XrSessionState state = event->state;
 
-			// it would be better to handle each state change
 			self->state = event->state;
 			printf("to %d", state);
 			if (event->state >= XR_SESSION_STATE_STOPPING) {
@@ -1266,29 +1273,72 @@ process_openxr(OPENXR_API_HANDLE _self)
 				return;
 			}
 			printf("\n");
-		}
+		} break;
 		case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
-			printf("EVENT: reference space change pending!\n");
 			XrEventDataReferenceSpaceChangePending *event =
 			    (XrEventDataReferenceSpaceChangePending
 			         *)&runtimeEvent;
+			printf(
+			    "EVENT: reference space type %d change pending!\n",
+			    event->referenceSpaceType);
 			// TODO: do something
-			break;
-		}
+		} break;
 		case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
 			printf("EVENT: interaction profile changed!\n");
 			XrEventDataInteractionProfileChanged *event =
 			    (XrEventDataInteractionProfileChanged
 			         *)&runtimeEvent;
+
+			XrInteractionProfileState state = {
+			    .type = XR_TYPE_INTERACTION_PROFILE_STATE};
+
+			XrPath hand_paths[2];
+			xrStringToPath(self->instance, "/user/hand/left",
+			               &hand_paths[0]);
+			xrStringToPath(self->instance, "/user/hand/right",
+			               &hand_paths[1]);
+			for (int i = 0; i < 2; i++) {
+				XrResult res = xrGetCurrentInteractionProfile(
+				    self->session, hand_paths[i], &state);
+				if (!xr_result(self->instance, res,
+				               "Failed to get interaction "
+				               "profile for %d",
+				               i))
+					continue;
+
+				XrPath prof = state.interactionProfile;
+
+				uint32_t strl;
+				char profile_str[XR_MAX_PATH_LENGTH];
+				res = xrPathToString(self->instance, prof,
+				                     XR_MAX_PATH_LENGTH, &strl,
+				                     profile_str);
+				if (!xr_result(self->instance, res,
+				               "Failed to get interaction "
+				               "profile path str for %s",
+				               i == 0 ? "/user/hand/left"
+				                      : "/user/hand/right"))
+					continue;
+
+				printf(
+				    "Event: Interaction profile changed for "
+				    "%s: %s\n",
+				    i == 0 ? "/user/hand/left"
+				           : "/user/hand/right",
+				    profile_str);
+			}
+
 			// TODO: do something
-			break;
-		}
+		} break;
 		default:
 			printf("Unhandled event type %d\n", runtimeEvent.type);
 			break;
 		}
-	} else if (pollResult == XR_EVENT_UNAVAILABLE) {
-		// this is the usual case
+
+		pollResult = xrPollEvent(self->instance, &runtimeEvent);
+	}
+	if (pollResult == XR_EVENT_UNAVAILABLE) {
+		// processed all events in the queue
 	} else {
 		printf("Failed to poll events!\n");
 		return;

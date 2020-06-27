@@ -379,6 +379,45 @@ _suggestActions(xr_api *self,
 	return true;
 }
 
+static bool
+_check_graphics_requirements_gl(xr_api *self, XrSystemId system_id)
+{
+	XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
+	    .type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR, .next = NULL};
+
+	PFN_xrGetOpenGLGraphicsRequirementsKHR
+	    pfnGetOpenGLGraphicsRequirementsKHR = NULL;
+	XrResult result = xrGetInstanceProcAddr(
+	    self->instance, "xrGetOpenGLGraphicsRequirementsKHR",
+	    (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
+
+	if (!xr_result(self->instance, result,
+	               "Failed to get xrGetOpenGLGraphicsRequirementsKHR fp!"))
+		return false;
+
+	result = pfnGetOpenGLGraphicsRequirementsKHR(self->instance, system_id,
+	                                             &opengl_reqs);
+
+	if (!xr_result(self->instance, result,
+	               "Failed to get OpenGL graphics requirements!"))
+		return false;
+
+	XrVersion desired_opengl_version = XR_MAKE_VERSION(3, 3, 0);
+	if (desired_opengl_version > opengl_reqs.maxApiVersionSupported ||
+	    desired_opengl_version < opengl_reqs.minApiVersionSupported) {
+		printf(
+		    "OpenXR Runtime only supports OpenGL version %d.%d "
+		    "- %d.%d!\n",
+		    XR_VERSION_MAJOR(opengl_reqs.minApiVersionSupported),
+		    XR_VERSION_MINOR(opengl_reqs.minApiVersionSupported),
+		    XR_VERSION_MAJOR(opengl_reqs.maxApiVersionSupported),
+		    XR_VERSION_MINOR(opengl_reqs.maxApiVersionSupported));
+		// it might still work
+		return true;
+	}
+	return true;
+}
+
 OPENXR_API_HANDLE
 init_openxr()
 {
@@ -507,41 +546,8 @@ init_openxr()
 
 	self->buffer_index = malloc(sizeof(uint32_t) * self->view_count);
 
-	{
-		XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
-		    .type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR,
-		    .next = NULL};
-
-		PFN_xrGetOpenGLGraphicsRequirementsKHR
-		    pfnGetOpenGLGraphicsRequirementsKHR = NULL;
-		result = xrGetInstanceProcAddr(
-		    self->instance, "xrGetOpenGLGraphicsRequirementsKHR",
-		    (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
-		result = pfnGetOpenGLGraphicsRequirementsKHR(
-		    self->instance, systemId, &opengl_reqs);
-
-		if (!xr_result(self->instance, result,
-		               "Failed to get OpenGL graphics requirements!"))
-			return NULL;
-
-		XrVersion desired_opengl_version = XR_MAKE_VERSION(4, 5, 0);
-		if (desired_opengl_version >
-		        opengl_reqs.maxApiVersionSupported ||
-		    desired_opengl_version <
-		        opengl_reqs.minApiVersionSupported) {
-			printf(
-			    "OpenXR Runtime only supports OpenGL version %d.%d "
-			    "- %d.%d!\n",
-			    XR_VERSION_MAJOR(
-			        opengl_reqs.minApiVersionSupported),
-			    XR_VERSION_MINOR(
-			        opengl_reqs.minApiVersionSupported),
-			    XR_VERSION_MAJOR(
-			        opengl_reqs.maxApiVersionSupported),
-			    XR_VERSION_MINOR(
-			        opengl_reqs.maxApiVersionSupported));
-		}
-	}
+	if (!_check_graphics_requirements_gl(self, systemId))
+		return NULL;
 
 	// TODO: support wayland
 	// TODO: support windows

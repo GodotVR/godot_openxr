@@ -1045,7 +1045,11 @@ render_openxr(OpenXRApi *self,
 }
 
 void
-fill_projection_matrix(OpenXRApi *self, int eye, godot_real *p_projection)
+fill_projection_matrix(OpenXRApi *self,
+                       int eye,
+                       godot_real p_z_near,
+                       godot_real p_z_far,
+                       godot_real *p_projection)
 {
 	XrView views[self->view_count];
 	for (uint32_t i = 0; i < self->view_count; i++) {
@@ -1073,7 +1077,8 @@ fill_projection_matrix(OpenXRApi *self, int eye, godot_real *p_projection)
 		printf("Locate Views failed??\n");
 	} else {
 		XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL,
-		                                 views[eye].fov, 0.05f, 100.0f);
+		                                 views[eye].fov, p_z_near,
+		                                 p_z_far);
 		// printf("Fill projection matrix for eye %d / %d\n", eye,
 		// self->view_count
 		// - 1);

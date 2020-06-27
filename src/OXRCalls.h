@@ -41,7 +41,11 @@ process_openxr(OpenXRApi *self);
 
 // fill_projection_matrix() should be called after process_openxr()
 void
-fill_projection_matrix(OpenXRApi *self, int eye, godot_real *p_projection);
+fill_projection_matrix(OpenXRApi *self,
+                       int eye,
+                       godot_real p_z_near,
+                       godot_real p_z_far,
+                       godot_real *p_projection);
 
 // get_view_matrix() should be called after fill_projection_matrix()
 bool

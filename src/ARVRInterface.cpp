@@ -182,12 +182,12 @@ godot_arvr_fill_projection_for_eye(void *p_data,
 		// printf("fill projection for eye %d\n", p_eye);
 		if (p_eye == 1)
 			fill_projection_matrix(
-			    arvr_data->openxr_data->openxr_api, 0,
-			    p_projection);
+			    arvr_data->openxr_data->openxr_api, 0, p_z_near,
+			    p_z_far, p_projection);
 		else
 			fill_projection_matrix(
-			    arvr_data->openxr_data->openxr_api, 1,
-			    p_projection);
+			    arvr_data->openxr_data->openxr_api, 1, p_z_near,
+			    p_z_far, p_projection);
 		// ???
 
 		// printf("\n");

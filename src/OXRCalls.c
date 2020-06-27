@@ -1335,6 +1335,7 @@ process_openxr(OPENXR_API_HANDLE _self)
 			break;
 		}
 
+		runtimeEvent.type = XR_TYPE_EVENT_DATA_BUFFER;
 		pollResult = xrPollEvent(self->instance, &runtimeEvent);
 	}
 	if (pollResult == XR_EVENT_UNAVAILABLE) {

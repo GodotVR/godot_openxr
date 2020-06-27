@@ -620,7 +620,7 @@ init_openxr()
 	               "Failed to enumerate swapchain formats"))
 		return NULL;
 
-	const bool SRGB_SWAPCHAIN = false;
+	const bool SRGB_SWAPCHAIN = true;
 
 	int64_t swapchainFormatToUse = swapchainFormats[0];
 

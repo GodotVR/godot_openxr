@@ -5,15 +5,15 @@
 #define OXR_CALLS_H
 
 #include "GodotCalls.h"
-#include "xrmath.h"
-#include <openxr/openxr.h>
 
-typedef void *OPENXR_API_HANDLE;
+// OXRCalls encapsulates all interaction with the OpenXR API and exposes
+// the relevant results in terms of Godot types.
+typedef struct _openxr_api_private OpenXRApi;
 
-typedef struct openxr_data_struct
+typedef struct
 {
 	int use_count;
-	OPENXR_API_HANDLE api;
+	OpenXRApi *openxr_api;
 } openxr_data_struct;
 
 #ifdef __cplusplus
@@ -22,39 +22,41 @@ extern "C" {
 
 void
 openxr_release_data();
+
 openxr_data_struct *
 openxr_get_data();
 
-OPENXR_API_HANDLE
+OpenXRApi *
 init_openxr();
 
 void
-deinit_openxr(OPENXR_API_HANDLE _self);
+deinit_openxr(OpenXRApi *self);
 
 void
-render_openxr(OPENXR_API_HANDLE _self,
+render_openxr(OpenXRApi *self,
               int eye,
               uint32_t texid,
               bool has_external_texture_support);
 
 void
-fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix);
+fill_projection_matrix(OpenXRApi *self, int eye, godot_real *p_projection);
 
 void
-recommended_rendertarget_size(OPENXR_API_HANDLE _self,
+recommended_rendertarget_size(OpenXRApi *self,
                               uint32_t *width,
                               uint32_t *height);
 
 bool
-get_view_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix);
+get_view_matrix(OpenXRApi *self,
+                int eye,
+                float world_scale,
+                godot_transform *transform_for_eye);
 
 int
-get_external_texture_for_eye(OPENXR_API_HANDLE _self,
-                             int eye,
-                             bool *has_support);
+get_external_texture_for_eye(OpenXRApi *self, int eye, bool *has_support);
 
 void
-process_openxr(OPENXR_API_HANDLE _self);
+process_openxr(OpenXRApi *self);
 
 #ifdef __cplusplus
 }

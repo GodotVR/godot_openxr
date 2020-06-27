@@ -6,7 +6,7 @@
 
 typedef struct arvr_data_struct
 {
-	openxr_data_struct *oxr;
+	openxr_data_struct *openxr_data;
 
 	bool has_external_texture_support;
 } arvr_data_struct;
@@ -62,7 +62,7 @@ godot_arvr_is_initialized(const void *p_data)
 	godot_bool ret;
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
-	ret = arvr_data == NULL ? false : arvr_data->oxr != NULL;
+	ret = arvr_data == NULL ? false : arvr_data->openxr_data != NULL;
 
 	return ret;
 };
@@ -73,15 +73,15 @@ godot_arvr_initialize(void *p_data)
 	godot_bool ret;
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
-	if (arvr_data->oxr == NULL) {
-		arvr_data->oxr = openxr_get_data();
-		if (arvr_data->oxr != NULL) {
+	if (arvr_data->openxr_data == NULL) {
+		arvr_data->openxr_data = openxr_get_data();
+		if (arvr_data->openxr_data != NULL) {
 			// TODO reset state if necessary
 		};
 	};
 
 	// and return our result
-	ret = arvr_data->oxr != NULL;
+	ret = arvr_data->openxr_data != NULL;
 	return ret;
 };
 
@@ -90,7 +90,7 @@ godot_arvr_uninitialize(void *p_data)
 {
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
-	if (arvr_data->oxr != NULL) {
+	if (arvr_data->openxr_data != NULL) {
 		// note, this will already be removed as the primary interface
 		// by ARVRInterfaceGDNative
 
@@ -102,7 +102,7 @@ godot_arvr_uninitialize(void *p_data)
 		*/
 
 		openxr_release_data();
-		arvr_data->oxr = NULL;
+		arvr_data->openxr_data = NULL;
 	};
 };
 
@@ -112,11 +112,11 @@ godot_arvr_get_render_targetsize(const void *p_data)
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 	godot_vector2 size;
 
-	if (arvr_data->oxr != NULL) {
+	if (arvr_data->openxr_data != NULL) {
 		uint32_t width, height;
 
-		recommended_rendertarget_size(arvr_data->oxr->api, &width,
-		                              &height);
+		recommended_rendertarget_size(
+		    arvr_data->openxr_data->openxr_api, &width, &height);
 		// printf("Render Target size %dx%d\n", width, height);
 
 		api->godot_vector2_new(&size, width, height);
@@ -126,39 +126,6 @@ godot_arvr_get_render_targetsize(const void *p_data)
 
 	return size;
 };
-
-void
-transform_from_matrix(godot_transform *p_dest,
-                      XrMatrix4x4f *matrix,
-                      float p_world_scale)
-{
-	godot_basis basis;
-	godot_vector3 origin;
-	float *basis_ptr =
-	    (float *)&basis; // Godot can switch between real_t being
-	                     // double or float.. which one is used...
-	float m[4][4];
-
-	for (int i = 0; i < 4; i++) {
-		for (int j = 0; j < 4; j++) {
-			m[i][j] = matrix->m[(i * 4) + j];
-		}
-	}
-
-	int k = 0;
-	for (int i = 0; i < 3; i++) {
-		for (int j = 0; j < 3; j++) {
-			basis_ptr[k++] = m[i][j];
-		};
-	};
-
-	api->godot_vector3_new(&origin, -m[3][0] * p_world_scale,
-	                       -m[3][1] * p_world_scale,
-	                       -m[3][2] * p_world_scale);
-	// printf("Origin %f %f %f\n", origin.x, origin.y, origin.z);
-	api->godot_transform_new(p_dest, &basis, &origin);
-};
-
 
 godot_transform
 godot_arvr_get_transform_for_eye(void *p_data,
@@ -176,17 +143,14 @@ godot_arvr_get_transform_for_eye(void *p_data,
 	if (p_eye == 0) {
 		// we want a monoscopic transform.. shouldn't really apply here
 		api->godot_transform_new_identity(&transform_for_eye);
-	} else if (arvr_data->oxr != NULL) {
+	} else if (arvr_data->openxr_data != NULL) {
 		// printf("Get view matrix for eye %d\n", p_eye);
-		XrMatrix4x4f matrix;
 		if (p_eye == 1) {
-			get_view_matrix(arvr_data->oxr->api, 0, &matrix);
-			transform_from_matrix(&transform_for_eye, &matrix,
-			                      world_scale);
+			get_view_matrix(arvr_data->openxr_data->openxr_api, 0,
+			                world_scale, &transform_for_eye);
 		} else if (p_eye == 2) {
-			get_view_matrix(arvr_data->oxr->api, 1, &matrix);
-			transform_from_matrix(&transform_for_eye, &matrix,
-			                      world_scale);
+			get_view_matrix(arvr_data->openxr_data->openxr_api, 1,
+			                world_scale, &transform_for_eye);
 		} else {
 			// 'mono' will be requested purely for scene positioning
 			// feedback, no longer used by renderer hopefully this
@@ -214,22 +178,18 @@ godot_arvr_fill_projection_for_eye(void *p_data,
 {
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
-	if (arvr_data->oxr != NULL) {
+	if (arvr_data->openxr_data != NULL) {
 		// printf("fill projection for eye %d\n", p_eye);
-		XrMatrix4x4f projectionMatrix;
 		if (p_eye == 1)
-			fill_projection_matrix(arvr_data->oxr->api, 0,
-			                       &projectionMatrix);
+			fill_projection_matrix(
+			    arvr_data->openxr_data->openxr_api, 0,
+			    p_projection);
 		else
-			fill_projection_matrix(arvr_data->oxr->api, 1,
-			                       &projectionMatrix);
+			fill_projection_matrix(
+			    arvr_data->openxr_data->openxr_api, 1,
+			    p_projection);
 		// ???
 
-		// printf("Projection Matrix: ");
-		for (int i = 0; i < 16; i++) {
-			p_projection[i] = projectionMatrix.m[i];
-			// printf("%f ", p_projection[i]);
-		}
 		// printf("\n");
 	} else {
 		// uhm, should do something here really..
@@ -286,11 +246,11 @@ godot_arvr_commit_for_eye(void *p_data,
 		arvr_api->godot_arvr_blit(0, p_render_target, &screen_rect);
 	};
 
-	if (arvr_data->oxr != NULL) {
+	if (arvr_data->openxr_data != NULL) {
 		uint32_t texid =
 		    arvr_api->godot_arvr_get_texid(p_render_target);
-		render_openxr(arvr_data->oxr->api, p_eye - 1, texid,
-		              arvr_data->has_external_texture_support);
+		render_openxr(arvr_data->openxr_data->openxr_api, p_eye - 1,
+		              texid, arvr_data->has_external_texture_support);
 	};
 };
 
@@ -301,8 +261,8 @@ godot_arvr_process(void *p_data)
 
 	// this method gets called before every frame is rendered, here is where
 	// you should update tracking data, update controllers, etc.
-	if (arvr_data->oxr != NULL) {
-		process_openxr(arvr_data->oxr->api);
+	if (arvr_data->openxr_data != NULL) {
+		process_openxr(arvr_data->openxr_data->openxr_api);
 	}
 };
 
@@ -313,7 +273,7 @@ godot_arvr_constructor(godot_object *p_instance)
 
 	arvr_data_struct *arvr_data =
 	    (arvr_data_struct *)api->godot_alloc(sizeof(arvr_data_struct));
-	arvr_data->oxr = NULL;
+	arvr_data->openxr_data = NULL;
 	// api->godot_transform_new_identity(&arvr_data->hmd_transform);
 
 	return arvr_data;
@@ -324,7 +284,7 @@ godot_arvr_destructor(void *p_data)
 {
 	if (p_data != NULL) {
 		arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
-		if (arvr_data->oxr != NULL) {
+		if (arvr_data->openxr_data != NULL) {
 			// this should have already been called... But just in
 			// case...
 			godot_arvr_uninitialize(p_data);
@@ -343,7 +303,7 @@ godot_arvr_get_external_texture_for_eye(void *p_data, int p_eye)
 	// OpenXR swapchain directly.
 
 	return get_external_texture_for_eye(
-	    arvr_data->oxr->api, p_eye - 1,
+	    arvr_data->openxr_data->openxr_api, p_eye - 1,
 	    &arvr_data->has_external_texture_support);
 }
 

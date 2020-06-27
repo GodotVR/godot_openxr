@@ -4,6 +4,9 @@
 #include "OXRCalls.h"
 #include <stdint.h>
 
+#include "xrmath.h"
+#include <openxr/openxr.h>
+
 openxr_data_struct *openxr_data_singleton = NULL;
 
 void
@@ -22,7 +25,7 @@ openxr_release_data()
 		// cleanup openxr
 		printf("OpenXR: releasing OpenXR context\n");
 
-		deinit_openxr(openxr_data_singleton->api);
+		deinit_openxr(openxr_data_singleton->openxr_api);
 
 		api->godot_free(openxr_data_singleton);
 		openxr_data_singleton = NULL;
@@ -44,8 +47,8 @@ openxr_get_data()
 		openxr_data_singleton = (openxr_data_struct *)api->godot_alloc(
 		    sizeof(openxr_data_struct));
 		if (openxr_data_singleton != NULL) {
-			openxr_data_singleton->api = init_openxr();
-			if (openxr_data_singleton->api == NULL) {
+			openxr_data_singleton->openxr_api = init_openxr();
+			if (openxr_data_singleton->openxr_api == NULL) {
 				printf("OpenXR init failed\n");
 				api->godot_free(openxr_data_singleton);
 				openxr_data_singleton = NULL;
@@ -92,7 +95,7 @@ openxr_get_data()
 #define MENU_ACTION_INDEX 3
 #define LAST_ACTION_INDEX 4 // array size
 
-typedef struct xr_api
+struct _openxr_api_private
 {
 	XrInstance instance;
 	XrSession session;
@@ -125,7 +128,7 @@ typedef struct xr_api
 	godot_int godot_controllers[2];
 
 	bool monado_stick_on_ball_ext;
-} xr_api;
+};
 
 bool
 xr_result(XrInstance instance, XrResult result, const char *format, ...)
@@ -221,9 +224,8 @@ isReferenceSpaceSupported(XrInstance instance,
 }
 
 void
-deinit_openxr(OPENXR_API_HANDLE _self)
+deinit_openxr(OpenXRApi *self)
 {
-	xr_api *self = (xr_api *)_self;
 	free(self->projection_views);
 	free(self->configuration_views);
 	free(self->buffer_index);
@@ -246,7 +248,7 @@ deinit_openxr(OPENXR_API_HANDLE _self)
 }
 
 static XrAction
-_createAction(xr_api *self,
+_createAction(OpenXRApi *self,
               XrActionType actionType,
               char *actionName,
               char *localizedActionName)
@@ -269,7 +271,7 @@ _createAction(xr_api *self,
 }
 
 static XrResult
-_getActionStates(xr_api *self,
+_getActionStates(OpenXRApi *self,
                  XrAction action,
                  XrStructureType actionStateType,
                  void *states)
@@ -328,7 +330,7 @@ _getActionStates(xr_api *self,
 }
 
 static bool
-_suggestActions(xr_api *self,
+_suggestActions(OpenXRApi *self,
                 char *interaction_profile,
                 XrAction *actions,
                 XrPath **paths,
@@ -380,7 +382,7 @@ _suggestActions(xr_api *self,
 }
 
 static bool
-_check_graphics_requirements_gl(xr_api *self, XrSystemId system_id)
+_check_graphics_requirements_gl(OpenXRApi *self, XrSystemId system_id)
 {
 	XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
 	    .type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR, .next = NULL};
@@ -418,10 +420,10 @@ _check_graphics_requirements_gl(xr_api *self, XrSystemId system_id)
 	return true;
 }
 
-OPENXR_API_HANDLE
+OpenXRApi *
 init_openxr()
 {
-	xr_api *self = malloc(sizeof(xr_api));
+	OpenXRApi *self = malloc(sizeof(struct _openxr_api_private));
 
 	self->buffer_index = NULL;
 
@@ -916,17 +918,15 @@ init_openxr()
 	printf("initialized controllers %d %d\n", self->godot_controllers[0],
 	       self->godot_controllers[1]);
 
-	return (OPENXR_API_HANDLE)self;
+	return (OpenXRApi *)self;
 }
 
 void
-render_openxr(OPENXR_API_HANDLE _self,
+render_openxr(OpenXRApi *self,
               int eye,
               uint32_t texid,
               bool has_external_texture_support)
 {
-	xr_api *self = (xr_api *)_self;
-
 	// printf("Render eye %d texture %d\n", eye, texid);
 	XrResult result;
 
@@ -980,9 +980,8 @@ render_openxr(OPENXR_API_HANDLE _self,
 }
 
 void
-fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix)
+fill_projection_matrix(OpenXRApi *self, int eye, godot_real *p_projection)
 {
-	xr_api *self = (xr_api *)_self;
 	XrView views[self->view_count];
 	for (uint32_t i = 0; i < self->view_count; i++) {
 		views[i].type = XR_TYPE_VIEW;
@@ -1004,14 +1003,21 @@ fill_projection_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix)
 	// views[eye].fov.angleRight, views[eye].fov.angleUp,
 	// views[eye].fov.angleDown);
 
+	XrMatrix4x4f matrix;
 	if (!xr_result(self->instance, result, "Could not locate views")) {
 		printf("Locate Views failed??\n");
 	} else {
-		XrMatrix4x4f_CreateProjectionFov(matrix, GRAPHICS_OPENGL,
+		XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL,
 		                                 views[eye].fov, 0.05f, 100.0f);
 		// printf("Fill projection matrix for eye %d / %d\n", eye,
 		// self->view_count
 		// - 1);
+	}
+
+	// printf("Projection Matrix: ");
+	for (int i = 0; i < 16; i++) {
+		p_projection[i] = matrix.m[i];
+		// printf("%f ", p_projection[i]);
 	}
 }
 
@@ -1048,9 +1054,8 @@ _transform_from_rot_pos(godot_transform *p_dest,
 };
 
 void
-update_controllers(OPENXR_API_HANDLE _self)
+update_controllers(OpenXRApi *self)
 {
-	xr_api *self = (xr_api *)_self;
 	XrResult result;
 
 	const XrActiveActionSet activeActionSet = {
@@ -1170,19 +1175,52 @@ update_controllers(OPENXR_API_HANDLE _self)
 }
 
 void
-recommended_rendertarget_size(OPENXR_API_HANDLE _self,
+recommended_rendertarget_size(OpenXRApi *self,
                               uint32_t *width,
                               uint32_t *height)
 {
-	xr_api *self = (xr_api *)_self;
 	*width = self->configuration_views[0].recommendedImageRectWidth;
 	*height = self->configuration_views[0].recommendedImageRectHeight;
 }
 
-bool
-get_view_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix)
+void
+transform_from_matrix(godot_transform *p_dest,
+                      XrMatrix4x4f *matrix,
+                      float p_world_scale)
 {
-	xr_api *self = (xr_api *)_self;
+	godot_basis basis;
+	godot_vector3 origin;
+	float *basis_ptr =
+	    (float *)&basis; // Godot can switch between real_t being
+	// double or float.. which one is used...
+	float m[4][4];
+
+	for (int i = 0; i < 4; i++) {
+		for (int j = 0; j < 4; j++) {
+			m[i][j] = matrix->m[(i * 4) + j];
+		}
+	}
+
+	int k = 0;
+	for (int i = 0; i < 3; i++) {
+		for (int j = 0; j < 3; j++) {
+			basis_ptr[k++] = m[i][j];
+		};
+	};
+
+	api->godot_vector3_new(&origin, -m[3][0] * p_world_scale,
+	                       -m[3][1] * p_world_scale,
+	                       -m[3][2] * p_world_scale);
+	// printf("Origin %f %f %f\n", origin.x, origin.y, origin.z);
+	api->godot_transform_new(p_dest, &basis, &origin);
+};
+
+bool
+get_view_matrix(OpenXRApi *self,
+                int eye,
+                float world_scale,
+                godot_transform *transform_for_eye)
+{
 	if (self->views == NULL)
 		return false;
 	const XrVector3f uniformScale = {.x = 1.f, .y = 1.f, .z = 1.f};
@@ -1192,16 +1230,17 @@ get_view_matrix(OPENXR_API_HANDLE _self, int eye, XrMatrix4x4f *matrix)
 	    &viewMatrix, &self->views[eye].pose.position,
 	    &self->views[eye].pose.orientation, &uniformScale);
 
-	XrMatrix4x4f_InvertRigidBody(matrix, &viewMatrix);
+	XrMatrix4x4f matrix;
+	XrMatrix4x4f_InvertRigidBody(&matrix, &viewMatrix);
+
+	transform_from_matrix(transform_for_eye, &matrix, world_scale);
+
 	return true;
 }
 
 int
-get_external_texture_for_eye(OPENXR_API_HANDLE _self,
-                             int eye,
-                             bool *has_support)
+get_external_texture_for_eye(OpenXRApi *self, int eye, bool *has_support)
 {
-	xr_api *self = (xr_api *)_self;
 	// this only gets called from Godot 3.2 and newer, allows us to use
 	// OpenXR swapchain directly.
 
@@ -1220,10 +1259,8 @@ get_external_texture_for_eye(OPENXR_API_HANDLE _self,
 }
 
 void
-process_openxr(OPENXR_API_HANDLE _self)
+process_openxr(OpenXRApi *self)
 {
-	xr_api *self = (xr_api *)_self;
-
 	XrResult result;
 
 	XrEventDataBuffer runtimeEvent = {.type = XR_TYPE_EVENT_DATA_BUFFER,

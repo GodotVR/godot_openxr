@@ -960,6 +960,41 @@ render_openxr(OpenXRApi *self,
 	if (!self->running || self->state >= XR_SESSION_STATE_STOPPING)
 		return;
 
+	if (!self->frameState.shouldRender) {
+
+		// TODO: When godot doesn't render & call
+		// get_external_texture_for_eye(), we also don't need to release
+		if (has_external_texture_support) {
+			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo =
+			    {.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
+			     .next = NULL};
+			result = xrReleaseSwapchainImage(
+			    self->swapchains[eye], &swapchainImageReleaseInfo);
+			if (!xr_result(self->instance, result,
+			               "failed to release swapchain image!"))
+				return;
+		}
+
+		if (eye == 1) {
+			// submit 0 layers when we shouldn't render
+			XrFrameEndInfo frameEndInfo = {
+			    .type = XR_TYPE_FRAME_END_INFO,
+			    .displayTime =
+			        self->frameState.predictedDisplayTime,
+			    .layerCount = 0,
+			    .layers = NULL,
+			    .environmentBlendMode =
+			        XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
+			    .next = NULL};
+			result = xrEndFrame(self->session, &frameEndInfo);
+			xr_result(self->instance, result,
+			          "failed to end frame!");
+		}
+
+		// neither eye is rendered
+		return;
+	}
+
 	if (!has_external_texture_support) {
 		result = acquire_image(self, eye);
 		if (!xr_result(self->instance, result,
@@ -1439,4 +1474,9 @@ process_openxr(OpenXRApi *self)
 	result = xrBeginFrame(self->session, &frameBeginInfo);
 	if (!xr_result(self->instance, result, "failed to begin frame!"))
 		return;
+
+	if (self->frameState.shouldRender) {
+		// TODO: Tell godot not do render VR to save resources.
+		// See render_openxr() for the corresponding early exit.
+	}
 }

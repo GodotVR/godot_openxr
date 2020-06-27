@@ -1224,13 +1224,7 @@ process_openxr(OPENXR_API_HANDLE _self)
 {
 	xr_api *self = (xr_api *)_self;
 
-	XrFrameWaitInfo frameWaitInfo = {.type = XR_TYPE_FRAME_WAIT_INFO,
-	                                 .next = NULL};
 	XrResult result;
-	result = xrWaitFrame(self->session, &frameWaitInfo, &self->frameState);
-	if (!xr_result(self->instance, result,
-	               "xrWaitFrame() was not successful, exiting..."))
-		return;
 
 	XrEventDataBuffer runtimeEvent = {.type = XR_TYPE_EVENT_DATA_BUFFER,
 	                                  .next = NULL};
@@ -1344,6 +1338,13 @@ process_openxr(OPENXR_API_HANDLE _self)
 		printf("Failed to poll events!\n");
 		return;
 	}
+
+	XrFrameWaitInfo frameWaitInfo = {.type = XR_TYPE_FRAME_WAIT_INFO,
+	                                 .next = NULL};
+	result = xrWaitFrame(self->session, &frameWaitInfo, &self->frameState);
+	if (!xr_result(self->instance, result,
+	               "xrWaitFrame() was not successful, exiting..."))
+		return;
 
 	update_controllers(self);
 

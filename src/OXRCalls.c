@@ -921,6 +921,31 @@ init_openxr()
 	return (OpenXRApi *)self;
 }
 
+static XrResult
+acquire_image(OpenXRApi *self, int eye)
+{
+	XrResult result;
+	XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
+	    .type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = NULL};
+	result = xrAcquireSwapchainImage(self->swapchains[eye],
+	                                 &swapchainImageAcquireInfo,
+	                                 &self->buffer_index[eye]);
+	if (!xr_result(self->instance, result,
+	               "failed to acquire swapchain image!"))
+		return result;
+
+	XrSwapchainImageWaitInfo swapchainImageWaitInfo = {
+	    .type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO,
+	    .next = NULL,
+	    .timeout = 0};
+	result = xrWaitSwapchainImage(self->swapchains[eye],
+	                              &swapchainImageWaitInfo);
+	if (!xr_result(self->instance, result,
+	               "failed to wait for swapchain image!"))
+		return result;
+	return XR_SUCCESS;
+}
+
 void
 render_openxr(OpenXRApi *self,
               int eye,
@@ -935,18 +960,12 @@ render_openxr(OpenXRApi *self,
 	if (!self->running || self->state >= XR_SESSION_STATE_STOPPING)
 		return;
 
-	self->projection_views[eye].fov = self->views[eye].fov;
-	self->projection_views[eye].pose = self->views[eye].pose;
-
-	XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-	    .type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, .next = NULL};
-	result = xrReleaseSwapchainImage(self->swapchains[eye],
-	                                 &swapchainImageReleaseInfo);
-	if (!xr_result(self->instance, result,
-	               "failed to release swapchain image!"))
-		return;
-
 	if (!has_external_texture_support) {
+		result = acquire_image(self, eye);
+		if (!xr_result(self->instance, result,
+		               "failed to acquire swapchain image!"))
+			return;
+
 		glBindTexture(GL_TEXTURE_2D, texid);
 		glCopyTextureSubImage2D(
 		    self->images[eye][self->buffer_index[eye]].image, 0, 0, 0,
@@ -959,6 +978,17 @@ render_openxr(OpenXRApi *self,
 	} else {
 		// printf("Godot already rendered into our textures\n");
 	}
+
+	XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
+	    .type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO, .next = NULL};
+	result = xrReleaseSwapchainImage(self->swapchains[eye],
+	                                 &swapchainImageReleaseInfo);
+	if (!xr_result(self->instance, result,
+	               "failed to release swapchain image!"))
+		return;
+
+	self->projection_views[eye].fov = self->views[eye].fov;
+	self->projection_views[eye].pose = self->views[eye].pose;
 
 	if (eye == 1) {
 		self->projectionLayer->views = self->projection_views;
@@ -1244,6 +1274,11 @@ get_external_texture_for_eye(OpenXRApi *self, int eye, bool *has_support)
 	// this only gets called from Godot 3.2 and newer, allows us to use
 	// OpenXR swapchain directly.
 
+	XrResult result = acquire_image(self, eye);
+	if (!xr_result(self->instance, result,
+	               "failed to acquire swapchain image!"))
+		return 0;
+
 	// process should be called by now but just in case...
 	if (self->state > XR_SESSION_STATE_UNKNOWN &&
 	    self->buffer_index != NULL) {
@@ -1404,25 +1439,4 @@ process_openxr(OpenXRApi *self)
 	result = xrBeginFrame(self->session, &frameBeginInfo);
 	if (!xr_result(self->instance, result, "failed to begin frame!"))
 		return;
-
-	for (int eye = 0; eye < 2; eye++) {
-		XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
-		    .type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = NULL};
-		result = xrAcquireSwapchainImage(self->swapchains[eye],
-		                                 &swapchainImageAcquireInfo,
-		                                 &self->buffer_index[eye]);
-		if (!xr_result(self->instance, result,
-		               "failed to acquire swapchain image!"))
-			return;
-
-		XrSwapchainImageWaitInfo swapchainImageWaitInfo = {
-		    .type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO,
-		    .next = NULL,
-		    .timeout = 0};
-		result = xrWaitSwapchainImage(self->swapchains[eye],
-		                              &swapchainImageWaitInfo);
-		if (!xr_result(self->instance, result,
-		               "failed to wait for swapchain image!"))
-			return;
-	}
 }

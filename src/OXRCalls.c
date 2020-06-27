@@ -1348,6 +1348,8 @@ process_openxr(OPENXR_API_HANDLE _self)
 
 	XrViewLocateInfo viewLocateInfo = {
 	    .type = XR_TYPE_VIEW_LOCATE_INFO,
+	    .next = NULL,
+	    .viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
 	    .displayTime = self->frameState.predictedDisplayTime,
 	    .space = self->local_space};
 	XrViewState viewState = {.type = XR_TYPE_VIEW_STATE, .next = NULL};

@@ -12,5 +12,5 @@ X11.64="res://addons/godot-openxr/bin/linux/libgodot_openxr.so"
 
 [dependencies]
 
-Windows.64=[  ]
+Windows.64=[ "res://addons/godot-openxr/bin/win64/openxr_loader.dll" ]
 X11.64=[  ]

@@ -67,7 +67,7 @@ bool OpenXRApi::xr_result(XrResult result, const char *format, ...) {
 	return false;
 }
 
-bool OpenXRApi::isExtensionSupported(char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount) {
+bool OpenXRApi::isExtensionSupported(const char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount) {
 	for (uint32_t supportedIndex = 0; supportedIndex < instanceExtensionCount; supportedIndex++) {
 		if (!strcmp(extensionName, instanceExtensionProperties[supportedIndex].extensionName)) {
 			return true;
@@ -199,7 +199,7 @@ OpenXRApi::OpenXRApi() {
 
 	// Damn you microsoft for not supporting this!!
 	// const char *enabledExtensions[extensionCount];
-	char **enabledExtensions = (char **)malloc(sizeof(char *) * extensionCount);
+	const char **enabledExtensions = (const char **)malloc(sizeof(const char *) * extensionCount);
 	if (enabledExtensions == NULL) {
 		printf("Couldn't allocate memory to record enabled extensions\n");
 		return;
@@ -218,11 +218,19 @@ OpenXRApi::OpenXRApi() {
 		.next = NULL,
 		.createFlags = 0,
 		.applicationInfo = {
-				// TODO: get application name from godot
-				// TODO: establish godot version -> uint32_t versioning
+	// TODO: get application name from godot
+	// TODO: establish godot version -> uint32_t versioning
+#ifdef __GNUC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
+				{ .applicationName = "Godot OpenXR Plugin" },
+#else
 				.applicationName = "Godot OpenXR Plugin",
+#endif
 				.applicationVersion = 1,
+#ifdef __GNUC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
+				{ .engineName = "Godot Engine" },
+#else
 				.engineName = "Godot Engine",
+#endif
 				.engineVersion = 0,
 				.apiVersion = XR_CURRENT_API_VERSION,
 		},
@@ -389,7 +397,7 @@ OpenXRApi::OpenXRApi() {
 
 	printf("Swapchain Formats\n");
 	for (int i = 0; i < swapchainFormatCount; i++) {
-		printf("%llX\n", swapchainFormats[i]);
+		printf("%lX\n", swapchainFormats[i]);
 #ifdef WIN32
 		if (SRGB_SWAPCHAIN && swapchainFormats[i] == GL_SRGB8_ALPHA8) {
 			swapchainFormatToUse = swapchainFormats[i];
@@ -446,20 +454,12 @@ OpenXRApi::OpenXRApi() {
 			return;
 		}
 	}
-	free(swapchainLength);
-
-	uint32_t maxSwapchainLength = 0;
-	for (uint32_t i = 0; i < view_count; i++) {
-		if (swapchainLength[i] > maxSwapchainLength) {
-			maxSwapchainLength = swapchainLength[i];
-		}
-	}
 
 	images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
 	for (uint32_t i = 0; i < view_count; i++) {
-		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR *) * maxSwapchainLength);
+		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchainLength[i]);
 
-		for (int j = 0; j < maxSwapchainLength; j++) {
+		for (int j = 0; j < swapchainLength[i]; j++) {
 			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
 			images[i][j].next = NULL;
 		}
@@ -471,6 +471,8 @@ OpenXRApi::OpenXRApi() {
 			return;
 		}
 	}
+
+	free(swapchainLength);
 
 	// only used for OpenGL depth testing
 	/*
@@ -574,7 +576,7 @@ OpenXRApi::OpenXRApi() {
 
 	// khr simple controller
 	{
-		XrAction actions[] = { actions[POSE_ACTION_INDEX], actions[TRIGGER_ACTION_INDEX] };
+		XrAction actions[] = { this->actions[POSE_ACTION_INDEX], this->actions[TRIGGER_ACTION_INDEX] };
 		XrPath *paths[] = { aimPosePath, selectClickPath };
 		int num_actions = sizeof(actions) / sizeof(actions[0]);
 		if (!suggestActions("/interaction_profiles/khr/simple_controller", actions, paths, num_actions)) {
@@ -585,10 +587,10 @@ OpenXRApi::OpenXRApi() {
 	// valve index controller
 	{
 		XrAction actions[] = {
-			actions[POSE_ACTION_INDEX],
-			actions[TRIGGER_ACTION_INDEX],
-			actions[GRAB_ACTION_INDEX],
-			actions[MENU_ACTION_INDEX],
+			this->actions[POSE_ACTION_INDEX],
+			this->actions[TRIGGER_ACTION_INDEX],
+			this->actions[GRAB_ACTION_INDEX],
+			this->actions[MENU_ACTION_INDEX],
 		};
 		XrPath *paths[] = { aimPosePath, triggerPath, aPath, bPath };
 		int num_actions = sizeof(actions) / sizeof(actions[0]);
@@ -604,10 +606,10 @@ OpenXRApi::OpenXRApi() {
 		xrStringToPath(instance, "/user/hand/right/input/square_mnd/click", &squarePath[HAND_RIGHT]);
 
 		XrAction actions[] = {
-			actions[POSE_ACTION_INDEX],
-			actions[TRIGGER_ACTION_INDEX],
-			actions[GRAB_ACTION_INDEX],
-			actions[MENU_ACTION_INDEX],
+			this->actions[POSE_ACTION_INDEX],
+			this->actions[TRIGGER_ACTION_INDEX],
+			this->actions[GRAB_ACTION_INDEX],
+			this->actions[MENU_ACTION_INDEX],
 		};
 		XrPath *paths[] = { aimPosePath, triggerPath, squarePath, menuPath };
 		int num_actions = sizeof(actions) / sizeof(actions[0]);
@@ -650,8 +652,8 @@ OpenXRApi::OpenXRApi() {
 		return;
 	}
 
-	godot_controllers[0] = arvr_api->godot_arvr_add_controller("lefthand", 1, true, true);
-	godot_controllers[1] = arvr_api->godot_arvr_add_controller("righthand", 2, true, true);
+	godot_controllers[0] = arvr_api->godot_arvr_add_controller((char *)"lefthand", 1, true, true);
+	godot_controllers[1] = arvr_api->godot_arvr_add_controller((char *)"righthand", 2, true, true);
 
 	printf("initialized controllers %d %d\n", godot_controllers[0], godot_controllers[1]);
 }
@@ -676,7 +678,7 @@ OpenXRApi::~OpenXRApi() {
 	xrDestroyInstance(instance);
 }
 
-XrAction OpenXRApi::createAction(XrActionType actionType, char *actionName, char *localizedActionName) {
+XrAction OpenXRApi::createAction(XrActionType actionType, const char *actionName, const char *localizedActionName) {
 	XrActionCreateInfo actionInfo = {
 		.type = XR_TYPE_ACTION_CREATE_INFO,
 		.next = NULL,
@@ -745,7 +747,7 @@ XrResult OpenXRApi::getActionStates(XrAction action, XrStructureType actionState
 	return XR_SUCCESS;
 }
 
-bool OpenXRApi::suggestActions(char *interaction_profile, XrAction *actions, XrPath **paths, int num_actions) {
+bool OpenXRApi::suggestActions(const char *interaction_profile, XrAction *actions, XrPath **paths, int num_actions) {
 	XrPath interactionProfilePath;
 
 	XrResult result = xrStringToPath(instance, interaction_profile, &interactionProfilePath);
@@ -1215,7 +1217,7 @@ void OpenXRApi::process_openxr() {
 			} break;
 			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
 				XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtimeEvent;
-				printf("EVENT: instance loss pending at %llu!\n", event->lossTime);
+				printf("EVENT: instance loss pending at %ld!\n", event->lossTime);
 				running = false;
 				return;
 			} break;

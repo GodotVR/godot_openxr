@@ -100,13 +100,13 @@ private:
 	bool monado_stick_on_ball_ext;
 
 	bool xr_result(XrResult result, const char *format, ...);
-	bool isExtensionSupported(char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount);
+	bool isExtensionSupported(const char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount);
 	bool isViewConfigSupported(XrViewConfigurationType type, XrSystemId systemId);
 	bool isReferenceSpaceSupported(XrReferenceSpaceType type);
 	bool check_graphics_requirements_gl(XrSystemId system_id);
-	XrAction createAction(XrActionType actionType, char *actionName, char *localizedActionName);
+	XrAction createAction(XrActionType actionType, const char *actionName, const char *localizedActionName);
 	XrResult getActionStates(XrAction action, XrStructureType actionStateType, void *states);
-	bool suggestActions(char *interaction_profile, XrAction *actions, XrPath **paths, int num_actions);
+	bool suggestActions(const char *interaction_profile, XrAction *actions, XrPath **paths, int num_actions);
 	XrResult acquire_image(int eye);
 	bool transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location, float p_world_scale);
 	void update_controllers();

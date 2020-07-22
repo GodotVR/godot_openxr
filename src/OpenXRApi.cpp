@@ -624,8 +624,8 @@ OpenXRApi::OpenXRApi() {
 	// monado ext: ball on stick controller (psmv)
 	if (/* TODO: remove when ext exists */ true || monado_stick_on_ball_ext) {
 		XrPath squarePath[HANDCOUNT];
-		xrStringToPath(instance, "/user/hand/left/input/square_mnd/click", &squarePath[HAND_LEFT]);
-		xrStringToPath(instance, "/user/hand/right/input/square_mnd/click", &squarePath[HAND_RIGHT]);
+		xrStringToPath(instance, "/user/hand/left/input/square_mndx/click", &squarePath[HAND_LEFT]);
+		xrStringToPath(instance, "/user/hand/right/input/square_mndx/click", &squarePath[HAND_RIGHT]);
 
 		XrAction actions[] = {
 			this->actions[POSE_ACTION_INDEX],
@@ -635,7 +635,7 @@ OpenXRApi::OpenXRApi() {
 		};
 		XrPath *paths[] = { aimPosePath, triggerPath, squarePath, menuPath };
 		int num_actions = sizeof(actions) / sizeof(actions[0]);
-		if (!suggestActions("/interaction_profiles/mnd/ball_on_stick_controller", actions, paths, num_actions)) {
+		if (!suggestActions("/interaction_profiles/mndx/ball_on_a_stick_controller", actions, paths, num_actions)) {
 			return;
 		}
 	}

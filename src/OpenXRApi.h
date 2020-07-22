@@ -10,7 +10,7 @@
 #include "xrmath.h"
 #include <openxr/openxr.h>
 
-#define XR_MND_BALL_ON_STICK_EXTENSION_NAME "TODO_BALL_ON_STICK"
+#define XR_MND_BALL_ON_STICK_EXTENSION_NAME "XR_MNDX_ball_on_a_stick_controller"
 
 #ifdef WIN32
 #define XR_USE_PLATFORM_WIN32

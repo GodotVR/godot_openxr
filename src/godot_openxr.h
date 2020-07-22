@@ -11,11 +11,17 @@
 #include "GodotCalls.h"
 #include <openxr/openxr.h>
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 // declare our public functions for our ARVR Interface
 
-void GDN_EXPORT
-godot_openxr_gdnative_singleton();
-void GDN_EXPORT
-godot_openxr_nativescript_init(void *p_handle);
+void GDN_EXPORT godot_openxr_gdnative_singleton();
+void GDN_EXPORT godot_openxr_nativescript_init(void *p_handle);
+
+#ifdef __cplusplus
+}
+#endif
 
 #endif /* !GODOT_OPENXR_H */

@@ -21,13 +21,11 @@
 #include <openxr/openxr.h>
 #define MATH_PI 3.14159265358979323846f
 
-typedef struct XrMatrix4x4f
-{
+typedef struct XrMatrix4x4f {
 	float m[16];
 } XrMatrix4x4f;
 
-typedef enum
-{
+typedef enum {
 	GRAPHICS_VULKAN,
 	GRAPHICS_OPENGL,
 	GRAPHICS_OPENGL_ES
@@ -44,29 +42,26 @@ typedef enum
 //              Journal of Graphics Tools, Volume 16, Issue 1, 2012
 static void
 XrMatrix4x4f_CreateProjection(XrMatrix4x4f *result,
-                              GraphicsAPI graphicsApi,
-                              const float tanAngleLeft,
-                              const float tanAngleRight,
-                              const float tanAngleUp,
-                              float const tanAngleDown,
-                              const float nearZ,
-                              const float farZ)
-{
+		GraphicsAPI graphicsApi,
+		const float tanAngleLeft,
+		const float tanAngleRight,
+		const float tanAngleUp,
+		float const tanAngleDown,
+		const float nearZ,
+		const float farZ) {
 	const float tanAngleWidth = tanAngleRight - tanAngleLeft;
 
 	// Set to tanAngleDown - tanAngleUp for a clip space with positive Y
 	// down (Vulkan). Set to tanAngleUp - tanAngleDown for a clip space with
 	// positive Y up (OpenGL / D3D / Metal).
-	const float tanAngleHeight = graphicsApi == GRAPHICS_VULKAN
-	                                 ? (tanAngleDown - tanAngleUp)
-	                                 : (tanAngleUp - tanAngleDown);
+	const float tanAngleHeight = graphicsApi == GRAPHICS_VULKAN ? (tanAngleDown - tanAngleUp) : (tanAngleUp - tanAngleDown);
 
 	// Set to nearZ for a [-1,1] Z clip space (OpenGL / OpenGL ES).
 	// Set to zero for a [0,1] Z clip space (Vulkan / D3D / Metal).
 	const float offsetZ = (graphicsApi == GRAPHICS_OPENGL ||
-	                       graphicsApi == GRAPHICS_OPENGL_ES)
-	                          ? nearZ
-	                          : 0;
+								  graphicsApi == GRAPHICS_OPENGL_ES) ?
+								  nearZ :
+								  0;
 
 	if (farZ <= nearZ) {
 		// place the far plane at infinity
@@ -116,11 +111,10 @@ XrMatrix4x4f_CreateProjection(XrMatrix4x4f *result,
 // Creates a projection matrix based on the specified FOV.
 static void
 XrMatrix4x4f_CreateProjectionFov(XrMatrix4x4f *result,
-                                 GraphicsAPI graphicsApi,
-                                 const XrFovf fov,
-                                 const float nearZ,
-                                 const float farZ)
-{
+		GraphicsAPI graphicsApi,
+		const XrFovf fov,
+		const float nearZ,
+		const float farZ) {
 	const float tanLeft = tanf(fov.angleLeft);
 	const float tanRight = tanf(fov.angleRight);
 
@@ -128,16 +122,15 @@ XrMatrix4x4f_CreateProjectionFov(XrMatrix4x4f *result,
 	const float tanUp = tanf(fov.angleUp);
 
 	XrMatrix4x4f_CreateProjection(result, graphicsApi, tanLeft, tanRight,
-	                              tanUp, tanDown, nearZ, farZ);
+			tanUp, tanDown, nearZ, farZ);
 }
 
 // Creates a translation matrix.
 static void
 XrMatrix4x4f_CreateTranslation(XrMatrix4x4f *result,
-                               const float x,
-                               const float y,
-                               const float z)
-{
+		const float x,
+		const float y,
+		const float z) {
 	result->m[0] = 1.0f;
 	result->m[1] = 0.0f;
 	result->m[2] = 0.0f;
@@ -159,44 +152,43 @@ XrMatrix4x4f_CreateTranslation(XrMatrix4x4f *result,
 // Use left-multiplication to accumulate transformations.
 static void
 XrMatrix4x4f_Multiply(XrMatrix4x4f *result,
-                      const XrMatrix4x4f *a,
-                      const XrMatrix4x4f *b)
-{
+		const XrMatrix4x4f *a,
+		const XrMatrix4x4f *b) {
 	result->m[0] = a->m[0] * b->m[0] + a->m[4] * b->m[1] +
-	               a->m[8] * b->m[2] + a->m[12] * b->m[3];
+				   a->m[8] * b->m[2] + a->m[12] * b->m[3];
 	result->m[1] = a->m[1] * b->m[0] + a->m[5] * b->m[1] +
-	               a->m[9] * b->m[2] + a->m[13] * b->m[3];
+				   a->m[9] * b->m[2] + a->m[13] * b->m[3];
 	result->m[2] = a->m[2] * b->m[0] + a->m[6] * b->m[1] +
-	               a->m[10] * b->m[2] + a->m[14] * b->m[3];
+				   a->m[10] * b->m[2] + a->m[14] * b->m[3];
 	result->m[3] = a->m[3] * b->m[0] + a->m[7] * b->m[1] +
-	               a->m[11] * b->m[2] + a->m[15] * b->m[3];
+				   a->m[11] * b->m[2] + a->m[15] * b->m[3];
 
 	result->m[4] = a->m[0] * b->m[4] + a->m[4] * b->m[5] +
-	               a->m[8] * b->m[6] + a->m[12] * b->m[7];
+				   a->m[8] * b->m[6] + a->m[12] * b->m[7];
 	result->m[5] = a->m[1] * b->m[4] + a->m[5] * b->m[5] +
-	               a->m[9] * b->m[6] + a->m[13] * b->m[7];
+				   a->m[9] * b->m[6] + a->m[13] * b->m[7];
 	result->m[6] = a->m[2] * b->m[4] + a->m[6] * b->m[5] +
-	               a->m[10] * b->m[6] + a->m[14] * b->m[7];
+				   a->m[10] * b->m[6] + a->m[14] * b->m[7];
 	result->m[7] = a->m[3] * b->m[4] + a->m[7] * b->m[5] +
-	               a->m[11] * b->m[6] + a->m[15] * b->m[7];
+				   a->m[11] * b->m[6] + a->m[15] * b->m[7];
 
 	result->m[8] = a->m[0] * b->m[8] + a->m[4] * b->m[9] +
-	               a->m[8] * b->m[10] + a->m[12] * b->m[11];
+				   a->m[8] * b->m[10] + a->m[12] * b->m[11];
 	result->m[9] = a->m[1] * b->m[8] + a->m[5] * b->m[9] +
-	               a->m[9] * b->m[10] + a->m[13] * b->m[11];
+				   a->m[9] * b->m[10] + a->m[13] * b->m[11];
 	result->m[10] = a->m[2] * b->m[8] + a->m[6] * b->m[9] +
-	                a->m[10] * b->m[10] + a->m[14] * b->m[11];
+					a->m[10] * b->m[10] + a->m[14] * b->m[11];
 	result->m[11] = a->m[3] * b->m[8] + a->m[7] * b->m[9] +
-	                a->m[11] * b->m[10] + a->m[15] * b->m[11];
+					a->m[11] * b->m[10] + a->m[15] * b->m[11];
 
 	result->m[12] = a->m[0] * b->m[12] + a->m[4] * b->m[13] +
-	                a->m[8] * b->m[14] + a->m[12] * b->m[15];
+					a->m[8] * b->m[14] + a->m[12] * b->m[15];
 	result->m[13] = a->m[1] * b->m[12] + a->m[5] * b->m[13] +
-	                a->m[9] * b->m[14] + a->m[13] * b->m[15];
+					a->m[9] * b->m[14] + a->m[13] * b->m[15];
 	result->m[14] = a->m[2] * b->m[12] + a->m[6] * b->m[13] +
-	                a->m[10] * b->m[14] + a->m[14] * b->m[15];
+					a->m[10] * b->m[14] + a->m[14] * b->m[15];
 	result->m[15] = a->m[3] * b->m[12] + a->m[7] * b->m[13] +
-	                a->m[11] * b->m[14] + a->m[15] * b->m[15];
+					a->m[11] * b->m[14] + a->m[15] * b->m[15];
 }
 
 // Creates a rotation matrix.
@@ -204,22 +196,24 @@ XrMatrix4x4f_Multiply(XrMatrix4x4f *result,
 // degreesZ=roll.
 static void
 XrMatrix4x4f_CreateRotation(XrMatrix4x4f *result,
-                            const float degreesX,
-                            const float degreesY,
-                            const float degreesZ)
-{
+		const float degreesX,
+		const float degreesY,
+		const float degreesZ) {
 	const float sinX = sinf(degreesX * (MATH_PI / 180.0f));
 	const float cosX = cosf(degreesX * (MATH_PI / 180.0f));
 	const XrMatrix4x4f rotationX = {
-	    {1, 0, 0, 0, 0, cosX, sinX, 0, 0, -sinX, cosX, 0, 0, 0, 0, 1}};
+		{ 1, 0, 0, 0, 0, cosX, sinX, 0, 0, -sinX, cosX, 0, 0, 0, 0, 1 }
+	};
 	const float sinY = sinf(degreesY * (MATH_PI / 180.0f));
 	const float cosY = cosf(degreesY * (MATH_PI / 180.0f));
 	const XrMatrix4x4f rotationY = {
-	    {cosY, 0, -sinY, 0, 0, 1, 0, 0, sinY, 0, cosY, 0, 0, 0, 0, 1}};
+		{ cosY, 0, -sinY, 0, 0, 1, 0, 0, sinY, 0, cosY, 0, 0, 0, 0, 1 }
+	};
 	const float sinZ = sinf(degreesZ * (MATH_PI / 180.0f));
 	const float cosZ = cosf(degreesZ * (MATH_PI / 180.0f));
 	const XrMatrix4x4f rotationZ = {
-	    {cosZ, sinZ, 0, 0, -sinZ, cosZ, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1}};
+		{ cosZ, sinZ, 0, 0, -sinZ, cosZ, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1 }
+	};
 	XrMatrix4x4f rotationXY;
 	XrMatrix4x4f_Multiply(&rotationXY, &rotationY, &rotationX);
 	XrMatrix4x4f_Multiply(result, &rotationZ, &rotationXY);
@@ -228,10 +222,9 @@ XrMatrix4x4f_CreateRotation(XrMatrix4x4f *result,
 // Creates a scale matrix.
 static void
 XrMatrix4x4f_CreateScale(XrMatrix4x4f *result,
-                         const float x,
-                         const float y,
-                         const float z)
-{
+		const float x,
+		const float y,
+		const float z) {
 	result->m[0] = x;
 	result->m[1] = 0.0f;
 	result->m[2] = 0.0f;
@@ -253,8 +246,7 @@ XrMatrix4x4f_CreateScale(XrMatrix4x4f *result,
 // Creates a matrix from a quaternion.
 static void
 XrMatrix4x4f_CreateFromQuaternion(XrMatrix4x4f *result,
-                                  const XrQuaternionf *quat)
-{
+		const XrQuaternionf *quat) {
 	const float x2 = quat->x + quat->x;
 	const float y2 = quat->y + quat->y;
 	const float z2 = quat->z + quat->z;
@@ -293,8 +285,7 @@ XrMatrix4x4f_CreateFromQuaternion(XrMatrix4x4f *result,
 
 // Calculates the inverse of a rigid body transform.
 static void
-XrMatrix4x4f_InvertRigidBody(XrMatrix4x4f *result, const XrMatrix4x4f *src)
-{
+XrMatrix4x4f_InvertRigidBody(XrMatrix4x4f *result, const XrMatrix4x4f *src) {
 	result->m[0] = src->m[0];
 	result->m[1] = src->m[4];
 	result->m[2] = src->m[8];
@@ -308,11 +299,11 @@ XrMatrix4x4f_InvertRigidBody(XrMatrix4x4f *result, const XrMatrix4x4f *src)
 	result->m[10] = src->m[10];
 	result->m[11] = 0.0f;
 	result->m[12] = -(src->m[0] * src->m[12] + src->m[1] * src->m[13] +
-	                  src->m[2] * src->m[14]);
+					  src->m[2] * src->m[14]);
 	result->m[13] = -(src->m[4] * src->m[12] + src->m[5] * src->m[13] +
-	                  src->m[6] * src->m[14]);
+					  src->m[6] * src->m[14]);
 	result->m[14] = -(src->m[8] * src->m[12] + src->m[9] * src->m[13] +
-	                  src->m[10] * src->m[14]);
+					  src->m[10] * src->m[14]);
 	result->m[15] = 1.0f;
 }
 
@@ -322,10 +313,9 @@ XrMatrix4x4f_InvertRigidBody(XrMatrix4x4f *result, const XrMatrix4x4f *src)
 // it, then rotate it around the HMD
 static void
 XrMatrix4x4f_CreateTranslationRotationScaleOrbit(XrMatrix4x4f *result,
-                                                 const XrVector3f *translation,
-                                                 const XrQuaternionf *rotation,
-                                                 const XrVector3f *scale)
-{
+		const XrVector3f *translation,
+		const XrQuaternionf *rotation,
+		const XrVector3f *scale) {
 	XrMatrix4x4f scaleMatrix;
 	XrMatrix4x4f_CreateScale(&scaleMatrix, scale->x, scale->y, scale->z);
 
@@ -334,7 +324,7 @@ XrMatrix4x4f_CreateTranslationRotationScaleOrbit(XrMatrix4x4f *result,
 
 	XrMatrix4x4f translationMatrix;
 	XrMatrix4x4f_CreateTranslation(&translationMatrix, translation->x,
-	                               translation->y, translation->z);
+			translation->y, translation->z);
 
 	XrMatrix4x4f combinedMatrix;
 	XrMatrix4x4f_Multiply(&combinedMatrix, &rotationMatrix, &scaleMatrix);
@@ -348,10 +338,9 @@ XrMatrix4x4f_CreateTranslationRotationScaleOrbit(XrMatrix4x4f *result,
 // they should appear
 static void
 XrMatrix4x4f_CreateTranslationRotationScaleRotate(XrMatrix4x4f *result,
-                                                  const XrVector3f *translation,
-                                                  const XrQuaternionf *rotation,
-                                                  const XrVector3f *scale)
-{
+		const XrVector3f *translation,
+		const XrQuaternionf *rotation,
+		const XrVector3f *scale) {
 	XrMatrix4x4f scaleMatrix;
 	XrMatrix4x4f_CreateScale(&scaleMatrix, scale->x, scale->y, scale->z);
 
@@ -360,7 +349,7 @@ XrMatrix4x4f_CreateTranslationRotationScaleRotate(XrMatrix4x4f *result,
 
 	XrMatrix4x4f translationMatrix;
 	XrMatrix4x4f_CreateTranslation(&translationMatrix, translation->x,
-	                               translation->y, translation->z);
+			translation->y, translation->z);
 
 	XrMatrix4x4f combinedMatrix;
 	XrMatrix4x4f_Multiply(&combinedMatrix, &rotationMatrix, &scaleMatrix);
@@ -369,13 +358,12 @@ XrMatrix4x4f_CreateTranslationRotationScaleRotate(XrMatrix4x4f *result,
 }
 
 static void
-printXrMatrix4x4(XrMatrix4x4f matrix)
-{
+printXrMatrix4x4(XrMatrix4x4f matrix) {
 	printf(
-	    "%6.1f %6.1f %6.1f %6.1f\n%6.1f %6.1f %6.1f %6.1f\n%6.1f %6.1f "
-	    "%6.1f %6.1f\n%6.1f %6.1f %6.1f %6.1f\n",
-	    matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3], matrix.m[4],
-	    matrix.m[5], matrix.m[6], matrix.m[7], matrix.m[8], matrix.m[9],
-	    matrix.m[10], matrix.m[11], matrix.m[12], matrix.m[13],
-	    matrix.m[14], matrix.m[15]);
+			"%6.1f %6.1f %6.1f %6.1f\n%6.1f %6.1f %6.1f %6.1f\n%6.1f %6.1f "
+			"%6.1f %6.1f\n%6.1f %6.1f %6.1f %6.1f\n",
+			matrix.m[0], matrix.m[1], matrix.m[2], matrix.m[3], matrix.m[4],
+			matrix.m[5], matrix.m[6], matrix.m[7], matrix.m[8], matrix.m[9],
+			matrix.m[10], matrix.m[11], matrix.m[12], matrix.m[13],
+			matrix.m[14], matrix.m[15]);
 }

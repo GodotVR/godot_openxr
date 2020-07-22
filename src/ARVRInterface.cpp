@@ -116,19 +116,29 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 	godot_vector3 offset;
 	godot_real world_scale = arvr_api->godot_arvr_get_worldscale();
 
-	if (p_eye == 0) {
-		// we want a monoscopic transform.. shouldn't really apply here
-		api->godot_transform_new_identity(&transform_for_eye);
-	} else if (arvr_data->openxr_api != NULL) {
-		// printf("Get view matrix for eye %d\n", p_eye);
-		if (p_eye == 1) {
-			arvr_data->openxr_api->get_view_matrix(0, world_scale, &transform_for_eye);
-		} else if (p_eye == 2) {
-			arvr_data->openxr_api->get_view_matrix(1, world_scale, &transform_for_eye);
-		} else {
-			// TODO this must be implemented as this is used for head positioning, it should return the position center between the eyes
-			printf("matrix for eye %d: no\n", p_eye);
-		}
+	// TODO should rewrite this to obtain and store left and right eye transforms in process
+	// then calculate center transform
+	// and just use the stored transforms here, more efficient
+
+	// printf("Get view matrix for eye %d\n", p_eye);
+	if (p_eye == 1) {
+		arvr_data->openxr_api->get_view_matrix(0, world_scale, &transform_for_eye);
+	} else if (p_eye == 2) {
+		arvr_data->openxr_api->get_view_matrix(1, world_scale, &transform_for_eye);
+	} else {
+		// return center position between the two eyes, this is used by Godot to place the ARVRCamera node within the scene so user scripts can track the head position.
+
+		// base this on the left eye
+		arvr_data->openxr_api->get_view_matrix(0, world_scale, &transform_for_eye);
+
+		// also get our right eye, in theory the orientation of both eyes should match
+		godot_transform right_eye;
+		arvr_data->openxr_api->get_view_matrix(1, world_scale, &right_eye);
+
+		// now center the position between the two eyes
+		transform_for_eye.origin.x = (transform_for_eye.origin.x + right_eye.origin.x) * 0.5;
+		transform_for_eye.origin.y = (transform_for_eye.origin.y + right_eye.origin.y) * 0.5;
+		transform_for_eye.origin.z = (transform_for_eye.origin.z + right_eye.origin.z) * 0.5;
 	}
 
 	// Now construct our full transform, the order may be in reverse, have

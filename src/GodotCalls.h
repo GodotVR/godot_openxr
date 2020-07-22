@@ -59,6 +59,27 @@ typedef union godot_rect2 {
 		godot_vector2 size;
 	};
 } godot_rect2;
+
+#define GODOT_CORE_API_GODOT_BASIS_TYPE_DEFINED
+typedef union godot_basis {
+	// Force struct to be classified as INTEGER by System V AMD64 ABI.
+	uint8_t _dont_touch_that[36];
+	struct
+	{
+		godot_vector3 elements[3];
+	};
+} godot_basis;
+
+#define GODOT_CORE_API_GODOT_TRANSFORM_TYPE_DEFINED
+typedef union godot_transform {
+	// Force struct to be classified as INTEGER by System V AMD64 ABI.
+	uint8_t _dont_touch_that[48];
+	struct
+	{
+		godot_basis basis;
+		godot_vector3 origin;
+	};
+} godot_transform;
 #endif
 
 #include <gdnative_api_struct.gen.h>

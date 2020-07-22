@@ -1035,6 +1035,11 @@ bool OpenXRApi::transform_from_pose(godot_transform *p_dest, XrPosef *pose, floa
 void OpenXRApi::update_controllers() {
 	XrResult result;
 
+	// xrWaitFrame not run yet
+	if (frameState.predictedDisplayTime == 0) {
+		return;
+	}
+
 	const XrActiveActionSet activeActionSet = {
 		.actionSet = actionSet,
 		.subactionPath = XR_NULL_PATH
@@ -1167,17 +1172,27 @@ void OpenXRApi::transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *mat
 };
 
 bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *transform_for_eye) {
+	// xrWaitFrame not run yet
+	if (frameState.predictedDisplayTime == 0) {
+		return false;
+	}
+
 	if (views == NULL || !views_located) {
 		printf("views not located! (check tracking?)\n");
 		return false;
 	}
 
-	transform_from_pose(transform_for_eye, &views[eye].pose, 1.0);
+	transform_from_pose(transform_for_eye, &views[eye].pose, world_scale);
 
 	return true;
 }
 
-bool OpenXRApi::get_head_center(godot_transform *transform) {
+bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
+	// xrWaitFrame not run yet
+	if (frameState.predictedDisplayTime == 0) {
+		return false;
+	}
+
 	XrResult result;
 	XrSpaceLocation location = {
 		.type = XR_TYPE_SPACE_LOCATION,
@@ -1194,9 +1209,9 @@ bool OpenXRApi::get_head_center(godot_transform *transform) {
 		return false;
 	}
 
-	transform_from_pose(transform, &location.pose, 1.0);
+	transform_from_pose(transform, &location.pose, world_scale);
 
-	return result;
+	return true;
 }
 
 int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {

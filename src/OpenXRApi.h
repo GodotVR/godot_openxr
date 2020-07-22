@@ -145,7 +145,7 @@ public:
 	bool get_view_transform(int eye, float world_scale, godot_transform *transform_for_eye);
 
 	// get_head_center() can be called at any time after init
-	bool get_head_center(godot_transform *transform);
+	bool get_head_center(float world_scale, godot_transform *transform);
 
 	// get_external_texture_for_eye() acquires images and sets has_support to true
 	int get_external_texture_for_eye(int eye, bool *has_support);

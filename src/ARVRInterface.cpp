@@ -113,18 +113,23 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 	godot_transform transform_for_eye;
 	godot_transform reference_frame = arvr_api->godot_arvr_get_reference_frame();
 	godot_transform ret;
-	godot_vector3 offset;
 	godot_real world_scale = arvr_api->godot_arvr_get_worldscale();
 
 	if (p_eye == 0) {
 		// this is used for head positioning, it should return the position center between the eyes
-		arvr_data->openxr_api->get_head_center(&transform_for_eye);
+		if (!arvr_data->openxr_api->get_head_center(world_scale, &transform_for_eye)) {
+			api->godot_transform_new_identity(&transform_for_eye);
+		}
 	} else if (arvr_data->openxr_api != NULL) {
 		// printf("Get view matrix for eye %d\n", p_eye);
 		if (p_eye == 1) {
-			arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye);
+			if (!arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye)) {
+				api->godot_transform_new_identity(&transform_for_eye);
+			}
 		} else if (p_eye == 2) {
-			arvr_data->openxr_api->get_view_transform(1, world_scale, &transform_for_eye);
+			if (!arvr_data->openxr_api->get_view_transform(1, world_scale, &transform_for_eye)) {
+				api->godot_transform_new_identity(&transform_for_eye);
+			}
 		} else {
 			// TODO does this ever happen?
 			api->godot_transform_new_identity(&transform_for_eye);

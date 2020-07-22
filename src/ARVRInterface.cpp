@@ -122,9 +122,9 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 	} else if (arvr_data->openxr_api != NULL) {
 		// printf("Get view matrix for eye %d\n", p_eye);
 		if (p_eye == 1) {
-			arvr_data->openxr_api->get_view_matrix(0, world_scale, &transform_for_eye);
+			arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye);
 		} else if (p_eye == 2) {
-			arvr_data->openxr_api->get_view_matrix(1, world_scale, &transform_for_eye);
+			arvr_data->openxr_api->get_view_transform(1, world_scale, &transform_for_eye);
 		} else {
 			// TODO does this ever happen?
 			api->godot_transform_new_identity(&transform_for_eye);

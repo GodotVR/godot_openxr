@@ -1015,29 +1015,18 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 	free(views);
 }
 
-bool OpenXRApi::transform_from_rot_pos(godot_transform *p_dest, XrSpaceLocation *location, float p_world_scale) {
+bool OpenXRApi::transform_from_pose(godot_transform *p_dest, XrPosef *pose, float p_world_scale) {
 	godot_quat q;
 	godot_basis basis;
 	godot_vector3 origin;
 
-	if (location->pose.orientation.x == 0 &&
-			location->pose.orientation.y == 0 &&
-			location->pose.orientation.z == 0 &&
-			location->pose.orientation.w == 0)
-		return false;
-
 	// convert orientation quad to position, should add helper function for
 	// this
 	// :)
-	api->godot_quat_new(
-			&q, location->pose.orientation.x, location->pose.orientation.y,
-			location->pose.orientation.z, location->pose.orientation.w);
+	api->godot_quat_new(&q, pose->orientation.x, pose->orientation.y, pose->orientation.z, pose->orientation.w);
 	api->godot_basis_new_with_euler_quat(&basis, &q);
 
-	api->godot_vector3_new(&origin,
-			location->pose.position.x * p_world_scale,
-			location->pose.position.y * p_world_scale,
-			location->pose.position.z * p_world_scale);
+	api->godot_vector3_new(&origin, pose->position.x * p_world_scale, pose->position.y * p_world_scale, pose->position.z * p_world_scale);
 	api->godot_transform_new(p_dest, &basis, &origin);
 
 	return true;
@@ -1095,7 +1084,7 @@ void OpenXRApi::update_controllers() {
 			printf("Space location not valid for hand %d\n", i);
 			continue;
 		} else {
-			if (!transform_from_rot_pos(&controller_transform, &spaceLocation[i], 1.0)) {
+			if (!transform_from_pose(&controller_transform, &spaceLocation[i].pose, 1.0)) {
 				printf("Pose for hand %d is active but invalid\n", i);
 				continue;
 			}
@@ -1177,20 +1166,13 @@ void OpenXRApi::transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *mat
 	api->godot_transform_new(p_dest, &basis, &origin);
 };
 
-bool OpenXRApi::get_view_matrix(int eye, float world_scale, godot_transform *transform_for_eye) {
-	if (views == NULL) {
+bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *transform_for_eye) {
+	if (views == NULL || !views_located) {
+		printf("views not located! (check tracking?)\n");
 		return false;
 	}
 
-	const XrVector3f uniformScale = { .x = 1.f, .y = 1.f, .z = 1.f };
-
-	XrMatrix4x4f viewMatrix;
-	XrMatrix4x4f_CreateTranslationRotationScaleOrbit(&viewMatrix, &views[eye].pose.position, &views[eye].pose.orientation, &uniformScale);
-
-	XrMatrix4x4f matrix;
-	XrMatrix4x4f_InvertRigidBody(&matrix, &viewMatrix);
-
-	transform_from_matrix(transform_for_eye, &matrix, world_scale);
+	transform_from_pose(transform_for_eye, &views[eye].pose, 1.0);
 
 	return true;
 }
@@ -1212,7 +1194,7 @@ bool OpenXRApi::get_head_center(godot_transform *transform) {
 		return false;
 	}
 
-	transform_from_rot_pos(transform, &location, 1.0);
+	transform_from_pose(transform, &location.pose, 1.0);
 
 	return result;
 }
@@ -1355,8 +1337,10 @@ void OpenXRApi::process_openxr() {
 	uint32_t viewCountOutput;
 	result = xrLocateViews(session, &viewLocateInfo, &viewState, view_count, &viewCountOutput, views);
 	if (!xr_result(result, "Could not locate views")) {
+		views_located = false;
 		return;
 	}
+	views_located = true;
 
 	XrFrameBeginInfo frameBeginInfo = {
 		.type = XR_TYPE_FRAME_BEGIN_INFO,

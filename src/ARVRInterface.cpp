@@ -117,8 +117,8 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 	godot_real world_scale = arvr_api->godot_arvr_get_worldscale();
 
 	if (p_eye == 0) {
-		// we want a monoscopic transform.. shouldn't really apply here
-		api->godot_transform_new_identity(&transform_for_eye);
+		// this is used for head positioning, it should return the position center between the eyes
+		arvr_data->openxr_api->get_head_center(&transform_for_eye);
 	} else if (arvr_data->openxr_api != NULL) {
 		// printf("Get view matrix for eye %d\n", p_eye);
 		if (p_eye == 1) {
@@ -126,7 +126,8 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 		} else if (p_eye == 2) {
 			arvr_data->openxr_api->get_view_matrix(1, world_scale, &transform_for_eye);
 		} else {
-			// TODO this must be implemented as this is used for head positioning, it should return the position center between the eyes
+			// TODO does this ever happen?
+			api->godot_transform_new_identity(&transform_for_eye);
 			printf("matrix for eye %d: no\n", p_eye);
 		}
 	}

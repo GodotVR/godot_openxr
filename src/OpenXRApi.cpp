@@ -338,27 +338,49 @@ OpenXRApi::OpenXRApi() {
 		return;
 	}
 
-	XrReferenceSpaceType playSpace = XR_REFERENCE_SPACE_TYPE_LOCAL;
-	if (!isReferenceSpaceSupported(playSpace)) {
-		printf("runtime does not support local space!\n");
-		return;
-	}
-
 	XrPosef identityPose = {
 		.orientation = { .x = 0, .y = 0, .z = 0, .w = 1.0 },
 		.position = { .x = 0, .y = 0, .z = 0 }
 	};
 
-	XrReferenceSpaceCreateInfo localSpaceCreateInfo = {
-		.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-		.next = NULL,
-		.referenceSpaceType = playSpace,
-		.poseInReferenceSpace = identityPose
-	};
+	{
+		// most runtimes will support local and stage
+		if (!isReferenceSpaceSupported(play_space_type)) {
+			printf("runtime does not support play space type %d!\n", play_space_type);
+			return;
+		}
 
-	result = xrCreateReferenceSpace(session, &localSpaceCreateInfo, &local_space);
-	if (!xr_result(result, "Failed to create local space!")) {
-		return;
+		XrReferenceSpaceCreateInfo localSpaceCreateInfo = {
+			.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+			.next = NULL,
+			.referenceSpaceType = play_space_type,
+			.poseInReferenceSpace = identityPose
+		};
+
+		result = xrCreateReferenceSpace(session, &localSpaceCreateInfo, &play_space);
+		if (!xr_result(result, "Failed to create local space!")) {
+			return;
+		}
+	}
+
+	{
+		// all runtimes should support this
+		if (!isReferenceSpaceSupported(XR_REFERENCE_SPACE_TYPE_VIEW)) {
+			printf("runtime does not support view space!\n");
+			return;
+		}
+
+		XrReferenceSpaceCreateInfo view_space_create_info = {
+			.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
+			.next = NULL,
+			.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW,
+			.poseInReferenceSpace = identityPose
+		};
+
+		result = xrCreateReferenceSpace(session, &view_space_create_info, &view_space);
+		if (!xr_result(result, "Failed to create local space!")) {
+			return;
+		}
 	}
 
 	XrSessionBeginInfo sessionBeginInfo = {
@@ -488,7 +510,7 @@ OpenXRApi::OpenXRApi() {
 	projectionLayer->type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;
 	projectionLayer->next = NULL;
 	projectionLayer->layerFlags = 0;
-	projectionLayer->space = local_space;
+	projectionLayer->space = play_space;
 	projectionLayer->viewCount = view_count;
 	projectionLayer->views = NULL;
 
@@ -963,7 +985,7 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,
 		.displayTime = frameState.predictedDisplayTime,
-		.space = local_space
+		.space = play_space
 	};
 
 	XrViewState viewState = { .type = XR_TYPE_VIEW_STATE, .next = NULL };
@@ -1061,7 +1083,7 @@ void OpenXRApi::update_controllers() {
 		spaceLocation[i].type = XR_TYPE_SPACE_LOCATION;
 		spaceLocation[i].next = NULL;
 
-		result = xrLocateSpace(handSpaces[i], local_space, frameState.predictedDisplayTime, &spaceLocation[i]);
+		result = xrLocateSpace(handSpaces[i], play_space, frameState.predictedDisplayTime, &spaceLocation[i]);
 		xr_result(result, "failed to locate space %d!", i);
 		bool spaceLocationValid =
 				//(spaceLocation[i].locationFlags &
@@ -1171,6 +1193,28 @@ bool OpenXRApi::get_view_matrix(int eye, float world_scale, godot_transform *tra
 	transform_from_matrix(transform_for_eye, &matrix, world_scale);
 
 	return true;
+}
+
+bool OpenXRApi::get_head_center(godot_transform *transform) {
+	XrResult result;
+	XrSpaceLocation location = {
+		.type = XR_TYPE_SPACE_LOCATION,
+		.next = NULL
+	};
+	result = xrLocateSpace(view_space, play_space, frameState.predictedDisplayTime, &location);
+	if (!xr_result(result, "Failed to locate view space in play space!")) {
+		return false;
+	}
+
+	if ((location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) == 0 ||
+			(location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) == 0) {
+		printf("View space location not valid (check tracking?)\n");
+		return false;
+	}
+
+	transform_from_rot_pos(transform, &location, 1.0);
+
+	return result;
 }
 
 int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
@@ -1302,7 +1346,7 @@ void OpenXRApi::process_openxr() {
 		.next = NULL,
 		.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
 		.displayTime = frameState.predictedDisplayTime,
-		.space = local_space
+		.space = play_space
 	};
 	XrViewState viewState = {
 		.type = XR_TYPE_VIEW_STATE,

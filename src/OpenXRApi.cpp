@@ -3,7 +3,7 @@
 
 #include "OpenXRApi.h"
 
-OpenXRApi * OpenXRApi::singleton = NULL;
+OpenXRApi *OpenXRApi::singleton = NULL;
 
 void OpenXRApi::openxr_release_api() {
 	if (singleton == NULL) {
@@ -22,7 +22,7 @@ void OpenXRApi::openxr_release_api() {
 	};
 };
 
-OpenXRApi * OpenXRApi::openxr_get_api() {
+OpenXRApi *OpenXRApi::openxr_get_api() {
 	if (singleton != NULL) {
 		// increase use count
 		singleton->use_count++;
@@ -87,7 +87,7 @@ bool OpenXRApi::isViewConfigSupported(XrViewConfigurationType type, XrSystemId s
 
 	// Damn you microsoft for not supporting this!!
 	// XrViewConfigurationType viewConfigurations[viewConfigurationCount];
-	XrViewConfigurationType * viewConfigurations = (XrViewConfigurationType *)malloc(sizeof(XrViewConfigurationType) * viewConfigurationCount);
+	XrViewConfigurationType *viewConfigurations = (XrViewConfigurationType *)malloc(sizeof(XrViewConfigurationType) * viewConfigurationCount);
 	if (viewConfigurations == NULL) {
 		printf("Couldn''t allocate memory for view configurations\n");
 		return false;
@@ -121,7 +121,7 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 
 	// Damn you microsoft for not supporting this!!
 	// XrReferenceSpaceType referenceSpaces[referenceSpacesCount];
-	XrReferenceSpaceType * referenceSpaces = (XrReferenceSpaceType *) malloc(sizeof(XrReferenceSpaceType) * referenceSpacesCount);
+	XrReferenceSpaceType *referenceSpaces = (XrReferenceSpaceType *)malloc(sizeof(XrReferenceSpaceType) * referenceSpacesCount);
 	if (referenceSpaces == NULL) {
 		printf("Couldn't allocate memory for reference spaces\n");
 	}
@@ -169,7 +169,7 @@ OpenXRApi::OpenXRApi() {
 
 	// Damn you microsoft for not supporting this!!
 	// XrExtensionProperties extensionProperties[extensionCount];
-	XrExtensionProperties * extensionProperties = (XrExtensionProperties *)malloc(sizeof(XrExtensionProperties) * extensionCount);
+	XrExtensionProperties *extensionProperties = (XrExtensionProperties *)malloc(sizeof(XrExtensionProperties) * extensionCount);
 	if (extensionProperties == NULL) {
 		printf("Couldn't allocate memory for extension properties\n");
 		return;
@@ -199,7 +199,7 @@ OpenXRApi::OpenXRApi() {
 
 	// Damn you microsoft for not supporting this!!
 	// const char *enabledExtensions[extensionCount];
-	char ** enabledExtensions = (char **) malloc(sizeof(char *) * extensionCount);
+	char **enabledExtensions = (char **)malloc(sizeof(char *) * extensionCount);
 	if (enabledExtensions == NULL) {
 		printf("Couldn't allocate memory to record enabled extensions\n");
 		return;
@@ -273,14 +273,14 @@ OpenXRApi::OpenXRApi() {
 		return;
 	}
 
-	configuration_views = (XrViewConfigurationView *) malloc(sizeof(XrViewConfigurationView) * view_count);
+	configuration_views = (XrViewConfigurationView *)malloc(sizeof(XrViewConfigurationView) * view_count);
 
 	result = xrEnumerateViewConfigurationViews(instance, systemId, viewConfigType, view_count, &view_count, configuration_views);
 	if (!xr_result(result, "Failed to enumerate view configuration views!")) {
 		return;
 	}
 
-	buffer_index = (uint32_t *) malloc(sizeof(uint32_t) * view_count);
+	buffer_index = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 
 	if (!check_graphics_requirements_gl(systemId)) {
 		return;
@@ -292,7 +292,7 @@ OpenXRApi::OpenXRApi() {
 #ifdef WIN32
 	// TODO: support windows
 
-	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR {
+	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
 	};
 
@@ -300,7 +300,7 @@ OpenXRApi::OpenXRApi() {
 	// graphics_binding_gl.hDC = ???;
 	// graphics_binding_gl.hGLRC = ???;
 #else
-	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR) {
+	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
 	};
 
@@ -315,7 +315,6 @@ OpenXRApi::OpenXRApi() {
 			(uintptr_t)graphics_binding_gl.glxContext,
 			(uintptr_t)graphics_binding_gl.glxDrawable);
 #endif
-
 
 	printf("Using OpenGL version: %s\n", glGetString(GL_VERSION));
 	printf("Using OpenGL Renderer: %s\n", glGetString(GL_RENDERER));
@@ -372,7 +371,7 @@ OpenXRApi::OpenXRApi() {
 
 	// Damn you microsoft for not supporting this!!
 	// int64_t swapchainFormats[swapchainFormatCount];
-	int64_t * swapchainFormats = (int64_t *) malloc(sizeof(int64_t) * swapchainFormatCount);
+	int64_t *swapchainFormats = (int64_t *)malloc(sizeof(int64_t) * swapchainFormatCount);
 	if (swapchainFormats == NULL) {
 		printf("Couldn't allocate memory for swap chain formats\n");
 		return;
@@ -418,7 +417,7 @@ OpenXRApi::OpenXRApi() {
 
 	// Damn you microsoft for not supporting this!!
 	//uint32_t swapchainLength[view_count];
-	uint32_t * swapchainLength = (uint32_t *) malloc(sizeof(uint32_t) * view_count);
+	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 	for (uint32_t i = 0; i < view_count; i++) {
 		// again Microsoft wants these in order!
 		XrSwapchainCreateInfo swapchainCreateInfo = {
@@ -625,10 +624,8 @@ OpenXRApi::OpenXRApi() {
 		// seriously MS, you can't support this either?!?!
 		//.poseInActionSpace.orientation.w = 1.f,
 		.poseInActionSpace = {
-			.orientation = {
-				.w = 1.f
-			}
-		},
+				.orientation = {
+						.w = 1.f } },
 	};
 
 	result = xrCreateActionSpace(session, &actionSpaceInfo, &handSpaces[0]);
@@ -658,7 +655,6 @@ OpenXRApi::OpenXRApi() {
 
 	printf("initialized controllers %d %d\n", godot_controllers[0], godot_controllers[1]);
 }
-
 
 OpenXRApi::~OpenXRApi() {
 	free(projection_views);
@@ -762,7 +758,7 @@ bool OpenXRApi::suggestActions(char *interaction_profile, XrAction *actions, XrP
 
 	// ugh..
 	// XrActionSuggestedBinding bindings[num_bindings];
-	XrActionSuggestedBinding * bindings = (XrActionSuggestedBinding *) malloc(sizeof(XrActionSuggestedBinding) * num_bindings);
+	XrActionSuggestedBinding *bindings = (XrActionSuggestedBinding *)malloc(sizeof(XrActionSuggestedBinding) * num_bindings);
 
 	for (int action_count = 0; action_count < num_actions; action_count++) {
 		for (int handCount = 0; handCount < HANDCOUNT; handCount++) {
@@ -871,7 +867,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		if (has_external_texture_support) {
 			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
 				.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-				.next = NULL 
+				.next = NULL
 			};
 			result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
 			if (!xr_result(result, "failed to release swapchain image!")) {
@@ -937,7 +933,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		projectionLayer->views = projection_views;
 
 		const XrCompositionLayerBaseHeader *const projectionlayers[1] = { (const XrCompositionLayerBaseHeader *const)
-																				  projectionLayer };
+					projectionLayer };
 		XrFrameEndInfo frameEndInfo = {
 			.type = XR_TYPE_FRAME_END_INFO,
 			.next = NULL,
@@ -956,7 +952,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection) {
 	// ugh again
 	// XrView views[view_count];
-	XrView * views = (XrView *) malloc(sizeof(XrView) * view_count);
+	XrView *views = (XrView *)malloc(sizeof(XrView) * view_count);
 	for (uint32_t i = 0; i < view_count; i++) {
 		views[i].type = XR_TYPE_VIEW;
 		views[i].next = NULL;
@@ -1027,14 +1023,14 @@ void OpenXRApi::update_controllers() {
 	XrResult result;
 
 	const XrActiveActionSet activeActionSet = {
-		.actionSet = actionSet, 
+		.actionSet = actionSet,
 		.subactionPath = XR_NULL_PATH
 	};
 
-	XrActionsSyncInfo syncInfo = { 
+	XrActionsSyncInfo syncInfo = {
 		.type = XR_TYPE_ACTIONS_SYNC_INFO,
 		.countActiveActionSets = 1,
-		.activeActionSets = &activeActionSet 
+		.activeActionSets = &activeActionSet
 	};
 	result = xrSyncActions(session, &syncInfo);
 	xr_result(result, "failed to sync actions!");
@@ -1124,7 +1120,7 @@ void OpenXRApi::update_controllers() {
 	};
 }
 
-void OpenXRApi::recommended_rendertarget_size(uint32_t *width,uint32_t *height) {
+void OpenXRApi::recommended_rendertarget_size(uint32_t *width, uint32_t *height) {
 	*width = configuration_views[0].recommendedImageRectWidth;
 	*height = configuration_views[0].recommendedImageRectHeight;
 }
@@ -1201,7 +1197,7 @@ void OpenXRApi::process_openxr() {
 
 	XrEventDataBuffer runtimeEvent = {
 		.type = XR_TYPE_EVENT_DATA_BUFFER,
-		.next = NULL 
+		.next = NULL
 	};
 
 	XrResult pollResult = xrPollEvent(instance, &runtimeEvent);
@@ -1288,9 +1284,9 @@ void OpenXRApi::process_openxr() {
 		return;
 	}
 
-	XrFrameWaitInfo frameWaitInfo = { 
+	XrFrameWaitInfo frameWaitInfo = {
 		.type = XR_TYPE_FRAME_WAIT_INFO,
-		.next = NULL 
+		.next = NULL
 	};
 	result = xrWaitFrame(session, &frameWaitInfo, &frameState);
 	if (!xr_result(result, "xrWaitFrame() was not successful, exiting...")) {
@@ -1307,8 +1303,8 @@ void OpenXRApi::process_openxr() {
 		.space = local_space
 	};
 	XrViewState viewState = {
-		.type = XR_TYPE_VIEW_STATE, 
-		.next = NULL 
+		.type = XR_TYPE_VIEW_STATE,
+		.next = NULL
 	};
 	uint32_t viewCountOutput;
 	result = xrLocateViews(session, &viewLocateInfo, &viewState, view_count, &viewCountOutput, views);
@@ -1316,9 +1312,9 @@ void OpenXRApi::process_openxr() {
 		return;
 	}
 
-	XrFrameBeginInfo frameBeginInfo = { 
+	XrFrameBeginInfo frameBeginInfo = {
 		.type = XR_TYPE_FRAME_BEGIN_INFO,
-		.next = NULL 
+		.next = NULL
 	};
 
 	result = xrBeginFrame(session, &frameBeginInfo);

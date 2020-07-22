@@ -59,8 +59,8 @@ public:
 		LAST_ACTION_INDEX
 	};
 
-private: 
-	static OpenXRApi * singleton;
+private:
+	static OpenXRApi *singleton;
 	int use_count;
 
 	XrInstance instance;
@@ -132,7 +132,7 @@ public:
 	void fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection);
 
 	// recommended_rendertarget_size() returns required size of our image buffers
-	void recommended_rendertarget_size(uint32_t *width,uint32_t *height);
+	void recommended_rendertarget_size(uint32_t *width, uint32_t *height);
 
 	// get_view_matrix() should be called after fill_projection_matrix()
 	bool get_view_matrix(int eye, float world_scale, godot_transform *transform_for_eye);

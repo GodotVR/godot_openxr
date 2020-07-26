@@ -212,6 +212,11 @@ OpenXRApi::OpenXRApi() {
 		enabledExtensions[enabledExtensionCount++] = XR_MND_BALL_ON_STICK_EXTENSION_NAME;
 	}
 
+// https://stackoverflow.com/a/55926503
+#if defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
+#define __GCC__
+#endif
+
 	// Microsoft wants fields in definition to be in order or it will have a hissy fit!
 	XrInstanceCreateInfo instanceCreateInfo = {
 		.type = XR_TYPE_INSTANCE_CREATE_INFO,
@@ -220,13 +225,13 @@ OpenXRApi::OpenXRApi() {
 		.applicationInfo = {
 	// TODO: get application name from godot
 	// TODO: establish godot version -> uint32_t versioning
-#ifdef __GNUC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
+#ifdef __GCC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
 				{ .applicationName = "Godot OpenXR Plugin" },
 #else
 				.applicationName = "Godot OpenXR Plugin",
 #endif
 				.applicationVersion = 1,
-#ifdef __GNUC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
+#ifdef __GCC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
 				{ .engineName = "Godot Engine" },
 #else
 				.engineName = "Godot Engine",

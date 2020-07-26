@@ -40,6 +40,7 @@ if env['platform'] == "windows":
     # Check some environment settings
     if env['use_llvm']:
         env['CXX'] = 'clang++'
+        env['CC'] = 'clang'
 
         if env['target'] in ('debug', 'd'):
             env.Append(CCFLAGS = ['-fPIC', '-g3','-Og', '-std=c++17'])
@@ -67,6 +68,9 @@ elif env['platform'] == "linux":
     target_path += "linux/"
 
     # note, on linux the OpenXR SDK is installed in /usr and should be accessible
+    if env['use_llvm']:
+        env['CXX'] = 'clang++'
+        env['CC'] = 'clang'
 
     if env['target'] in ('debug', 'd'):
         env.Append(CCFLAGS = ['-fPIC', '-ggdb','-O0'])

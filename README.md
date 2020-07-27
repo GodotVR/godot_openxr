@@ -16,10 +16,12 @@ On the other hand the godot_openxr plugin can be compiled in debug mode without 
 
 ## Status
 
-* This plugin only supports Linux/X11.
-* HMD poses and HMD rendering work.
-* Controller/Actions are unimplemented.
-* The code structure could be improved.
+* This plugin only supports Linux/X11. Windows support is in early WIP.
+* VR is tested with SteamVR and Monado
+* Explicit support for controller input with interaction profile:
+  * Valve Index Controller
+  * Monado Playstation Move Controller
+* Limited support for other controllers via Khronos Simple interaction profile.
 
 ## Building this module
 In order to compile this module you will have to clone the source code to disk. You will need a C/C++ compiler, python and scons installed. This is the same toolchain you will need in order to compile Godot from master. The documentation on Godot is a very good place to read up on this. It is too much information to duplicate here.
@@ -33,21 +35,23 @@ git submodule init
 git submodule update
 ```
 
-(We may switch to godot-cpp in the near future)
-
 ### OpenXR SDK loader
-OpenXR requires a loaded to be compiled in, you can find the source for this here: https://github.com/KhronosGroup/OpenXR-SDK
+OpenXR on desktop PCs usually requires using a loader provided by Khronos, you can find the source here: https://github.com/KhronosGroup/OpenXR-SDK
 
-On Linux the loader and include files are installed within the `/usr` folder structure and they should be picked up automatically.
+On Linux the loader and include files should be installed system wide via package manager (or manually) within the `/usr` folder structure and they should be picked up automatically.
 
 On Windows a precompiled version of the loaded can be found in `openxr_loader_windows`, currently only the x86 version is used. 
 
 ### Compiling the plugin
 If everything is in place compiling should be pretty straight forward
 
-For Linux: ```scons platform=linux```
-For OSX: ```scons platform=osx```
 For Windows: ```scons platform=windows```
+For Linux: ```scons platform=linux```
+
+On older linux distributions (e.g. Ubuntu 18.04) the plugin may not build with gcc.
+In this case install clang and compile the plugin with ```scons use_llvm=yes platform=linux```
+
+Currently there is no proper OpenXR support on OSX.
 
 The compiled plugin and related files will be placed in `demo/addons/`. 
 When using godot_openxr in another project, copy this directory.

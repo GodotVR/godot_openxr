@@ -61,6 +61,7 @@ public:
 
 private:
 	static OpenXRApi *singleton;
+	bool successful_init;
 	int use_count;
 
 	XrInstance instance = XR_NULL_HANDLE;
@@ -77,25 +78,25 @@ private:
 #else
 	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
 #endif
-	XrSwapchainImageOpenGLKHR **images;
-	XrSwapchain *swapchains;
+	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchain *swapchains = NULL;
 	uint32_t view_count;
-	XrViewConfigurationView *configuration_views;
+	XrViewConfigurationView *configuration_views = NULL;
 	// GLuint** framebuffers;
 	// GLuint depthbuffer;
 
-	XrCompositionLayerProjection *projectionLayer;
+	XrCompositionLayerProjection *projectionLayer = NULL;
 	XrFrameState frameState;
 	bool running;
 
 	XrSessionState state;
 	bool should_render;
 
-	uint32_t *buffer_index;
+	uint32_t *buffer_index = NULL;
 
 	bool views_located = false;
-	XrView *views;
-	XrCompositionLayerProjectionView *projection_views;
+	XrView *views = NULL;
+	XrCompositionLayerProjectionView *projection_views = NULL;
 
 	XrActionSet actionSet;
 	XrAction actions[LAST_ACTION_INDEX];
@@ -106,6 +107,7 @@ private:
 
 	bool monado_stick_on_ball_ext;
 
+	bool is_successful_init();
 	bool xr_result(XrResult result, const char *format, ...);
 	bool isExtensionSupported(const char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount);
 	bool isViewConfigSupported(XrViewConfigurationType type, XrSystemId systemId);

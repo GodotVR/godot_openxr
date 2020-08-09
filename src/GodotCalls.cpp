@@ -7,7 +7,7 @@
 const godot_gdnative_core_api_struct *api = NULL;
 const godot_gdnative_ext_arvr_api_struct *arvr_api = NULL;
 const godot_gdnative_ext_nativescript_api_struct *nativescript_api = NULL;
-
+const godot_gdnative_ext_windows_api_struct *windows_api = NULL;
 // we don't use anything more for OpenHMD at the moment
 
 void GDN_EXPORT godot_openxr_gdnative_init(godot_gdnative_init_options *p_options) {
@@ -49,6 +49,9 @@ void GDN_EXPORT godot_openxr_gdnative_init(godot_gdnative_init_options *p_option
 							api->extensions[i]->version.major,
 							api->extensions[i]->version.minor);
 				}
+			}; break;
+			case GDNATIVE_EXT_WINDOWS: {
+				windows_api = (godot_gdnative_ext_windows_api_struct *)api->extensions[i];
 			}; break;
 			default: break;
 		};

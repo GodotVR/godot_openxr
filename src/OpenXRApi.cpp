@@ -34,6 +34,10 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 		singleton = new OpenXRApi();
 		if (singleton == NULL) {
 			printf("OpenXR init failed\n");
+		} else if (!singleton->is_successful_init()) {
+			printf("OpenXR init failed\n");
+			delete singleton;
+			singleton = NULL;
 		} else {
 			printf("OpenXR init succeeded\n");
 		}
@@ -143,6 +147,9 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 }
 
 OpenXRApi::OpenXRApi() {
+	// we set this to true if we init everything correctly
+	successful_init = false;
+
 #ifdef WIN32
 	if (!gladLoadGL()) {
 		printf("Failed to initialize GLAD\n");
@@ -252,6 +259,7 @@ OpenXRApi::OpenXRApi() {
 	}
 	free(enabledExtensions);
 
+	// TODO: Support AR?
 	XrSystemGetInfo systemGetInfo = {
 		.type = XR_TYPE_SYSTEM_GET_INFO,
 		.next = NULL,
@@ -303,24 +311,30 @@ OpenXRApi::OpenXRApi() {
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
 #ifdef WIN32
-	// TODO: support windows
+	if (windows_api == NULL) {
+		printf("GDNative Windows API is missing, please use a newer version of Godot!\n");
+		return;
+	}
 
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
+		.next = NULL,
 	};
 
-	// TODO: get this from godot engine
-	// graphics_binding_gl.hDC = ???;
-	// graphics_binding_gl.hGLRC = ???;
+	graphics_binding_gl.hDC = (HDC) windows_api->godot_windows_get_hdc();
+	graphics_binding_gl.hGLRC = (HGLRC) windows_api->godot_windows_get_hglrc();
 #else
 	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
+		.next = NULL,
 	};
 
 	// TODO: get this from godot engine
 	graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
 	graphics_binding_gl.glxContext = glXGetCurrentContext();
 	graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
+
+	// init visualid and glxFBConfig ??
 
 	printf("Graphics: Display %p, Context %" PRIxPTR ", Drawable %" PRIxPTR
 		   "\n",
@@ -418,32 +432,45 @@ OpenXRApi::OpenXRApi() {
 		return;
 	}
 
-	const bool SRGB_SWAPCHAIN = true;
+	// int64_t swapchainFormatToUse = swapchainFormats[0];
+	int64_t swapchainFormatToUse = 0;
 
-	int64_t swapchainFormatToUse = swapchainFormats[0];
+	// With the GLES2 driver we're rendering directly into this buffer with a pipeline that assumes an RGBA8 buffer.
+	// With the GLES3 driver rendering happens into an RGBA16F buffer with all rendering happening in linear color space.
+	// This buffer is then copied into the texture we supply here during the post process stage where tone mapping, glow, DOF, screenspace reflection and conversion to sRGB is applied. 
+	// As such we should chose an RGBA8 buffer here (note that an SRGB variant would allow automatic Linear to SRGB conversion but not sure if that is actually used)
+
+	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
 	printf("Swapchain Formats\n");
-	for (int i = 0; i < swapchainFormatCount; i++) {
-		printf("%lX\n", swapchainFormats[i]);
+	for (int i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
+		// printf("Found %llX\n", swapchainFormats[i]);
 #ifdef WIN32
-		if (SRGB_SWAPCHAIN && swapchainFormats[i] == GL_SRGB8_ALPHA8) {
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
 			swapchainFormatToUse = swapchainFormats[i];
 			printf("Using SRGB swapchain!\n");
 		}
-		if (!SRGB_SWAPCHAIN && swapchainFormats[i] == GL_RGBA8) {
+		if (swapchainFormats[i] == GL_RGBA8) {
 			swapchainFormatToUse = swapchainFormats[i];
 			printf("Using RGBA swapchain!\n");
 		}
 #else
-		if (SRGB_SWAPCHAIN && swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
 			printf("Using SRGB swapchain!\n");
 		}
-		if (!SRGB_SWAPCHAIN && swapchainFormats[i] == GL_RGBA8_EXT) {
+		if (swapchainFormats[i] == GL_RGBA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
 			printf("Using RGBA swapchain!\n");
 		}
 #endif
+	}
+
+	// Couldn't find any we want? use the first one. 
+	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
+	if (swapchainFormatToUse == 0) {
+		swapchainFormatToUse = swapchainFormats[0];
+		printf("Couldn't find prefered swapchain format, using %llX\n", swapchainFormatToUse);
 	}
 
 	free(swapchainFormats);
@@ -461,7 +488,7 @@ OpenXRApi::OpenXRApi() {
 			.createFlags = 0,
 			.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
 			.format = swapchainFormatToUse,
-			.sampleCount = 1,
+			.sampleCount = configuration_views->recommendedSwapchainSampleCount, // 1,
 			.width = configuration_views[i].recommendedImageRectWidth,
 			.height = configuration_views[i].recommendedImageRectHeight,
 			.faceCount = 1,
@@ -506,10 +533,10 @@ OpenXRApi::OpenXRApi() {
 	glGenTextures(1, &depthbuffer);
 	glBindTexture(GL_TEXTURE_2D, depthbuffer);
 	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
-	             configuration_views[0].recommendedImageRectWidth,
-	             configuration_views[0].recommendedImageRectHeight, 0,
-	             GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 0);
-      */
+		configuration_views[0].recommendedImageRectWidth,
+		configuration_views[0].recommendedImageRectHeight, 0,
+		GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 0);
+	*/
 
 	projectionLayer = (XrCompositionLayerProjection *)malloc(sizeof(XrCompositionLayerProjection));
 	projectionLayer->type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;
@@ -683,6 +710,9 @@ OpenXRApi::OpenXRApi() {
 	godot_controllers[1] = arvr_api->godot_arvr_add_controller((char *)"righthand", 2, true, true);
 
 	printf("initialized controllers %d %d\n", godot_controllers[0], godot_controllers[1]);
+
+	// We've made it!
+	successful_init = true;
 }
 
 OpenXRApi::~OpenXRApi() {
@@ -703,6 +733,10 @@ OpenXRApi::~OpenXRApi() {
 		xrDestroySession(session);
 	}
 	xrDestroyInstance(instance);
+}
+
+bool OpenXRApi::is_successful_init() {
+	return successful_init;
 }
 
 XrAction OpenXRApi::createAction(XrActionType actionType, const char *actionName, const char *localizedActionName) {

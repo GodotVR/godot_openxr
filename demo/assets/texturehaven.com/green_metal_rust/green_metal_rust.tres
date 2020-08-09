@@ -1,0 +1,16 @@
+[gd_resource type="SpatialMaterial" load_steps=5 format=2]
+
+[ext_resource path="res://assets/texturehaven.com/green_metal_rust/green_metal_rust_diff_1k.jpg" type="Texture" id=1]
+[ext_resource path="res://assets/texturehaven.com/green_metal_rust/green_metal_rust_spec_1k.jpg" type="Texture" id=2]
+[ext_resource path="res://assets/texturehaven.com/green_metal_rust/green_metal_rust_Nor_1k.jpg" type="Texture" id=3]
+[ext_resource path="res://assets/texturehaven.com/green_metal_rust/green_metal_rust_rough_1k.jpg" type="Texture" id=4]
+
+[resource]
+albedo_texture = ExtResource( 1 )
+metallic = 0.99
+metallic_texture = ExtResource( 2 )
+roughness_texture = ExtResource( 4 )
+normal_enabled = true
+normal_scale = 1.0
+normal_texture = ExtResource( 3 )
+uv1_triplanar = true

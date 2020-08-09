@@ -56,18 +56,23 @@ godot_bool godot_arvr_is_initialized(const void *p_data) {
 };
 
 godot_bool godot_arvr_initialize(void *p_data) {
-	godot_bool ret;
+	godot_bool ret = false;
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
+	// Doesn't yet exist? create our OpenXR API instance
 	if (arvr_data->openxr_api == NULL) {
 		arvr_data->openxr_api = OpenXRApi::openxr_get_api();
-		if (arvr_data->openxr_api != NULL) {
-			// TODO reset state if necessary
-		};
 	};
 
+	// We (already) have our API instance? cool!
+	if (arvr_data->openxr_api != NULL) {
+		// TODO reset state if necessary
+
+		// We're good
+		ret = true;
+	}
+
 	// and return our result
-	ret = arvr_data->openxr_api != NULL;
 	return ret;
 };
 
@@ -78,7 +83,7 @@ void godot_arvr_uninitialize(void *p_data) {
 		// note, this will already be removed as the primary interface
 		// by ARVRInterfaceGDNative
 
-		// detach all our divices
+		// detach all our devices
 		/*
 		for (uint32_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
 		  godot_detach_device(arvr_data, i);

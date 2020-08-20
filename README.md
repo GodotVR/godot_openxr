@@ -56,9 +56,21 @@ Currently there is no proper OpenXR support on OSX.
 The compiled plugin and related files will be placed in `demo/addons/`. 
 When using godot_openxr in another project, copy this directory.
 
+
+If you compile with gcc and encounter the error message
+```
+sorry, unimplemented: non-trivial designated initializers not supported
+```
+it probably means your gcc is too old (e.g. Ubuntu 18.04).
+The easiest way around this is to compile the plugin with clang instead.
+```
+apt install clang
+scons platform=linux use_llvm=yes
+```
+
 Testing
 -------
-Start Godot, open the godot_openxr/demo project and click play.
+After compiling the plugin, start Godot, open the godot_openxr/demo project and click play.
 
 Using this module in your own project
 -------------------------------------

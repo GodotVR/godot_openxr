@@ -86,7 +86,7 @@ private:
 	// GLuint depthbuffer;
 
 	XrCompositionLayerProjection *projectionLayer = NULL;
-	XrFrameState frameState;
+	XrFrameState frameState = {};
 	bool running;
 
 	XrSessionState state;

@@ -161,7 +161,7 @@ OpenXRApi::OpenXRApi() {
 	buffer_index = NULL;
 
 	state = XR_SESSION_STATE_UNKNOWN;
-	should_render = false;
+	view_pose_valid = false;
 
 	monado_stick_on_ball_ext = false;
 
@@ -937,9 +937,14 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 	if (!running || state >= XR_SESSION_STATE_STOPPING)
 		return;
 
-	if (!frameState.shouldRender) {
-		// TODO: When godot doesn't render & call
-		// get_external_texture_for_eye(), we also don't need to release
+	// must have valid view pose for projection_views[eye].pose to submit layer
+	if (!frameState.shouldRender || !view_pose_valid) {
+		/* Godot 3.1: we acquire and release the image below in this function.
+		 * Godot 3.2+: get_external_texture_for_eye() on acquires the image,
+		 * therefore we have to release it here.
+		 * TODO: Tell godot not to call get_external_texture_for_eye() when
+		 * frameState.shouldRender is false, then remove the image release here
+		 */
 		if (has_external_texture_support) {
 			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
 				.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
@@ -1229,8 +1234,8 @@ bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *
 		return false;
 	}
 
-	if (views == NULL || !views_located) {
-		printf("views not located! (check tracking?)\n");
+	if (views == NULL || !view_pose_valid) {
+		printf("don't have valid view pose! (check tracking?)\n");
 		return false;
 	}
 
@@ -1408,10 +1413,17 @@ void OpenXRApi::process_openxr() {
 	uint32_t viewCountOutput;
 	result = xrLocateViews(session, &viewLocateInfo, &viewState, view_count, &viewCountOutput, views);
 	if (!xr_result(result, "Could not locate views")) {
-		views_located = false;
 		return;
 	}
-	views_located = true;
+
+	bool pose_invalid = false;
+	for (int i = 0; i < viewCountOutput; i++) {
+		if ((viewState.viewStateFlags & XR_VIEW_STATE_ORIENTATION_VALID_BIT) == 0 ||
+				(viewState.viewStateFlags & XR_VIEW_STATE_POSITION_VALID_BIT) == 0) {
+			pose_invalid = true;
+		}
+	}
+	view_pose_valid = !pose_invalid;
 
 	XrFrameBeginInfo frameBeginInfo = {
 		.type = XR_TYPE_FRAME_BEGIN_INFO,

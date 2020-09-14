@@ -90,11 +90,10 @@ private:
 	bool running;
 
 	XrSessionState state;
-	bool should_render;
+	bool view_pose_valid = false;
 
 	uint32_t *buffer_index = NULL;
 
-	bool views_located = false;
 	XrView *views = NULL;
 	XrCompositionLayerProjectionView *projection_views = NULL;
 

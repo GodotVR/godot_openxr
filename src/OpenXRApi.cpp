@@ -323,8 +323,8 @@ OpenXRApi::OpenXRApi() {
 		.next = NULL,
 	};
 
-	graphics_binding_gl.hDC = (HDC) os->get_native_handle(OS::WINDOW_VIEW);
-	graphics_binding_gl.hGLRC = (HGLRC) os->get_native_handle(OS::OPENGL_CONTEXT);
+	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OS::WINDOW_VIEW);
+	graphics_binding_gl.hGLRC = (HGLRC)os->get_native_handle(OS::OPENGL_CONTEXT);
 
 	if ((graphics_binding_gl.hDC == 0) || (graphics_binding_gl.hGLRC == 0)) {
 		printf("Windows native handle API is missing, please use a newer version of Godot!\n");
@@ -445,7 +445,7 @@ OpenXRApi::OpenXRApi() {
 
 	// With the GLES2 driver we're rendering directly into this buffer with a pipeline that assumes an RGBA8 buffer.
 	// With the GLES3 driver rendering happens into an RGBA16F buffer with all rendering happening in linear color space.
-	// This buffer is then copied into the texture we supply here during the post process stage where tone mapping, glow, DOF, screenspace reflection and conversion to sRGB is applied. 
+	// This buffer is then copied into the texture we supply here during the post process stage where tone mapping, glow, DOF, screenspace reflection and conversion to sRGB is applied.
 	// As such we should chose an RGBA8 buffer here (note that an SRGB variant would allow automatic Linear to SRGB conversion but not sure if that is actually used)
 
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
@@ -474,7 +474,7 @@ OpenXRApi::OpenXRApi() {
 #endif
 	}
 
-	// Couldn't find any we want? use the first one. 
+	// Couldn't find any we want? use the first one.
 	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
 	if (swapchainFormatToUse == 0) {
 		swapchainFormatToUse = swapchainFormats[0];
@@ -809,7 +809,8 @@ XrResult OpenXRApi::getActionStates(XrAction action, XrStructureType actionState
 				break;
 			}
 
-			default: return XR_ERROR_ACTION_TYPE_MISMATCH; // TOOD
+			default:
+				return XR_ERROR_ACTION_TYPE_MISMATCH; // TOOD
 		}
 	}
 
@@ -932,7 +933,6 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		return;
 
 	if (!frameState.shouldRender) {
-
 		// TODO: When godot doesn't render & call
 		// get_external_texture_for_eye(), we also don't need to release
 		if (has_external_texture_support) {

@@ -49,7 +49,8 @@ void GDN_EXPORT godot_openxr_gdnative_init(godot_gdnative_init_options *p_option
 							api->extensions[i]->version.minor);
 				}
 			}; break;
-			default: break;
+			default:
+				break;
 		};
 	};
 }
@@ -93,7 +94,7 @@ int64_t ___godot_icall_int_int_int(godot_method_bind *mb, godot_object *inst,
 	int64_t ret;
 	const void *args[] = {
 		(void *)&arg0,
-		(void *)&arg1,		
+		(void *)&arg1,
 	};
 
 	api->godot_method_bind_ptrcall(mb, inst, args, &ret);

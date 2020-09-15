@@ -36,7 +36,7 @@ func _ready():
 	# Get button press feedback from our parent (should be an ARVRController)
 	get_parent().connect(\"button_pressed\", self, \"_on_button_pressed\")
 	get_parent().connect(\"button_release\", self, \"_on_button_release\")
-	
+
 	# apply our world scale to our laser position
 	$Laser.translation.y = laser_y * ws
 
@@ -45,11 +45,11 @@ func _process(delta):
 	if (ws != new_ws):
 		ws = new_ws
 	$Laser.translation.y = laser_y * ws
-	
+
 	if $Laser/RayCast.enabled and $Laser/RayCast.is_colliding():
 		var new_at = $Laser/RayCast.get_collision_point()
 		var new_target = $Laser/RayCast.get_collider()
-		
+
 		if new_at == last_collided_at:
 			pass
 		elif target:
@@ -59,7 +59,7 @@ func _process(delta):
 		else:
 			if new_target.has_method(\"_on_pointer_moved\"):
 				new_target._on_pointer_moved(new_at, last_collided_at)
-		
+
 		last_collided_at = new_at
 
 "

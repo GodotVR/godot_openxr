@@ -2,7 +2,7 @@
 
 ## Versions
 
-Requires Godot 3.2. 
+Requires Godot 3.2.
 
 If not yet merged you must use a custom compile with the follow PR included:
 https://github.com/godotengine/godot/pull/42531
@@ -43,7 +43,7 @@ OpenXR on desktop PCs usually requires using a loader provided by Khronos, you c
 
 On Linux the loader and include files should be installed system wide via package manager (or manually) within the `/usr` folder structure and they should be picked up automatically.
 
-On Windows a precompiled version of the loaded can be found in `openxr_loader_windows`, currently only the x86 version is used. 
+On Windows a precompiled version of the loaded can be found in `openxr_loader_windows`, currently only the x86 version is used.
 
 ### Compiling the plugin
 If everything is in place compiling should be pretty straight forward
@@ -56,7 +56,7 @@ In this case install clang and compile the plugin with ```scons use_llvm=yes pla
 
 Currently there is no proper OpenXR support on OSX.
 
-The compiled plugin and related files will be placed in `demo/addons/`. 
+The compiled plugin and related files will be placed in `demo/addons/`.
 When using godot_openxr in another project, copy this directory.
 
 If you compile with gcc and encounter the error message

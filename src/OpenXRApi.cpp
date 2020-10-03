@@ -2,6 +2,7 @@
 // Helper calls and singleton container for accessing openxr
 
 #include "OpenXRApi.h"
+#include "OS.h"
 
 OpenXRApi *OpenXRApi::singleton = NULL;
 
@@ -310,26 +311,33 @@ OpenXRApi::OpenXRApi() {
 	// TODO: support wayland
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
-#ifdef WIN32
-	if (windows_api == NULL) {
-		printf("GDNative Windows API is missing, please use a newer version of Godot!\n");
-		return;
-	}
 
+	OS *os = OS::get_singleton();
+
+	// this will be 0 for GLES3, 1 for GLES2, not sure yet for Vulkan.
+	int video_driver = os->get_current_video_driver();
+
+#ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
 		.next = NULL,
 	};
 
-	graphics_binding_gl.hDC = (HDC) windows_api->godot_windows_get_hdc();
-	graphics_binding_gl.hGLRC = (HGLRC) windows_api->godot_windows_get_hglrc();
+	graphics_binding_gl.hDC = (HDC) os->get_native_handle(OS::WINDOW_VIEW);
+	graphics_binding_gl.hGLRC = (HGLRC) os->get_native_handle(OS::OPENGL_CONTEXT);
+
+	if ((graphics_binding_gl.hDC == 0) || (graphics_binding_gl.hGLRC == 0)) {
+		printf("Windows native handle API is missing, please use a newer version of Godot!\n");
+		return;
+	}
+
 #else
 	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
 		.next = NULL,
 	};
 
-	// TODO: get this from godot engine
+	// TODO: get this from godot engine using get_native_handle
 	graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
 	graphics_binding_gl.glxContext = glXGetCurrentContext();
 	graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();

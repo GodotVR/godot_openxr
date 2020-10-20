@@ -312,7 +312,7 @@ OpenXRApi::OpenXRApi() {
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
 
-	OS *os = OS::get_singleton();
+	OSNative *os = OSNative::get_singleton();
 
 	// this will be 0 for GLES3, 1 for GLES2, not sure yet for Vulkan.
 	int video_driver = os->get_current_video_driver();
@@ -323,8 +323,8 @@ OpenXRApi::OpenXRApi() {
 		.next = NULL,
 	};
 
-	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OS::WINDOW_VIEW);
-	graphics_binding_gl.hGLRC = (HGLRC)os->get_native_handle(OS::OPENGL_CONTEXT);
+	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OSNative::WINDOW_VIEW);
+	graphics_binding_gl.hGLRC = (HGLRC)os->get_native_handle(OSNative::OPENGL_CONTEXT);
 
 	if ((graphics_binding_gl.hDC == 0) || (graphics_binding_gl.hGLRC == 0)) {
 		printf("Windows native handle API is missing, please use a newer version of Godot!\n");

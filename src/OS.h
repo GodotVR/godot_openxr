@@ -7,15 +7,15 @@
 
 #include "GodotCalls.h"
 
-class OS {
+class OSNative {
 private:
-	static OS *singleton;
-	godot_object *_os_singleton;
+	static OSNative *singleton;
+	godot_object *_os_singleton = nullptr;
 
-	godot_method_bind *mb_get_ticks_msec;
-	godot_method_bind *mb_get_screen_size;
-	godot_method_bind *mb_get_current_video_driver;
-	godot_method_bind *mb_get_native_handle;
+	godot_method_bind *mb_get_ticks_msec = nullptr;
+	godot_method_bind *mb_get_screen_size = nullptr;
+	godot_method_bind *mb_get_current_video_driver = nullptr;
+	godot_method_bind *mb_get_native_handle = nullptr;
 
 public:
 	enum HandleType {
@@ -26,11 +26,11 @@ public:
 		OPENGL_CONTEXT // HGLRC, X11::GLXContext, NSOpenGLContext*, EGLContext* ...
 	};
 
-	static OS *get_singleton();
+	static OSNative *get_singleton();
 	static void cleanup_singleton();
 
-	OS();
-	~OS();
+	OSNative();
+	~OSNative();
 
 	int64_t get_ticks_msec();
 	godot_vector2 get_screen_size(const int64_t screen = -1);

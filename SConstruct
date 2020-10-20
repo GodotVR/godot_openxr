@@ -9,7 +9,7 @@ opts = Variables(customs, ARGUMENTS)
 env = DefaultEnvironment()
 
 # Define our parameters
-opts.Add(EnumVariable('platform', "Platform", 'windows', ['linux', 'osx', 'windows']))
+opts.Add(EnumVariable('platform', "Platform", 'windows', ['linux', 'windows']))
 opts.Add(EnumVariable('target', "Compilation target", 'release', ['d', 'debug', 'r', 'release']))
 opts.AddVariables(
     PathVariable('target_path', 'The path where the lib is installed.', 'demo/addons/godot-openxr/bin/'),

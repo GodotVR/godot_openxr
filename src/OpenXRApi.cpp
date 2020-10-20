@@ -345,6 +345,19 @@ OpenXRApi::OpenXRApi() {
 	graphics_binding_gl.glxContext = (GLXContext)glxcontext_handle;
 	graphics_binding_gl.glxDrawable = (GLXDrawable)glxdrawable_handle;
 
+	if (graphics_binding_gl.xDisplay == NULL) {
+		printf("Failed to get xDisplay from Godot, using XOpenDisplay(NULL)\n");
+		graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
+	}
+	if (graphics_binding_gl.glxContext == NULL) {
+		printf("Failed to get glxContext from Godot, using glXGetCurrentContext()\n");
+		graphics_binding_gl.glxContext = glXGetCurrentContext();
+	}
+	if (graphics_binding_gl.glxDrawable == 0) {
+		printf("Failed to get glxDrawable from Godot, using glXGetCurrentDrawable()\n");
+		graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
+	}
+
 	// spec says to use proper values but runtimes don't care
 	graphics_binding_gl.visualid = 0;
 	graphics_binding_gl.glxFBConfig = 0;

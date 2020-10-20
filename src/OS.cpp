@@ -55,9 +55,9 @@ godot_int OS::get_current_video_driver() {
 	return ___godot_icall_int(mb_get_current_video_driver, _os_singleton);
 }
 
-godot_int OS::get_native_handle(godot_int p_handle_type) {
+void *OS::get_native_handle(godot_int p_handle_type) {
 	if (mb_get_native_handle == NULL) {
 		return 0;
 	}
-	return ___godot_icall_int_int(mb_get_native_handle, _os_singleton, p_handle_type);
+	return (void *)___godot_icall_int_int(mb_get_native_handle, _os_singleton, p_handle_type);
 }

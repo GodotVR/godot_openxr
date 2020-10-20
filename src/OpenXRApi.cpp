@@ -1346,6 +1346,10 @@ void OpenXRApi::process_openxr() {
 					}
 
 					XrPath prof = state.interactionProfile;
+					if (prof == XR_NULL_PATH) {
+						printf("No interaction profile for %s\n", i == 0 ? "/user/hand/left" : "/user/hand/right");
+						continue;
+					}
 
 					uint32_t strl;
 					char profile_str[XR_MAX_PATH_LENGTH];

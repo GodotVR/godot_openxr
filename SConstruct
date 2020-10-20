@@ -74,8 +74,10 @@ elif env['platform'] == "linux":
 
     if env['target'] in ('debug', 'd'):
         env.Append(CCFLAGS = ['-fPIC', '-ggdb','-O0'])
+        env.Append(CXXFLAGS = ['-fPIC', '-ggdb','-O0'])
     else:
         env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
+        env.Append(CXXFLAGS = ['-fPIC', '-g','-O3'])
     env.Append(CXXFLAGS = [ '-std=c++0x' ])
     env.Append(LINKFLAGS = [ '-Wl,-R,\'$$ORIGIN\'' ])
 

@@ -48,7 +48,7 @@ godot_vector2 OS::get_screen_size(const int64_t screen) {
 	return ___godot_icall_Vector2_int(mb_get_screen_size, _os_singleton, screen);
 }
 
-godot_int OS::get_current_video_driver() {
+int64_t OS::get_current_video_driver() {
 	if (mb_get_current_video_driver == NULL) {
 		return 0;
 	}

@@ -34,7 +34,7 @@ public:
 
 	int64_t get_ticks_msec();
 	godot_vector2 get_screen_size(const int64_t screen = -1);
-	godot_int get_current_video_driver();
+	int64_t get_current_video_driver();
 	void *get_native_handle(godot_int p_handle_type);
 };
 

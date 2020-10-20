@@ -337,12 +337,17 @@ OpenXRApi::OpenXRApi() {
 		.next = NULL,
 	};
 
-	// TODO: get this from godot engine using get_native_handle
-	graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
-	graphics_binding_gl.glxContext = glXGetCurrentContext();
-	graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
+	void *display_handle = (void *)os->get_native_handle(OSNative::DISPLAY_HANDLE);
+	void *glxcontext_handle = (void *)os->get_native_handle(OSNative::OPENGL_CONTEXT);
+	void *glxdrawable_handle = (void *)os->get_native_handle(OSNative::WINDOW_HANDLE);
 
-	// init visualid and glxFBConfig ??
+	graphics_binding_gl.xDisplay = (Display *)display_handle;
+	graphics_binding_gl.glxContext = (GLXContext)glxcontext_handle;
+	graphics_binding_gl.glxDrawable = (GLXDrawable)glxdrawable_handle;
+
+	// spec says to use proper values but runtimes don't care
+	graphics_binding_gl.visualid = 0;
+	graphics_binding_gl.glxFBConfig = 0;
 
 	printf("Graphics: Display %p, Context %" PRIxPTR ", Drawable %" PRIxPTR
 		   "\n",

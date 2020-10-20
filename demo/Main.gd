@@ -1,18 +1,8 @@
 extends Spatial
 
-
 func _ready():
-	var arvr_interface = ARVRServer.find_interface("OpenXR")
-	if arvr_interface and arvr_interface.initialize():
-		# list devices
-		print("AR VR Interface initialized")
-
-		# and tell our viewport to render
-		get_viewport().arvr = true
-		print("Started ARVR")
-		
-		Engine.iterations_per_second = 144
-
+	# Start our OpenXR session
+	$FPSController.initialise()
 
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame
@@ -25,11 +15,11 @@ func _process(delta):
 	# We minipulate our origin point to move around. Note that with roomscale tracking a little more then this is needed
 	# because we'll rotate around our origin point, not around our player. But that is a subject for another day.
 	if (Input.is_key_pressed(KEY_LEFT)):
-		$ARVROrigin.rotation.y += delta
+		$FPSController.rotation.y += delta
 	elif (Input.is_key_pressed(KEY_RIGHT)):
-		$ARVROrigin.rotation.y -= delta
+		$FPSController.rotation.y -= delta
 
 	if (Input.is_key_pressed(KEY_UP)):
-		$ARVROrigin.translation -= $ARVROrigin.transform.basis.z * delta;
+		$FPSController.translation -= $FPSController.transform.basis.z * delta;
 	elif (Input.is_key_pressed(KEY_DOWN)):
-		$ARVROrigin.translation += $ARVROrigin.transform.basis.z * delta;
+		$FPSController.translation += $FPSController.transform.basis.z * delta;

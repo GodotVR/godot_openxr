@@ -2,7 +2,10 @@
 
 ## Versions
 
-Requires Godot 3.1.
+Requires Godot 3.2. 
+
+If not yet merged you must use a custom compile with the follow PR included:
+https://github.com/godotengine/godot/pull/42531
 
 Note: The godot engine (the full engine, not this plugin) must be compiled in release_debug mode, i.e. with
 
@@ -56,7 +59,6 @@ Currently there is no proper OpenXR support on OSX.
 The compiled plugin and related files will be placed in `demo/addons/`. 
 When using godot_openxr in another project, copy this directory.
 
-
 If you compile with gcc and encounter the error message
 ```
 sorry, unimplemented: non-trivial designated initializers not supported
@@ -71,6 +73,10 @@ scons platform=linux use_llvm=yes
 Testing
 -------
 After compiling the plugin, start Godot, open the godot_openxr/demo project and click play.
+
+Demo
+----
+There is a demo project contained within this repository as well that shows how to set things up.
 
 Using this module in your own project
 -------------------------------------

@@ -1176,7 +1176,9 @@ void OpenXRApi::update_controllers() {
 
 		// TODO: dynamic binding
 		const int triggerButton = 15;
+		const int triggerAxis = 2;
 		const int grabButton = 2;
+		const int grabAxis = 4;
 		const int menuButton = 1;
 
 #if DEBUG_INPUT
@@ -1197,10 +1199,13 @@ void OpenXRApi::update_controllers() {
 #endif
 
 		if (triggerStates[i].isActive && triggerStates[i].changedSinceLastSync) {
-			arvr_api->godot_arvr_set_controller_button(godot_controllers[i], triggerButton, triggerStates[i].currentState);
+			float trigger = triggerStates[i].currentState;
+			arvr_api->godot_arvr_set_controller_button(godot_controllers[i], triggerButton, trigger > 0.1);
+			arvr_api->godot_arvr_set_controller_axis(godot_controllers[i], triggerAxis, trigger, true);
 		}
 		if (grabStates[i].isActive && grabStates[i].changedSinceLastSync) {
 			arvr_api->godot_arvr_set_controller_button(godot_controllers[i], grabButton, grabStates[i].currentState);
+			arvr_api->godot_arvr_set_controller_axis(godot_controllers[i], grabAxis, grabStates[i].currentState ? 1.0 : 0.0, true);
 		}
 		if (menuStates[i].isActive && menuStates[i].changedSinceLastSync) {
 			arvr_api->godot_arvr_set_controller_button(godot_controllers[i], menuButton, menuStates[i].currentState);

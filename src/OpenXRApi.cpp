@@ -296,6 +296,10 @@ OpenXRApi::OpenXRApi() {
 	}
 
 	configuration_views = (XrViewConfigurationView *)malloc(sizeof(XrViewConfigurationView) * view_count);
+	for (uint32_t i = 0; i < view_count; i++) {
+		configuration_views[i].type = XR_TYPE_VIEW_CONFIGURATION_VIEW;
+		configuration_views[i].next = NULL;
+	}
 
 	result = xrEnumerateViewConfigurationViews(instance, systemId, viewConfigType, view_count, &view_count, configuration_views);
 	if (!xr_result(result, "Failed to enumerate view configuration views!")) {

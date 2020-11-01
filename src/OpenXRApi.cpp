@@ -1048,45 +1048,38 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 }
 
 void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection) {
-	// ugh again
-	// XrView views[view_count];
-	XrView *views = (XrView *)malloc(sizeof(XrView) * view_count);
-	for (uint32_t i = 0; i < view_count; i++) {
-		views[i].type = XR_TYPE_VIEW;
-		views[i].next = NULL;
-	};
+	XrMatrix4x4f matrix;
 
+	// TODO duplicate xrLocateViews call in fill_projection_matrix and process_openxr
+	// fill_projection_matrix is called first, so we definitely need it here.
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,
+		.next = NULL,
+		.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
 		.displayTime = frameState.predictedDisplayTime,
 		.space = play_space
 	};
-
-	XrViewState viewState = { .type = XR_TYPE_VIEW_STATE, .next = NULL };
+	XrViewState viewState = {
+		.type = XR_TYPE_VIEW_STATE,
+		.next = NULL
+	};
 	uint32_t viewCountOutput;
-	XrResult result = xrLocateViews(session, &viewLocateInfo, &viewState, view_count, &viewCountOutput, views);
-
-	// printf("FOV %f %f %f %f\n", views[eye].fov.angleLeft,
-	// views[eye].fov.angleRight, views[eye].fov.angleUp,
-	// views[eye].fov.angleDown);
-
-	XrMatrix4x4f matrix;
+	XrResult result;
+	result = xrLocateViews(session, &viewLocateInfo, &viewState, view_count, &viewCountOutput, views);
 	if (!xr_result(result, "Could not locate views")) {
-		printf("Locate Views failed??\n");
-	} else {
-		XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL, views[eye].fov, p_z_near, p_z_far);
-		// printf("Fill projection matrix for eye %d / %d\n", eye,
-		// view_count
-		// - 1);
+		return;
 	}
+	if (!xr_result(result, "Could not locate views")) {
+		return;
+	}
+
+	XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL, views[eye].fov, p_z_near, p_z_far);
 
 	// printf("Projection Matrix: ");
 	for (int i = 0; i < 16; i++) {
 		p_projection[i] = matrix.m[i];
 		// printf("%f ", p_projection[i]);
 	}
-
-	free(views);
 }
 
 bool OpenXRApi::transform_from_pose(godot_transform *p_dest, XrPosef *pose, float p_world_scale) {

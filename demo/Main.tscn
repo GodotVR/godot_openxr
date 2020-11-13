@@ -1,9 +1,11 @@
-[gd_scene load_steps=7 format=2]
+[gd_scene load_steps=9 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Ground.tscn" type="PackedScene" id=2]
 [ext_resource path="res://Table.tscn" type="PackedScene" id=3]
 [ext_resource path="res://addons/godot-openxr/scenes/first_person_controller_vr.tscn" type="PackedScene" id=4]
+[ext_resource path="res://addons/godot-openxr/scenes/left_hand.tscn" type="PackedScene" id=5]
+[ext_resource path="res://addons/godot-openxr/scenes/right_hand.tscn" type="PackedScene" id=6]
 
 [sub_resource type="CubeMesh" id=1]
 size = Vector3( 0.1, 0.5, 0.1 )
@@ -22,13 +24,22 @@ directional_shadow_max_distance = 20.0
 
 [node name="FPSController" parent="." instance=ExtResource( 4 )]
 
-[node name="MeshInstance" type="MeshInstance" parent="FPSController/LeftHand" index="0"]
+[node name="MeshInstance" type="MeshInstance" parent="FPSController/LeftHandController" index="0"]
+transform = Transform( 1, 2.98023e-08, 0, 0, 1, -2.98023e-08, 0, -2.98023e-08, 1, -1.90735e-06, 0, 0 )
+visible = false
 mesh = SubResource( 1 )
 material/0 = null
 
-[node name="MeshInstance2" type="MeshInstance" parent="FPSController/RightHand" index="0"]
+[node name="MeshInstance2" type="MeshInstance" parent="FPSController/RightHandController" index="0"]
+visible = false
 mesh = SubResource( 2 )
 material/0 = null
+
+[node name="Left_hand" parent="FPSController" instance=ExtResource( 5 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
+
+[node name="Right_hand" parent="FPSController" instance=ExtResource( 6 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5 )
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )

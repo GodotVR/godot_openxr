@@ -49,6 +49,18 @@
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 
+class HandTracker {
+public:
+	bool is_initialised;
+
+	XrHandTrackerEXT hand_tracker;
+	XrHandJointLocationEXT joint_locations[XR_HAND_JOINT_COUNT_EXT];
+	XrHandJointVelocityEXT joint_velocities[XR_HAND_JOINT_COUNT_EXT];
+
+	XrHandJointVelocitiesEXT velocities;
+	XrHandJointLocationsEXT locations;
+};
+
 class OpenXRApi {
 public:
 	enum Hands {
@@ -68,9 +80,11 @@ public:
 private:
 	static OpenXRApi *singleton;
 	bool successful_init;
+	bool hand_tracking_supported = false;
 	int use_count;
 
 	XrInstance instance = XR_NULL_HANDLE;
+	XrSystemId systemId;
 	XrSession session = XR_NULL_HANDLE;
 
 	/* XR_REFERENCE_SPACE_TYPE_LOCAL: head pose on startup/recenter is coordinate system origin.
@@ -107,6 +121,7 @@ private:
 	XrAction actions[LAST_ACTION_INDEX];
 	XrPath handPaths[HANDCOUNT];
 	XrSpace handSpaces[HANDCOUNT];
+	HandTracker hand_trackers[HANDCOUNT];
 
 	godot_int godot_controllers[2];
 
@@ -120,13 +135,15 @@ private:
 	bool isExtensionSupported(const char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount);
 	bool isViewConfigSupported(XrViewConfigurationType type, XrSystemId systemId);
 	bool isReferenceSpaceSupported(XrReferenceSpaceType type);
+	bool initialiseExtensions();
+	void initialiseHandTracking();
 	bool check_graphics_requirements_gl(XrSystemId system_id);
 	XrAction createAction(XrActionType actionType, const char *actionName, const char *localizedActionName);
 	XrResult getActionStates(XrAction action, XrStructureType actionStateType, void *states);
 	bool suggestActions(const char *interaction_profile, XrAction *actions, XrPath **paths, int num_actions);
 	XrResult acquire_image(int eye);
-	bool transform_from_pose(godot_transform *p_dest, XrPosef *pose, float p_world_scale);
 	void update_controllers();
+	void update_handtracking();
 	void transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *matrix, float p_world_scale);
 
 public:
@@ -135,6 +152,8 @@ public:
 
 	OpenXRApi();
 	~OpenXRApi();
+
+	const HandTracker *get_hand_tracker(Hands p_hand) { return &hand_trackers[p_hand]; };
 
 	/* render_openxr() should be called once per eye.
 	 *
@@ -162,6 +181,9 @@ public:
 
 	// process_openxr() should be called FIRST in the frame loop
 	void process_openxr();
+
+	// helper method to get a transform from an openxr pose
+	godot::Transform transform_from_pose(const XrPosef &p_pose, float p_world_scale);
 };
 
 #endif /* !OPENXR_API_H */

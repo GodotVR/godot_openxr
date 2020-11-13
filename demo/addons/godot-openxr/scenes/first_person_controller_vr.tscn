@@ -10,9 +10,9 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0 )
 fov = 65.0
 near = 0.1
 
-[node name="LeftHand" type="ARVRController" parent="."]
+[node name="LeftHandController" type="ARVRController" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
 
-[node name="RightHand" type="ARVRController" parent="."]
+[node name="RightHandController" type="ARVRController" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5 )
 controller_id = 2

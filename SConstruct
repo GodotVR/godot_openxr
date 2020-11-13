@@ -34,8 +34,8 @@ sources = []
 # Platform dependent settings
 if env['platform'] == "windows":
     target_path += "win64/"
-    openxr_include_path += "openxr_loader_windows/1.0.9/include/"
-    openxr_library_path += "openxr_loader_windows/1.0.9/x64/lib"
+    openxr_include_path += "openxr_loader_windows/1.0.12/include/"
+    openxr_library_path += "openxr_loader_windows/1.0.12/x64/lib"
 
     # Check some environment settings
     if env['use_llvm']:

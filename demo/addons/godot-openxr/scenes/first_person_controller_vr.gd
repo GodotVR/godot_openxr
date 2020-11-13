@@ -13,6 +13,7 @@ func initialise() -> bool:
 		# increase our physics engine update speed
 		Engine.iterations_per_second = 144
 
+		# $Left_hand.set_physics_process(true)
 		return true
 	else:
 		return false

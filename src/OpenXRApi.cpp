@@ -2,9 +2,66 @@
 // Helper calls and singleton container for accessing openxr
 
 #include "OpenXRApi.h"
+#include <math.h>
 #include <OS.hpp>
 
 using namespace godot;
+
+////////////////////////////////////////////////////////////////////////////////
+// Extension functions
+
+XrResult (*xrCreateHandTrackerEXT_ptr)(
+		XrSession session,
+		const XrHandTrackerCreateInfoEXT *createInfo,
+		XrHandTrackerEXT *handTracker) = NULL;
+
+XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
+		XrSession session,
+		const XrHandTrackerCreateInfoEXT *createInfo,
+		XrHandTrackerEXT *handTracker) {
+	XrResult result;
+
+	if (xrCreateHandTrackerEXT_ptr == NULL) {
+		return XR_ERROR_HANDLE_INVALID;
+	}
+
+	return (*xrCreateHandTrackerEXT_ptr)(session, createInfo, handTracker);
+};
+
+XrResult (*xrDestroyHandTrackerEXT_ptr)(
+		XrHandTrackerEXT handTracker) = NULL;
+
+XRAPI_ATTR XrResult XRAPI_CALL xrDestroyHandTrackerEXT(
+		XrHandTrackerEXT handTracker) {
+	XrResult result;
+
+	if (xrDestroyHandTrackerEXT_ptr == NULL) {
+		return XR_ERROR_HANDLE_INVALID;
+	}
+
+	return (*xrDestroyHandTrackerEXT_ptr)(handTracker);
+};
+
+XrResult (*xrLocateHandJointsEXT_ptr)(
+		XrHandTrackerEXT handTracker,
+		const XrHandJointsLocateInfoEXT *locateInfo,
+		XrHandJointLocationsEXT *locations) = NULL;
+
+XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
+		XrHandTrackerEXT handTracker,
+		const XrHandJointsLocateInfoEXT *locateInfo,
+		XrHandJointLocationsEXT *locations) {
+	XrResult result;
+
+	if (xrLocateHandJointsEXT_ptr == NULL) {
+		return XR_ERROR_HANDLE_INVALID;
+	}
+
+	return (*xrLocateHandJointsEXT_ptr)(handTracker, locateInfo, locations);
+};
+
+////////////////////////////////////////////////////////////////////////////////
+// Singleton management
 
 OpenXRApi *OpenXRApi::singleton = NULL;
 
@@ -49,6 +106,9 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 
 	return singleton;
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// OpenXRApi
 
 template <class... Args>
 bool OpenXRApi::xr_result(XrResult result, const char *format, Args... values) {
@@ -156,6 +216,83 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 	return false;
 }
 
+bool OpenXRApi::initialiseExtensions() {
+	XrResult result;
+
+	// Maybe we should remove the error checking here, if the extension is not supported, we won't be doing anything with this.
+
+	result = xrGetInstanceProcAddr(instance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT_ptr);
+	if (!xr_result(result, "Failed to obtain xrCreateHandTrackerEXT function pointer")) {
+		return false;
+	}
+
+	result = xrGetInstanceProcAddr(instance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT_ptr);
+	if (!xr_result(result, "Failed to obtain xrDestroyHandTrackerEXT function pointer")) {
+		return false;
+	}
+
+	result = xrGetInstanceProcAddr(instance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT_ptr);
+	if (!xr_result(result, "Failed to obtain xrLocateHandJointsEXT function pointer")) {
+		return false;
+	}
+
+	return true;
+}
+
+void OpenXRApi::initialiseHandTracking() {
+	XrResult result;
+
+	XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {
+		.type = XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT,
+	};
+
+	XrSystemProperties systemProperties = {
+		.type = XR_TYPE_SYSTEM_PROPERTIES,
+		.next = &handTrackingSystemProperties,
+	};
+
+	result = xrGetSystemProperties(instance, systemId, &systemProperties);
+	if (!xr_result(result, "Failed to obtain hand tracking information")) {
+		return;
+	}
+
+	if (!handTrackingSystemProperties.supportsHandTracking) {
+		// The system does not support hand tracking
+		printf("Hand tracking is not supported\n");
+		return;
+	}
+
+	for (int i = 0; i < HANDCOUNT; i++) {
+		XrHandTrackerCreateInfoEXT createInfo = {
+			.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
+			.hand = i == HAND_LEFT ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
+			.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
+		};
+
+		result = xrCreateHandTrackerEXT(session, &createInfo, &hand_trackers[i].hand_tracker);
+		if (!xr_result(result, "Failed to obtain hand tracking information")) {
+			// not successful? then we do nothing.
+			hand_trackers[i].is_initialised = false;
+		} else {
+			hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
+			hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
+			hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
+
+			hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
+			hand_trackers[i].locations.next = &hand_trackers[i].velocities;
+			hand_trackers[i].locations.isActive = false;
+			hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
+			hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
+
+			hand_trackers[i].is_initialised = true;
+		}
+	}
+
+	printf("Hand tracking is supported\n");
+
+	hand_tracking_supported = true;
+}
+
 OpenXRApi::OpenXRApi() {
 	// we set this to true if we init everything correctly
 	successful_init = false;
@@ -224,6 +361,7 @@ OpenXRApi::OpenXRApi() {
 
 	uint32_t enabledExtensionCount = 0;
 	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
+	enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
 
 	if (monado_stick_on_ball_ext) {
 		enabledExtensions[enabledExtensionCount++] = XR_MND_BALL_ON_STICK_EXTENSION_NAME;
@@ -269,6 +407,10 @@ OpenXRApi::OpenXRApi() {
 	}
 	free(enabledExtensions);
 
+	if (!initialiseExtensions()) {
+		return;
+	}
+
 	// TODO: Support AR?
 	XrSystemGetInfo systemGetInfo = {
 		.type = XR_TYPE_SYSTEM_GET_INFO,
@@ -276,7 +418,6 @@ OpenXRApi::OpenXRApi() {
 		.formFactor = XR_FORM_FACTOR_HEAD_MOUNTED_DISPLAY,
 	};
 
-	XrSystemId systemId;
 	result = xrGetSystem(instance, &systemGetInfo, &systemId);
 	if (!xr_result(result, "Failed to get system for HMD form factor.")) {
 		return;
@@ -749,6 +890,9 @@ OpenXRApi::OpenXRApi() {
 
 	Godot::print("OpenXR initialized controllers {0} {1}", godot_controllers[0], godot_controllers[1]);
 
+	// initialise hand tracking, it's fine if this fails
+	initialiseHandTracking();
+
 	// We've made it!
 	successful_init = true;
 }
@@ -1085,23 +1229,6 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 	}
 }
 
-bool OpenXRApi::transform_from_pose(godot_transform *p_dest, XrPosef *pose, float p_world_scale) {
-	godot_quat q;
-	godot_basis basis;
-	godot_vector3 origin;
-
-	// convert orientation quad to position, should add helper function for
-	// this
-	// :)
-	api->godot_quat_new(&q, pose->orientation.x, pose->orientation.y, pose->orientation.z, pose->orientation.w);
-	api->godot_basis_new_with_euler_quat(&basis, &q);
-
-	api->godot_vector3_new(&origin, pose->position.x * p_world_scale, pose->position.y * p_world_scale, pose->position.z * p_world_scale);
-	api->godot_transform_new(p_dest, &basis, &origin);
-
-	return true;
-};
-
 void OpenXRApi::update_controllers() {
 	XrResult result;
 
@@ -1159,10 +1286,8 @@ void OpenXRApi::update_controllers() {
 			Godot::print_error(String("OpenXR Space location not valid for hand") + String::num_int64(i), __FUNCTION__, __FILE__, __LINE__);
 			continue;
 		} else {
-			if (!transform_from_pose(&controller_transform, &spaceLocation[i].pose, 1.0)) {
-				Godot::print("OpenXR Pose for hand {0} is active but invalid\n", i);
-				continue;
-			}
+			Transform *t = (Transform *)&controller_transform;
+			*t = transform_from_pose(spaceLocation[i].pose, 1.0);
 		}
 
 #if 0
@@ -1206,6 +1331,38 @@ void OpenXRApi::update_controllers() {
 			arvr_api->godot_arvr_set_controller_button(godot_controllers[i], menuButton, menuStates[i].currentState);
 		}
 	};
+}
+
+void OpenXRApi::update_handtracking() {
+	const XrTime time = frameState.predictedDisplayTime;
+	XrResult result;
+
+	if (!hand_tracking_supported) {
+		return;
+	}
+
+	for (int i = 0; i < HANDCOUNT; i++) {
+		XrHandJointsLocateInfoEXT locateInfo = {
+			.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
+			.baseSpace = play_space,
+			.time = time,
+		};
+
+		result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
+		if (xr_result(result, "failed to get tracking for hand %d!", i)) {
+			// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
+			const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
+			if (
+					!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
+				hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
+				// printf("Hand %i inactive\n", i);
+			} else {
+				// we have our hand tracking info....
+
+				// printf("Hand %i: (%.2f, %.2f, %.2f)\n", i, palm.position.x, palm.position.y, palm.position.z);
+			}
+		}
+	}
 }
 
 void OpenXRApi::recommended_rendertarget_size(uint32_t *width, uint32_t *height) {
@@ -1252,7 +1409,8 @@ bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *
 		return false;
 	}
 
-	transform_from_pose(transform_for_eye, &views[eye].pose, world_scale);
+	Transform *t = (Transform *)transform_for_eye;
+	*t = transform_from_pose(views[eye].pose, world_scale);
 
 	return true;
 }
@@ -1279,7 +1437,8 @@ bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
 		return false;
 	}
 
-	transform_from_pose(transform, &location.pose, world_scale);
+	Transform *t = (Transform *)transform;
+	*t = transform_from_pose(location.pose, world_scale);
 
 	return true;
 }
@@ -1409,6 +1568,7 @@ void OpenXRApi::process_openxr() {
 	}
 
 	update_controllers();
+	update_handtracking();
 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,
@@ -1450,4 +1610,15 @@ void OpenXRApi::process_openxr() {
 		// TODO: Tell godot not do render VR to save resources.
 		// See render_openxr() for the corresponding early exit.
 	}
+}
+
+////////////////////////////////////////////////////////////////////////////////
+// Utility functions
+
+Transform OpenXRApi::transform_from_pose(const XrPosef &p_pose, float p_world_scale) {
+	Quat q(p_pose.orientation.x, p_pose.orientation.y, p_pose.orientation.z, p_pose.orientation.w);
+	Basis basis(q);
+	Vector3 origin(p_pose.position.x * p_world_scale, p_pose.position.y * p_world_scale, p_pose.position.z * p_world_scale);
+
+	return Transform(basis, origin);
 }

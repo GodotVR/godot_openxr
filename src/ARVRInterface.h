@@ -4,7 +4,6 @@
 #ifndef OXR_ARVR_INTERFACE_H
 #define OXR_ARVR_INTERFACE_H
 
-#include "GodotCalls.h"
 #include "OpenXRApi.h"
 
 extern const godot_arvr_interface_gdnative interface_struct;

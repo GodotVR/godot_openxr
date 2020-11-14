@@ -2,21 +2,24 @@
 // Helper calls and singleton container for accessing openxr
 
 #include "OpenXRApi.h"
-#include "OS.h"
+#include <OS.hpp>
+
+using namespace godot;
 
 OpenXRApi *OpenXRApi::singleton = NULL;
 
 void OpenXRApi::openxr_release_api() {
 	if (singleton == NULL) {
 		// nothing to release
-		printf("OpenXR: tried to release non-existent OpenXR context\n");
+		Godot::print("OpenXR: tried to release non-existent OpenXR context\n");
 	} else if (singleton->use_count > 1) {
 		// decrease use count
 		singleton->use_count--;
-		printf("OpenXR: decreased use count to %i\n", singleton->use_count);
+
+		Godot::print("OpenXR: decreased use count to %i", singleton->use_count);
 	} else {
 		// cleanup openxr
-		printf("OpenXR: releasing OpenXR context\n");
+		Godot::print("OpenXR releasing OpenXR context");
 
 		delete singleton;
 		singleton = NULL;
@@ -27,27 +30,28 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 	if (singleton != NULL) {
 		// increase use count
 		singleton->use_count++;
-		printf("OpenXR: increased use count to %i\n", singleton->use_count);
+		Godot::print("OpenXR increased use count to %i", singleton->use_count);
 	} else {
 		// init openxr
-		printf("OpenXR: initialising OpenXR context\n");
+		Godot::print("OpenXR initialising OpenXR context");
 
 		singleton = new OpenXRApi();
 		if (singleton == NULL) {
-			printf("OpenXR init failed\n");
+			Godot::print_error("OpenXR init failed", __FUNCTION__, __FILE__, __LINE__);
 		} else if (!singleton->is_successful_init()) {
-			printf("OpenXR init failed\n");
+			Godot::print_error("OpenXR init failed", __FUNCTION__, __FILE__, __LINE__);
 			delete singleton;
 			singleton = NULL;
 		} else {
-			printf("OpenXR init succeeded\n");
+			Godot::print("OpenXR init succeeded");
 		}
 	}
 
 	return singleton;
 };
 
-bool OpenXRApi::xr_result(XrResult result, const char *format, ...) {
+template <class... Args>
+bool OpenXRApi::xr_result(XrResult result, const char *format, Args... values) {
 	if (XR_SUCCEEDED(result))
 		return true;
 
@@ -59,13 +63,18 @@ bool OpenXRApi::xr_result(XrResult result, const char *format, ...) {
 
 	// Damn you microsoft for not supporting this!!
 	// char formatRes[len1 + len2 + 5]; // + " []\n"
-	char *formatRes = (char *)malloc(len1 + len2 + 5);
-	sprintf(formatRes, "%s [%s]\n", format, resultString);
+	char *formatRes = (char *)malloc(len1 + len2 + 15);
+	sprintf(formatRes, "OpenXR %s [%s]\n", format, resultString);
 
+	/*
 	va_list args;
 	va_start(args, format);
 	vprintf(formatRes, args);
 	va_end(args);
+	*/
+
+	// TODO change this into a macro so we can parse the function, file and line info from where the error actually happened!
+	Godot::print_error(String(formatRes).format(Array::make(values...)), __FUNCTION__, __FILE__, __LINE__);
 
 	free(formatRes);
 
@@ -94,7 +103,7 @@ bool OpenXRApi::isViewConfigSupported(XrViewConfigurationType type, XrSystemId s
 	// XrViewConfigurationType viewConfigurations[viewConfigurationCount];
 	XrViewConfigurationType *viewConfigurations = (XrViewConfigurationType *)malloc(sizeof(XrViewConfigurationType) * viewConfigurationCount);
 	if (viewConfigurations == NULL) {
-		printf("Couldn''t allocate memory for view configurations\n");
+		Godot::print_error("Couldn''t allocate memory for view configurations", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
@@ -128,7 +137,7 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 	// XrReferenceSpaceType referenceSpaces[referenceSpacesCount];
 	XrReferenceSpaceType *referenceSpaces = (XrReferenceSpaceType *)malloc(sizeof(XrReferenceSpaceType) * referenceSpacesCount);
 	if (referenceSpaces == NULL) {
-		printf("Couldn't allocate memory for reference spaces\n");
+		Godot::print_error("OpenXR Couldn't allocate memory for reference spaces", __FUNCTION__, __FILE__, __LINE__);
 	}
 	result = xrEnumerateReferenceSpaces(session, referenceSpacesCount, &referenceSpacesCount, referenceSpaces);
 	if (!xr_result(result, "Enumerating reference spaces failed!")) {
@@ -153,7 +162,7 @@ OpenXRApi::OpenXRApi() {
 
 #ifdef WIN32
 	if (!gladLoadGL()) {
-		printf("Failed to initialize GLAD\n");
+		Godot::print_error("OpenXR Failed to initialize GLAD", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 #endif
@@ -179,7 +188,7 @@ OpenXRApi::OpenXRApi() {
 	// XrExtensionProperties extensionProperties[extensionCount];
 	XrExtensionProperties *extensionProperties = (XrExtensionProperties *)malloc(sizeof(XrExtensionProperties) * extensionCount);
 	if (extensionProperties == NULL) {
-		printf("Couldn't allocate memory for extension properties\n");
+		Godot::print_error("OpenXR Couldn't allocate memory for extension properties", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 	for (uint16_t i = 0; i < extensionCount; i++) {
@@ -194,7 +203,7 @@ OpenXRApi::OpenXRApi() {
 	}
 
 	if (!isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
-		printf("Runtime does not support OpenGL extension!\n");
+		Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
 		free(extensionProperties);
 		return;
 	}
@@ -209,7 +218,7 @@ OpenXRApi::OpenXRApi() {
 	// const char *enabledExtensions[extensionCount];
 	const char **enabledExtensions = (const char **)malloc(sizeof(const char *) * extensionCount);
 	if (enabledExtensions == NULL) {
-		printf("Couldn't allocate memory to record enabled extensions\n");
+		Godot::print_error("OpenXR Couldn't allocate memory to record enabled extensions", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 
@@ -286,7 +295,7 @@ OpenXRApi::OpenXRApi() {
 
 	XrViewConfigurationType viewConfigType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
 	if (!isViewConfigSupported(viewConfigType, systemId)) {
-		printf("Stereo View Configuration not supported!");
+		Godot::print_error("OpenXR Stereo View Configuration not supported!", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 
@@ -316,7 +325,7 @@ OpenXRApi::OpenXRApi() {
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
 
-	OSNative *os = OSNative::get_singleton();
+	OS *os = OS::get_singleton();
 
 	// this will be 0 for GLES3, 1 for GLES2, not sure yet for Vulkan.
 	int video_driver = os->get_current_video_driver();
@@ -327,11 +336,11 @@ OpenXRApi::OpenXRApi() {
 		.next = NULL,
 	};
 
-	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OSNative::WINDOW_VIEW);
-	graphics_binding_gl.hGLRC = (HGLRC)os->get_native_handle(OSNative::OPENGL_CONTEXT);
+	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OS::WINDOW_VIEW);
+	graphics_binding_gl.hGLRC = (HGLRC)os->get_native_handle(OS::OPENGL_CONTEXT);
 
 	if ((graphics_binding_gl.hDC == 0) || (graphics_binding_gl.hGLRC == 0)) {
-		printf("Windows native handle API is missing, please use a newer version of Godot!\n");
+		Godot::print_error("OpenXR Windows native handle API is missing, please use a newer version of Godot!", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 
@@ -341,24 +350,24 @@ OpenXRApi::OpenXRApi() {
 		.next = NULL,
 	};
 
-	void *display_handle = (void *)os->get_native_handle(OSNative::DISPLAY_HANDLE);
-	void *glxcontext_handle = (void *)os->get_native_handle(OSNative::OPENGL_CONTEXT);
-	void *glxdrawable_handle = (void *)os->get_native_handle(OSNative::WINDOW_HANDLE);
+	void *display_handle = (void *)os->get_native_handle(OS::DISPLAY_HANDLE);
+	void *glxcontext_handle = (void *)os->get_native_handle(OS::OPENGL_CONTEXT);
+	void *glxdrawable_handle = (void *)os->get_native_handle(OS::WINDOW_HANDLE);
 
 	graphics_binding_gl.xDisplay = (Display *)display_handle;
 	graphics_binding_gl.glxContext = (GLXContext)glxcontext_handle;
 	graphics_binding_gl.glxDrawable = (GLXDrawable)glxdrawable_handle;
 
 	if (graphics_binding_gl.xDisplay == NULL) {
-		printf("Failed to get xDisplay from Godot, using XOpenDisplay(NULL)\n");
+		Godot::print("OpenXR Failed to get xDisplay from Godot, using XOpenDisplay(NULL)");
 		graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
 	}
 	if (graphics_binding_gl.glxContext == NULL) {
-		printf("Failed to get glxContext from Godot, using glXGetCurrentContext()\n");
+		Godot::print("OpenXR Failed to get glxContext from Godot, using glXGetCurrentContext()");
 		graphics_binding_gl.glxContext = glXGetCurrentContext();
 	}
 	if (graphics_binding_gl.glxDrawable == 0) {
-		printf("Failed to get glxDrawable from Godot, using glXGetCurrentDrawable()\n");
+		Godot::print("OpenXR Failed to get glxDrawable from Godot, using glXGetCurrentDrawable()");
 		graphics_binding_gl.glxDrawable = glXGetCurrentDrawable();
 	}
 
@@ -366,15 +375,14 @@ OpenXRApi::OpenXRApi() {
 	graphics_binding_gl.visualid = 0;
 	graphics_binding_gl.glxFBConfig = 0;
 
-	printf("Graphics: Display %p, Context %" PRIxPTR ", Drawable %" PRIxPTR
-		   "\n",
+	Godot::print("OpenXR Graphics: Display %p, Context %" PRIxPTR ", Drawable %" PRIxPTR,
 			graphics_binding_gl.xDisplay,
 			(uintptr_t)graphics_binding_gl.glxContext,
 			(uintptr_t)graphics_binding_gl.glxDrawable);
 #endif
 
-	printf("Using OpenGL version: %s\n", glGetString(GL_VERSION));
-	printf("Using OpenGL Renderer: %s\n", glGetString(GL_RENDERER));
+	Godot::print("OpenXR Using OpenGL version: {0}", (char *)glGetString(GL_VERSION));
+	Godot::print("OpenXR Using OpenGL renderer: {0}", (char *)glGetString(GL_RENDERER));
 
 	XrSessionCreateInfo session_create_info = {
 		.type = XR_TYPE_SESSION_CREATE_INFO,
@@ -395,7 +403,7 @@ OpenXRApi::OpenXRApi() {
 	{
 		// most runtimes will support local and stage
 		if (!isReferenceSpaceSupported(play_space_type)) {
-			printf("runtime does not support play space type %d!\n", play_space_type);
+			Godot::print("OpenXR runtime does not support play space type {0}!", play_space_type);
 			return;
 		}
 
@@ -415,7 +423,7 @@ OpenXRApi::OpenXRApi() {
 	{
 		// all runtimes should support this
 		if (!isReferenceSpaceSupported(XR_REFERENCE_SPACE_TYPE_VIEW)) {
-			printf("runtime does not support view space!\n");
+			Godot::print_error("OpenXR runtime does not support view space!", __FUNCTION__, __FILE__, __LINE__);
 			return;
 		}
 
@@ -452,7 +460,7 @@ OpenXRApi::OpenXRApi() {
 	// int64_t swapchainFormats[swapchainFormatCount];
 	int64_t *swapchainFormats = (int64_t *)malloc(sizeof(int64_t) * swapchainFormatCount);
 	if (swapchainFormats == NULL) {
-		printf("Couldn't allocate memory for swap chain formats\n");
+		Godot::print_error("OpenXR Couldn't allocate memory for swap chain formats", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 
@@ -472,26 +480,26 @@ OpenXRApi::OpenXRApi() {
 
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
-	printf("Swapchain Formats\n");
+	Godot::print("OpenXR Swapchain Formats");
 	for (int i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
 		// printf("Found %llX\n", swapchainFormats[i]);
 #ifdef WIN32
 		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
 			swapchainFormatToUse = swapchainFormats[i];
-			printf("Using SRGB swapchain!\n");
+			Godot::print("OpenXR Using SRGB swapchain.");
 		}
 		if (swapchainFormats[i] == GL_RGBA8) {
 			swapchainFormatToUse = swapchainFormats[i];
-			printf("Using RGBA swapchain!\n");
+			Godot::print("OpenXR Using RGBA swapchain.");
 		}
 #else
 		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
-			printf("Using SRGB swapchain!\n");
+			Godot::print("OpenXR Using SRGB swapchain.");
 		}
 		if (swapchainFormats[i] == GL_RGBA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
-			printf("Using RGBA swapchain!\n");
+			Godot::print("OpenXR Using RGBA swapchain.");
 		}
 #endif
 	}
@@ -500,7 +508,7 @@ OpenXRApi::OpenXRApi() {
 	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
 	if (swapchainFormatToUse == 0) {
 		swapchainFormatToUse = swapchainFormats[0];
-		printf("Couldn't find prefered swapchain format, using %llX\n", swapchainFormatToUse);
+		Godot::print("OpenXR Couldn't find prefered swapchain format, using %llX", swapchainFormatToUse);
 	}
 
 	free(swapchainFormats);
@@ -527,7 +535,7 @@ OpenXRApi::OpenXRApi() {
 		};
 
 		result = xrCreateSwapchain(session, &swapchainCreateInfo, &swapchains[i]);
-		if (!xr_result(result, "Failed to create swapchain %d!", i)) {
+		if (!xr_result(result, "Failed to create swapchain {0}!", i)) {
 			free(swapchainLength);
 			return;
 		}
@@ -739,7 +747,7 @@ OpenXRApi::OpenXRApi() {
 	godot_controllers[0] = arvr_api->godot_arvr_add_controller((char *)"lefthand", 1, true, true);
 	godot_controllers[1] = arvr_api->godot_arvr_add_controller((char *)"righthand", 2, true, true);
 
-	printf("initialized controllers %d %d\n", godot_controllers[0], godot_controllers[1]);
+	Godot::print("OpenXR initialized controllers {0} {1}", godot_controllers[0], godot_controllers[1]);
 
 	// We've made it!
 	successful_init = true;
@@ -805,7 +813,7 @@ XrResult OpenXRApi::getActionStates(XrAction action, XrStructureType actionState
 				resultStates[i].type = XR_TYPE_ACTION_STATE_FLOAT,
 				resultStates[i].next = NULL;
 				XrResult result = xrGetActionStateFloat(session, &getInfo, &resultStates[i]);
-				if (!xr_result(result, "failed to get float value for hand %d!", i)) {
+				if (!xr_result(result, "failed to get float value for hand {0}!", i)) {
 					resultStates[i].isActive = false;
 				}
 				break;
@@ -815,7 +823,7 @@ XrResult OpenXRApi::getActionStates(XrAction action, XrStructureType actionState
 				resultStates[i].type = XR_TYPE_ACTION_STATE_BOOLEAN,
 				resultStates[i].next = NULL;
 				XrResult result = xrGetActionStateBoolean(session, &getInfo, &resultStates[i]);
-				if (!xr_result(result, "failed to get boolean value for hand %d!", i)) {
+				if (!xr_result(result, "failed to get boolean value for hand {0}!", i)) {
 					resultStates[i].isActive = false;
 				}
 				break;
@@ -825,7 +833,7 @@ XrResult OpenXRApi::getActionStates(XrAction action, XrStructureType actionState
 				resultStates[i].type = XR_TYPE_ACTION_STATE_POSE;
 				resultStates[i].next = NULL;
 				XrResult result = xrGetActionStatePose(session, &getInfo, &resultStates[i]);
-				if (!xr_result(result, "failed to get pose value for hand %d!", i)) {
+				if (!xr_result(result, "failed to get pose value for hand {0}!", i)) {
 					resultStates[i].isActive = false;
 				}
 				break;
@@ -848,7 +856,7 @@ bool OpenXRApi::suggestActions(const char *interaction_profile, XrAction *action
 	}
 
 	uint32_t num_bindings = num_actions * HANDCOUNT;
-	printf("Suggesting actions for %s, %d bindings\n", interaction_profile, num_bindings);
+	Godot::print("OpenXR Suggesting actions for {0}, {1} bindings", interaction_profile, num_bindings);
 
 	// ugh..
 	// XrActionSuggestedBinding bindings[num_bindings];
@@ -910,13 +918,8 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 
 	XrVersion desired_opengl_version = XR_MAKE_VERSION(3, 3, 0);
 	if (desired_opengl_version > opengl_reqs.maxApiVersionSupported || desired_opengl_version < opengl_reqs.minApiVersionSupported) {
-		printf(
-				"OpenXR Runtime only supports OpenGL version %d.%d "
-				"- %d.%d!\n",
-				XR_VERSION_MAJOR(opengl_reqs.minApiVersionSupported),
-				XR_VERSION_MINOR(opengl_reqs.minApiVersionSupported),
-				XR_VERSION_MAJOR(opengl_reqs.maxApiVersionSupported),
-				XR_VERSION_MINOR(opengl_reqs.maxApiVersionSupported));
+		Godot::print(
+				"OpenXR Runtime only supports OpenGL version {0}.{1} - {2}.{3}!", XR_VERSION_MAJOR(opengl_reqs.minApiVersionSupported), XR_VERSION_MINOR(opengl_reqs.minApiVersionSupported), XR_VERSION_MAJOR(opengl_reqs.maxApiVersionSupported), XR_VERSION_MINOR(opengl_reqs.maxApiVersionSupported));
 		// it might still work
 		return true;
 	}
@@ -1145,7 +1148,7 @@ void OpenXRApi::update_controllers() {
 		spaceLocation[i].next = NULL;
 
 		result = xrLocateSpace(handSpaces[i], play_space, frameState.predictedDisplayTime, &spaceLocation[i]);
-		xr_result(result, "failed to locate space %d!", i);
+		xr_result(result, "failed to locate space {0}!", i);
 		bool spaceLocationValid =
 				//(spaceLocation[i].locationFlags &
 				// XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
@@ -1153,11 +1156,11 @@ void OpenXRApi::update_controllers() {
 
 		godot_transform controller_transform;
 		if (!spaceLocationValid) {
-			printf("Space location not valid for hand %d\n", i);
+			Godot::print_error(String("OpenXR Space location not valid for hand") + String::num_int64(i), __FUNCTION__, __FILE__, __LINE__);
 			continue;
 		} else {
 			if (!transform_from_pose(&controller_transform, &spaceLocation[i].pose, 1.0)) {
-				printf("Pose for hand %d is active but invalid\n", i);
+				Godot::print("OpenXR Pose for hand {0} is active but invalid\n", i);
 				continue;
 			}
 		}
@@ -1177,17 +1180,17 @@ void OpenXRApi::update_controllers() {
 		const int menuButton = 1;
 
 #if DEBUG_INPUT
-		printf("%d: trigger active %d changed %d state %f\n", i,
+		Godot::print("OpenXR {0}: trigger active {1} changed {2} state {3}", i,
 				triggerStates[i].isActive,
 				triggerStates[i].changedSinceLastSync,
 				triggerStates[i].currentState);
 
-		printf("%d: grab active %d changed %d state %d\n", i,
+		Godot::print("OpenXR {0}: grab active {1} changed {2} state {3}", i,
 				grabStates[i].isActive,
 				grabStates[i].changedSinceLastSync,
 				grabStates[i].currentState);
 
-		printf("%d: menu active %d changed %d state %d\n", i,
+		Godot::print("OpenXR {0}: menu active {1} changed {2} state {3}", i,
 				menuStates[i].isActive,
 				menuStates[i].changedSinceLastSync,
 				menuStates[i].currentState);
@@ -1245,7 +1248,7 @@ bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *
 	}
 
 	if (views == NULL || !view_pose_valid) {
-		printf("don't have valid view pose! (check tracking?)\n");
+		Godot::print_error("OpenxR don't have valid view pose! (check tracking?)", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
@@ -1272,7 +1275,7 @@ bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
 
 	if ((location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) == 0 ||
 			(location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) == 0) {
-		printf("View space location not valid (check tracking?)\n");
+		Godot::print_error("OpenXR View space location not valid (check tracking?)", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
@@ -1316,40 +1319,38 @@ void OpenXRApi::process_openxr() {
 			case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
 				XrEventDataEventsLost *event = (XrEventDataEventsLost *)&runtimeEvent;
 
-				printf("EVENT: %d event data lost!\n", event->lostEventCount);
+				Godot::print("OpenXR EVENT: {0} event data lost!", event->lostEventCount);
 				// we probably didn't poll fast enough'
 			} break;
 			case XR_TYPE_EVENT_DATA_VISIBILITY_MASK_CHANGED_KHR: {
 				XrEventDataVisibilityMaskChangedKHR *event = (XrEventDataVisibilityMaskChangedKHR *)&runtimeEvent;
-				printf("EVENT: STUB: visibility mask changed\n");
+				Godot::print("OpenXR EVENT: STUB: visibility mask changed");
 			} break;
 			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
 				XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtimeEvent;
-				printf("EVENT: instance loss pending at %ld!\n", event->lossTime);
+				Godot::print("OpenXR EVENT: instance loss pending at {0}!", event->lossTime);
 				running = false;
 				return;
 			} break;
 			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-				printf("EVENT: session state changed ");
 				XrEventDataSessionStateChanged *event = (XrEventDataSessionStateChanged *)&runtimeEvent;
 				// XrSessionState state = event->state;
 
 				state = event->state;
-				printf("to %d", state);
+				Godot::print("OpenXR EVENT: session state changed to {0}", state);
 				if (event->state >= XR_SESSION_STATE_STOPPING) {
-					printf("\nAbort Mission!\n");
+					Godot::print_error("Abort Mission!", __FUNCTION__, __FILE__, __LINE__);
 					running = false;
 					return;
 				}
-				printf("\n");
 			} break;
 			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
 				XrEventDataReferenceSpaceChangePending *event = (XrEventDataReferenceSpaceChangePending *)&runtimeEvent;
-				printf("EVENT: reference space type %d change pending!\n", event->referenceSpaceType);
+				Godot::print("OpenXR EVENT: reference space type {0} change pending!", event->referenceSpaceType);
 				// TODO: do something
 			} break;
 			case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
-				printf("EVENT: interaction profile changed!\n");
+				Godot::print("OpenXR EVENT: interaction profile changed!");
 				XrEventDataInteractionProfileChanged *event = (XrEventDataInteractionProfileChanged *)&runtimeEvent;
 
 				XrInteractionProfileState state = {
@@ -1361,30 +1362,30 @@ void OpenXRApi::process_openxr() {
 				xrStringToPath(instance, "/user/hand/right", &hand_paths[1]);
 				for (int i = 0; i < 2; i++) {
 					XrResult res = xrGetCurrentInteractionProfile(session, hand_paths[i], &state);
-					if (!xr_result(res, "Failed to get interaction profile for %d", i)) {
+					if (!xr_result(res, "Failed to get interaction profile for {0}", i)) {
 						continue;
 					}
 
 					XrPath prof = state.interactionProfile;
 					if (prof == XR_NULL_PATH) {
-						printf("No interaction profile for %s\n", i == 0 ? "/user/hand/left" : "/user/hand/right");
+						Godot::print("OpenXR No interaction profile for {0}", i == 0 ? "/user/hand/left" : "/user/hand/right");
 						continue;
 					}
 
 					uint32_t strl;
 					char profile_str[XR_MAX_PATH_LENGTH];
 					res = xrPathToString(instance, prof, XR_MAX_PATH_LENGTH, &strl, profile_str);
-					if (!xr_result(res, "Failed to get interaction profile path str for %s", i == 0 ? "/user/hand/left" : "/user/hand/right")) {
+					if (!xr_result(res, "Failed to get interaction profile path str for {0}", i == 0 ? "/user/hand/left" : "/user/hand/right")) {
 						continue;
 					}
 
-					printf("Event: Interaction profile changed for %s: %s\n", i == 0 ? "/user/hand/left" : "/user/hand/right", profile_str);
+					Godot::print("OpenXR Event: Interaction profile changed for {0}: {1}", i == 0 ? "/user/hand/left" : "/user/hand/right", profile_str);
 				}
 
 				// TODO: do something
 			} break;
 			default:
-				printf("Unhandled event type %d\n", runtimeEvent.type);
+				Godot::print_error(String("OpenXR Unhandled event type ") + String::num_int64(runtimeEvent.type), __FUNCTION__, __FILE__, __LINE__);
 				break;
 		}
 
@@ -1394,7 +1395,7 @@ void OpenXRApi::process_openxr() {
 	if (pollResult == XR_EVENT_UNAVAILABLE) {
 		// processed all events in the queue
 	} else {
-		printf("Failed to poll events!\n");
+		Godot::print_error("OpenXR Failed to poll events!", __FUNCTION__, __FILE__, __LINE__);
 		return;
 	}
 

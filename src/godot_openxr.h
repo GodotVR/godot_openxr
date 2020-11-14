@@ -8,7 +8,6 @@
 #define GODOT_OPENXR_H
 
 #include "ARVRInterface.h"
-#include "GodotCalls.h"
 #include <openxr/openxr.h>
 
 #ifdef __cplusplus
@@ -17,6 +16,8 @@ extern "C" {
 
 // declare our public functions for our ARVR Interface
 
+void GDN_EXPORT godot_openxr_gdnative_init(godot_gdnative_init_options *o);
+void GDN_EXPORT godot_openxr_gdnative_terminate(godot_gdnative_terminate_options *o);
 void GDN_EXPORT godot_openxr_gdnative_singleton();
 void GDN_EXPORT godot_openxr_nativescript_init(void *p_handle);
 

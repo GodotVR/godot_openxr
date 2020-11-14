@@ -20,9 +20,11 @@ opts.Add(BoolVariable('use_llvm', "Use the LLVM / Clang compiler", 'no'))
 # Updates the environment with the option variables.
 opts.Update(env)
 
-# Paths
+# Other needed paths
 godot_glad_path = "glad/"
-godot_headers_path = "godot_headers/"
+godot_headers_path = "godot-cpp/godot_headers/"
+godot_cpp_path = "godot-cpp/"
+godot_cpp_library = "libgodot-cpp"
 target_path = env['target_path']
 
 openxr_include_path = ""
@@ -34,6 +36,7 @@ sources = []
 # Platform dependent settings
 if env['platform'] == "windows":
     target_path += "win64/"
+    godot_cpp_library += '.windows'
     openxr_include_path += "openxr_loader_windows/1.0.12/include/"
     openxr_library_path += "openxr_loader_windows/1.0.12/x64/lib"
 
@@ -53,9 +56,9 @@ if env['platform'] == "windows":
 
         env.Append(CCFLAGS = ['-DWIN32', '-D_WIN32', '-D_WINDOWS', '-W3', '-GR', '-D_CRT_SECURE_NO_WARNINGS','-std:c++latest'])
         if env['target'] in ('debug', 'd'):
-            env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MTd'])
+            env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MDd'])
         else:
-            env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MT'])
+            env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MD'])
 
     # Do we need these?
     env.Append(LIBS = ["opengl32", "setupapi", "advapi32.lib"])
@@ -66,6 +69,7 @@ if env['platform'] == "windows":
 
 elif env['platform'] == "linux":
     target_path += "linux/"
+    godot_cpp_library += '.linux'
 
     # note, on linux the OpenXR SDK is installed in /usr and should be accessible
     if env['use_llvm']:
@@ -93,12 +97,29 @@ elif env['platform'] == "linux":
 #    env.Append(LINKFLAGS=['-framework', 'Cocoa', '-framework', 'OpenGL', '-framework', 'IOKit'])
 #    env.Append(LIBS=['pthread'])
 
+# Complete godot-cpp library path
+if env['target'] in ('debug', 'd'):
+    godot_cpp_library += '.debug.64'
+else:
+    godot_cpp_library += '.release.64'
 
 ####################################################################################################################################
 # and add our main project
 
-env.Append(CPPPATH=['.', 'src/', godot_headers_path])
+env.Append(CPPPATH=[
+    '.', 
+    'src/', 
+    godot_headers_path,
+    godot_cpp_path + 'include/',
+    godot_cpp_path + 'include/core/',
+    godot_cpp_path + 'include/gen/'
+])
 
+# Add our godot-cpp library
+env.Append(LIBPATH=[godot_cpp_path + 'bin/'])
+env.Append(LIBS=[godot_cpp_library])
+
+# Add openxr
 if openxr_include_path != "":
     env.Append(CPPPATH = [ openxr_include_path ])
 

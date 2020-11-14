@@ -1,11 +1,8 @@
-# GDNative driver for OpenXR
+#GDNative driver for OpenXR
 
 ## Versions
 
-Requires Godot 3.2.
-
-If not yet merged you must use a custom compile with the follow PR included:
-https://github.com/godotengine/godot/pull/42531
+Requires Godot 3.2.4 (currently in beta), does not (yet) work with Godot 4.
 
 Note: The godot engine (the full engine, not this plugin) must be compiled in release_debug mode, i.e. with
 
@@ -30,13 +27,27 @@ On the other hand the godot_openxr plugin can be compiled in debug mode without 
 In order to compile this module you will have to clone the source code to disk. You will need a C/C++ compiler, python and scons installed. This is the same toolchain you will need in order to compile Godot from master. The documentation on Godot is a very good place to read up on this. It is too much information to duplicate here.
 You will also need cmake if you're compiling the OpenXR SDK loader
 
-### Godot headers
-Currently this project includes the godot_headers repository as a submodule.
-This requires no further compilation steps but if the `godot_headers` folder is missing or empty execute:
+### Godot-cpp
+Currently this project includes the godot-cpp repository as a submodule.
+If you do not already have this repositories downloaded you can execute:
 ```
-git submodule init
-git submodule update
+git submodule update --init --recursive
 ```
+To download the required version.
+This will also include the `godot-headers` submodule.
+
+This submodule needs to be compiled with the following 
+```
+cd godot-cpp
+scons platform=<platform> target=release generate_bindings=yes
+cd ..
+```
+Replace `<platform>` with `linux` or `windows` depending on your platform. 
+
+**note** As we rely on Godot 3.2.4 which is still in beta `godot-headers` hasn't been updated with a new `api.json` file. For now add `custom_api_file=../api.json` to the scons command up above so:
+```
+scons platform=windows target=release generate_bindings=yes custom_api_file=../api.json
+```  
 
 ### OpenXR SDK loader
 OpenXR on desktop PCs usually requires using a loader provided by Khronos, you can find the source here: https://github.com/KhronosGroup/OpenXR-SDK

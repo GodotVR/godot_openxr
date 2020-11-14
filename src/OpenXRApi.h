@@ -4,8 +4,14 @@
 #ifndef OPENXR_API_H
 #define OPENXR_API_H
 
-#include "GodotCalls.h"
+#include <Godot.hpp>
+
+#ifdef WIN32
+#include <windows.h>
+#endif
+
 #include <stdint.h>
+#include <stdio.h>
 
 #include "xrmath.h"
 #include <openxr/openxr.h>
@@ -107,7 +113,10 @@ private:
 	bool monado_stick_on_ball_ext;
 
 	bool is_successful_init();
-	bool xr_result(XrResult result, const char *format, ...);
+
+	template <class... Args>
+	bool xr_result(XrResult result, const char *format, Args... values);
+
 	bool isExtensionSupported(const char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount);
 	bool isViewConfigSupported(XrViewConfigurationType type, XrSystemId systemId);
 	bool isReferenceSpaceSupported(XrReferenceSpaceType type);

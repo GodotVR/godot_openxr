@@ -14,8 +14,8 @@ godot_string godot_arvr_get_name(const void *p_data) {
 	godot_string ret;
 
 	char name[] = "OpenXR";
-	api->godot_string_new(&ret);
-	api->godot_string_parse_utf8(&ret, name);
+	godot::api->godot_string_new(&ret);
+	godot::api->godot_string_parse_utf8(&ret, name);
 
 	return ret;
 }
@@ -105,9 +105,9 @@ godot_vector2 godot_arvr_get_render_targetsize(const void *p_data) {
 		arvr_data->openxr_api->recommended_rendertarget_size(&width, &height);
 		// printf("Render Target size %dx%d\n", width, height);
 
-		api->godot_vector2_new(&size, width, height);
+		godot::api->godot_vector2_new(&size, width, height);
 	} else {
-		api->godot_vector2_new(&size, 500, 500);
+		godot::api->godot_vector2_new(&size, 500, 500);
 	};
 
 	return size;
@@ -116,28 +116,28 @@ godot_vector2 godot_arvr_get_render_targetsize(const void *p_data) {
 godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, godot_transform *p_cam_transform) {
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 	godot_transform transform_for_eye;
-	godot_transform reference_frame = arvr_api->godot_arvr_get_reference_frame();
+	godot_transform reference_frame = godot::arvr_api->godot_arvr_get_reference_frame();
 	godot_transform ret;
-	godot_real world_scale = arvr_api->godot_arvr_get_worldscale();
+	godot_real world_scale = godot::arvr_api->godot_arvr_get_worldscale();
 
 	if (p_eye == 0) {
 		// this is used for head positioning, it should return the position center between the eyes
 		if (!arvr_data->openxr_api->get_head_center(world_scale, &transform_for_eye)) {
-			api->godot_transform_new_identity(&transform_for_eye);
+			godot::api->godot_transform_new_identity(&transform_for_eye);
 		}
 	} else if (arvr_data->openxr_api != NULL) {
 		// printf("Get view matrix for eye %d\n", p_eye);
 		if (p_eye == 1) {
 			if (!arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye)) {
-				api->godot_transform_new_identity(&transform_for_eye);
+				godot::api->godot_transform_new_identity(&transform_for_eye);
 			}
 		} else if (p_eye == 2) {
 			if (!arvr_data->openxr_api->get_view_transform(1, world_scale, &transform_for_eye)) {
-				api->godot_transform_new_identity(&transform_for_eye);
+				godot::api->godot_transform_new_identity(&transform_for_eye);
 			}
 		} else {
 			// TODO does this ever happen?
-			api->godot_transform_new_identity(&transform_for_eye);
+			godot::api->godot_transform_new_identity(&transform_for_eye);
 			printf("matrix for eye %d: no\n", p_eye);
 		}
 	}
@@ -146,8 +146,8 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 	// to test
 	// :)
 	ret = *p_cam_transform;
-	ret = api->godot_transform_operator_multiply(&ret, &reference_frame);
-	ret = api->godot_transform_operator_multiply(&ret, &transform_for_eye);
+	ret = godot::api->godot_transform_operator_multiply(&ret, &reference_frame);
+	ret = godot::api->godot_transform_operator_multiply(&ret, &transform_for_eye);
 	return ret;
 };
 
@@ -183,20 +183,21 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 	// copy of one of the eyes to the main viewport if p_screen_rect is set,
 	// and only output to the external device if not.
 
-	godot_rect2 screen_rect = *p_screen_rect;
+	godot::Rect2 screen_rect = *(godot::Rect2 *)p_screen_rect;
 
-	if (p_eye == 1 && !api->godot_rect2_has_no_area(&screen_rect)) {
+	if (p_eye == 1 && !screen_rect.has_no_area()) {
 		// blit as mono, attempt to keep our aspect ratio and center our
 		// render buffer
-		godot_vector2 render_size = godot_arvr_get_render_targetsize(p_data);
+		godot_vector2 rs = godot_arvr_get_render_targetsize(p_data);
+		godot::Vector2 *render_size = (godot::Vector2 *)&rs;
 		// printf("Rendersize = %fx%f\n", render_size.x, render_size.y);
 
-		float new_height = screen_rect.size.x * (render_size.y / render_size.x);
+		float new_height = screen_rect.size.x * (render_size->y / render_size->x);
 		if (new_height > screen_rect.size.y) {
 			screen_rect.position.y = (0.5 * screen_rect.size.y) - (0.5 * new_height);
 			screen_rect.size.y = new_height;
 		} else {
-			float new_width = screen_rect.size.y * (render_size.x / render_size.y);
+			float new_width = screen_rect.size.y * (render_size->x / render_size->y);
 
 			screen_rect.position.x = (0.5 * screen_rect.size.x) - (0.5 * new_width);
 			screen_rect.size.x = new_width;
@@ -206,11 +207,11 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 		// %0.2f\n",screen_rect.position.x, screen_rect.position.y,
 		// screen_rect.size.x, screen_rect.size.y);
 
-		arvr_api->godot_arvr_blit(0, p_render_target, &screen_rect);
+		godot::arvr_api->godot_arvr_blit(0, p_render_target, (godot_rect2 *)&screen_rect);
 	};
 
 	if (arvr_data->openxr_api != NULL) {
-		uint32_t texid = arvr_api->godot_arvr_get_texid(p_render_target);
+		uint32_t texid = godot::arvr_api->godot_arvr_get_texid(p_render_target);
 		arvr_data->openxr_api->render_openxr(p_eye - 1, texid, arvr_data->has_external_texture_support);
 	};
 };
@@ -228,7 +229,7 @@ void godot_arvr_process(void *p_data) {
 void *godot_arvr_constructor(godot_object *p_instance) {
 	godot_string ret;
 
-	arvr_data_struct *arvr_data = (arvr_data_struct *)api->godot_alloc(sizeof(arvr_data_struct));
+	arvr_data_struct *arvr_data = (arvr_data_struct *)godot::api->godot_alloc(sizeof(arvr_data_struct));
 	arvr_data->openxr_api = NULL;
 
 	return arvr_data;
@@ -243,7 +244,7 @@ void godot_arvr_destructor(void *p_data) {
 			godot_arvr_uninitialize(p_data);
 		}
 
-		api->godot_free(p_data);
+		godot::api->godot_free(p_data);
 	};
 }
 

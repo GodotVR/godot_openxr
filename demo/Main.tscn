@@ -4,8 +4,8 @@
 [ext_resource path="res://Ground.tscn" type="PackedScene" id=2]
 [ext_resource path="res://Table.tscn" type="PackedScene" id=3]
 [ext_resource path="res://addons/godot-openxr/scenes/first_person_controller_vr.tscn" type="PackedScene" id=4]
-[ext_resource path="res://addons/godot-openxr/scenes/left_hand.tscn" type="PackedScene" id=5]
-[ext_resource path="res://addons/godot-openxr/scenes/right_hand.tscn" type="PackedScene" id=6]
+[ext_resource path="res://addons/godot-openxr/scenes/right_hand_nodes.tscn" type="PackedScene" id=5]
+[ext_resource path="res://addons/godot-openxr/scenes/left_hand_nodes.tscn" type="PackedScene" id=6]
 [ext_resource path="res://addons/godot-openxr/scenes/XRPose.tscn" type="PackedScene" id=7]
 [ext_resource path="res://addons/godot-xr-tools/objects/Viewport_2D_in_3D.tscn" type="PackedScene" id=8]
 [ext_resource path="res://ControllerInfo.tscn" type="PackedScene" id=9]
@@ -55,23 +55,13 @@ visible = true
 
 [node name="Info" parent="FPSController/LeftHandController" index="0" instance=ExtResource( 8 )]
 transform = Transform( 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0.0483518, 0.0719222, 0 )
-enabled = true
 screen_size = Vector2( 0.16, 0.12 )
 viewport_size = Vector2( 600, 400 )
-transparent = true
 scene = ExtResource( 9 )
 collision_layer = 0
 
 [node name="Function_Teleport" parent="FPSController/LeftHandController" index="1" instance=ExtResource( 10 )]
 collision_mask = 1022
-enabled = true
-teleport_button = 15
-can_teleport_color = Color( 0, 1, 0, 1 )
-cant_teleport_color = Color( 1, 0, 0, 1 )
-player_height = 1.8
-player_radius = 0.4
-strength = 5.0
-max_slope = 20.0
 camera = NodePath("../../ARVRCamera")
 
 [node name="Function_pointer" parent="FPSController/LeftHandController" index="2" instance=ExtResource( 13 )]
@@ -85,10 +75,8 @@ visible = true
 
 [node name="Info" parent="FPSController/RightHandController" index="0" instance=ExtResource( 8 )]
 transform = Transform( 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, -0.0871993, 0.072, 0 )
-enabled = true
 screen_size = Vector2( 0.16, 0.12 )
 viewport_size = Vector2( 600, 400 )
-transparent = true
 scene = ExtResource( 9 )
 collision_layer = 0
 
@@ -102,12 +90,6 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 show_target = true
 collision_mask = 1024
 collide_with_areas = true
-
-[node name="Left_hand" parent="FPSController" instance=ExtResource( 5 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
-
-[node name="Right_hand" parent="FPSController" instance=ExtResource( 6 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5 )
 
 [node name="Left_grip_pose" parent="FPSController" instance=ExtResource( 7 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
@@ -127,6 +109,12 @@ transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0
 mesh = SubResource( 3 )
 material/0 = null
 
+[node name="Left_hand" parent="FPSController" instance=ExtResource( 6 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
+
+[node name="Right_hand" parent="FPSController" instance=ExtResource( 5 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5 )
+
 [node name="Table" parent="." instance=ExtResource( 3 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )
 
@@ -134,10 +122,7 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )
 
 [node name="Screen" parent="." instance=ExtResource( 8 )]
 transform = Transform( 0.843251, 0, -0.53752, 0, 1, 0, 0.53752, 0, 0.843251, 1.92678, 1.5, -2.47671 )
-enabled = true
-screen_size = Vector2( 3, 2 )
 viewport_size = Vector2( 600, 400 )
-transparent = true
 scene = ExtResource( 12 )
 collision_layer = 1024
 

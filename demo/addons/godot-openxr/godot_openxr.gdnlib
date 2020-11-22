@@ -7,7 +7,7 @@ reloadable=false
 
 [entry]
 
-Windows.64="res://addons/godot-openxr/bin/win64/godot_openxr.dll"
+Windows.64="res://addons/godot-openxr/bin/win64/libgodot_openxr.dll"
 X11.64="res://addons/godot-openxr/bin/linux/libgodot_openxr.so"
 
 [dependencies]

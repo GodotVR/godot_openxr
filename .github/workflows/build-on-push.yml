@@ -1,0 +1,154 @@
+
+# Workflow to automatically compile a Linux/Windows library on commit/push
+name: Build on push
+
+# Controls when the action will run. Triggers the workflow on push or pull request
+# events, but only for the master branch we'll create .zip files
+on:
+  [push, pull_request]
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This job builds the plugin for our target platforms
+  build:
+    name: Building for ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - os: ubuntu-20.04
+            platform: linux
+          - os: windows-latest
+            platform: windows
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+    - uses: actions/checkout@v2
+      with:
+        submodules: 'recursive'
+
+    - name: Get OpenXR loader (Ubuntu)
+      run: |
+        sudo add-apt-repository ppa:monado-xr/monado
+        sudo apt-get update
+        sudo apt install libopenxr-loader1 libopenxr-dev
+      if: matrix.os == 'ubuntu-20.04'
+
+    - name: Get OpenGL (Ubuntu)
+      run: |
+        sudo apt install libgl1-mesa-dev
+      if: matrix.os == 'ubuntu-20.04'
+
+    - name: Install scons (Ubuntu)
+      run: |
+        sudo apt install scons
+      if: matrix.os == 'ubuntu-20.04'
+
+    - name: Install scons (Windows)
+      run: |
+        pip install scons
+      if: matrix.os == 'windows-latest'
+
+    - name: Run the build for godot-cpp
+      run: |
+        cd $GITHUB_WORKSPACE/godot-cpp
+        scons platform=${{ matrix.platform }} -j2 target=release generate_bindings=yes bits=64 custom_api_file=../api.json
+      if: matrix.os != 'windows-latest'
+
+    - name: Run the build for godot_openxr
+      run: |
+        cd $GITHUB_WORKSPACE
+        scons platform=${{ matrix.platform }} -j2 target=release bits=64
+      if: matrix.os != 'windows-latest'
+
+    - name: Run the build for godot-cpp (Windows)
+      run: |
+        cd ${env:GITHUB_WORKSPACE}/godot-cpp
+        scons platform=${{ matrix.platform }} -j2 target=release generate_bindings=yes bits=64 custom_api_file=../api.json
+      if: matrix.os == 'windows-latest'
+
+    - name: Run the build for godot_openxr (Windows)
+      run: |
+        cd ${env:GITHUB_WORKSPACE}
+        scons platform=${{ matrix.platform }} -j2 target=release bits=64
+      if: matrix.os == 'windows-latest'
+
+    - name: Upload build files (artifacts) (Linux)
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-files-linux
+        path: |
+          demo/addons/godot-openxr/bin/linux/libgodot_openxr.so
+      if: matrix.os == 'ubuntu-20.04'
+
+    - name: Upload build files (artifacts) (Windows)
+      uses: actions/upload-artifact@v2
+      with:
+        name: build-files-windows
+        path: |
+          demo/addons/godot-openxr/bin/win64/libgodot_openxr.dll
+          openxr_loader_windows/1.0.12/x64/bin/openxr_loader.dll
+      if: matrix.os == 'windows-latest'
+
+  # This job collects the build output and assembles the final asset (artifact)
+  asset:
+    name: Assembling the asset (artifact)
+    runs-on: ubuntu-20.04
+    needs: build
+    if: github.event_name == 'push' && github.ref == 'refs/heads/master'
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          repository: 'GodotVR/godot_openxr'
+          path: godot_openxr
+      - name: Download all workflow run artifacts
+        uses: actions/download-artifact@v2
+      - name: Copy files to destination
+        run: |
+          mkdir addons
+          cp -r godot_openxr/demo/addons/godot-openxr addons
+          cp build-files-linux/libgodot_openxr.so addons/godot-openxr/bin/linux/libgodot_openxr.so
+          cp build-files-windows/demo/addons/godot-openxr/bin/win64/libgodot_openxr.dll addons/godot-openxr/bin/win64/libgodot_openxr.dll
+          cp build-files-windows/openxr_loader_windows/1.0.12/x64/bin/openxr_loader.dll addons/godot-openxr/bin/win64/openxr_loader.dll
+      - name: Calculate GIT short ref
+        run: |
+          cd godot_openxr
+          echo "GITHUB_SHA_SHORT=$(git rev-parse --short ${{ github.sha }})" >> $GITHUB_ENV
+          cd ..
+      - name: Clean up extracted files
+        run: |
+          rm -rf build-files-linux
+          rm -rf build-files-windows
+          rm -rf godot_openxr
+          rm -rf .git
+          rm addons/godot-openxr/bin/win64/.gitignore
+          rm addons/godot-openxr/bin/linux/.gitignore
+      - name: Zip asset
+        run: |
+          zip -qq -r godot-openxr.zip .
+      - name: Create release for asset
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.GITHUB_SHA_SHORT }}
+          release_name: Automatic build for changeset ${{ env.GITHUB_SHA_SHORT }}
+          body: |
+            This is an automated build for changeset ${{ env.GITHUB_SHA_SHORT }}
+          draft: false
+          prerelease: true
+      - name: Upload asset
+        id: upload-release-asset
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }} # This pulls from the CREATE RELEASE step above, referencing it's ID to get its outputs object, which include a `upload_url`. See this blog post for more info: https://jasonet.co/posts/new-features-of-github-actions/#passing-data-to-future-steps
+          asset_path: ./godot-openxr.zip
+          asset_name: godot-openxr.zip
+          asset_content_type: application/zip

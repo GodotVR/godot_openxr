@@ -17,9 +17,11 @@ while IFS= read -rd '' f; do
     # Exclude some files.
     if [[ "$f" == "glad"* ]]; then
         continue
-    elif [[ "$f" == "godot_headers"* ]]; then
+    elif [[ "$f" == "godot-cpp"* ]]; then
         continue
     elif [[ "$f" == "openxr_loader_windows"* ]]; then
+        continue
+    elif [[ "$f" == "api.json" ]]; then
         continue
     fi
     # Ensure that files are UTF-8 formatted.

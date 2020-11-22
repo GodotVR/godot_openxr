@@ -6,14 +6,14 @@ customs = ['../custom.py']
 opts = Variables(customs, ARGUMENTS)
 
 # Gets the standard flags CC, CCX, etc.
-env = DefaultEnvironment()
+env = Environment(ENV = os.environ)
 
 # Define our parameters
 opts.Add(EnumVariable('platform', "Platform", 'windows', ['linux', 'windows']))
 opts.Add(EnumVariable('target', "Compilation target", 'release', ['d', 'debug', 'r', 'release']))
 opts.AddVariables(
     PathVariable('target_path', 'The path where the lib is installed.', 'demo/addons/godot-openxr/bin/'),
-    PathVariable('target_name', 'The library name.', 'godot_openxr', PathVariable.PathAccept),
+    PathVariable('target_name', 'The library name.', 'libgodot_openxr', PathVariable.PathAccept),
 )
 opts.Add(BoolVariable('use_llvm', "Use the LLVM / Clang compiler", 'no'))
 
@@ -48,7 +48,7 @@ if env['platform'] == "windows":
         if env['target'] in ('debug', 'd'):
             env.Append(CCFLAGS = ['-fPIC', '-g3','-Og', '-std=c++17'])
         else:
-            env.Append(CCFLAGS = ['-fPIC', '-g','-O3', '-std=c++17'])
+            env.Append(CCFLAGS = ['-fPIC','-O3', '-std=c++17'])
     else:
         # This makes sure to keep the session environment variables on windows,
         # that way you can run scons in a vs 2017 prompt and it will find all the required tools
@@ -107,8 +107,8 @@ else:
 # and add our main project
 
 env.Append(CPPPATH=[
-    '.', 
-    'src/', 
+    '.',
+    'src/',
     godot_headers_path,
     godot_cpp_path + 'include/',
     godot_cpp_path + 'include/core/',

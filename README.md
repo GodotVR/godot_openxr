@@ -36,18 +36,18 @@ git submodule update --init --recursive
 To download the required version.
 This will also include the `godot-headers` submodule.
 
-This submodule needs to be compiled with the following 
+This submodule needs to be compiled with the following
 ```
 cd godot-cpp
 scons platform=<platform> target=release generate_bindings=yes
 cd ..
 ```
-Replace `<platform>` with `linux` or `windows` depending on your platform. 
+Replace `<platform>` with `linux` or `windows` depending on your platform.
 
 **note** As we rely on Godot 3.2.4 which is still in beta `godot-headers` hasn't been updated with a new `api.json` file. For now add `custom_api_file=../api.json` to the scons command up above so:
 ```
 scons platform=windows target=release generate_bindings=yes custom_api_file=../api.json
-```  
+```
 
 ### OpenXR SDK loader
 OpenXR on desktop PCs usually requires using a loader provided by Khronos, you can find the source here: https://github.com/KhronosGroup/OpenXR-SDK

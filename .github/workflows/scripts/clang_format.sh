@@ -14,9 +14,11 @@ while IFS= read -rd '' f; do
     # Exclude some files.
     if [[ "$f" == "glad"* ]]; then
         continue
-    elif [[ "$f" == "godot_headers"* ]]; then
+    elif [[ "$f" == "godot-cpp"* ]]; then
         continue
     elif [[ "$f" == "openxr_loader_windows"* ]]; then
+        continue
+    elif [[ "$f" == ".github"* ]]; then
         continue
     fi
     for extension in ${CLANG_FORMAT_FILE_EXTS[@]}; do

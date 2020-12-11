@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        package="org.godotengine.plugin.vr.openxr.mobile">
+
+    <application>
+
+        <meta-data
+                android:name="org.godotengine.plugin.v1.gdopenxrmobile"
+                android:value="org.godotengine.plugin.vr.openxr.mobile.OpenXRMobilePlugin" />
+
+    </application>
+
+</manifest>

@@ -60,8 +60,8 @@ XrMatrix4x4f_CreateProjection(XrMatrix4x4f *result,
 	// Set to zero for a [0,1] Z clip space (Vulkan / D3D / Metal).
 	const float offsetZ = (graphicsApi == GRAPHICS_OPENGL ||
 								  graphicsApi == GRAPHICS_OPENGL_ES) ?
-								  nearZ :
-								  0;
+									nearZ :
+									0;
 
 	if (farZ <= nearZ) {
 		// place the far plane at infinity

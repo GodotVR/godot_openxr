@@ -14,6 +14,10 @@ config/name="Godot OpenXR demo"
 run/main_scene="res://Main.tscn"
 config/icon="res://icon.png"
 
+[debug]
+
+settings/stdout/verbose_stdout=true
+
 [display]
 
 window/vsync/use_vsync=false
@@ -21,7 +25,4 @@ window/vsync/use_vsync=false
 [gdnative]
 
 singletons=[ "res://addons/godot-openxr/godot_openxr.gdnlib" ]
-
-[rendering]
-
-environment/default_environment="res://default_env.tres"
+singletons_disabled=[  ]

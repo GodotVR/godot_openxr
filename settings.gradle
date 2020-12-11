@@ -1,0 +1,4 @@
+rootProject.name = "Godot OpenXR Mobile Plugin"
+
+include ":OpenXRMobile"
+project(":OpenXRMobile").projectDir = file("src")

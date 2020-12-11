@@ -1,0 +1,5 @@
+[config]
+
+name="OpenXRMobile"
+binary_type="local"
+binary="gdopenxrmobile.3.0.0-release.aar"

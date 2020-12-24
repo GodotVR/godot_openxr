@@ -481,7 +481,7 @@ OpenXRApi::OpenXRApi() {
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
 	Godot::print("OpenXR Swapchain Formats");
-	for (int i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
+	for (uint32_t i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
 		// printf("Found %llX\n", swapchainFormats[i]);
 #ifdef WIN32
 		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
@@ -551,7 +551,7 @@ OpenXRApi::OpenXRApi() {
 	for (uint32_t i = 0; i < view_count; i++) {
 		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchainLength[i]);
 
-		for (int j = 0; j < swapchainLength[i]; j++) {
+		for (uint32_t j = 0; j < swapchainLength[i]; j++) {
 			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
 			images[i][j].next = NULL;
 		}
@@ -642,6 +642,18 @@ OpenXRApi::OpenXRApi() {
 		return;
 	}
 
+	actions[THUMBSTICK_X_AXIS_ACTION_INDEX] = createAction(XR_ACTION_TYPE_FLOAT_INPUT, "thumbstick_x", "Thumbstick X Axis");
+	if (actions[THUMBSTICK_X_AXIS_ACTION_INDEX] == NULL) {
+		Godot::print("Failed to create the Thumbstick X Axis action.");
+		return;
+	}
+
+	actions[THUMBSTICK_Y_AXIS_ACTION_INDEX] = createAction(XR_ACTION_TYPE_FLOAT_INPUT, "thumbstick_y", "Thumbstick Y Axis");
+	if (actions[THUMBSTICK_Y_AXIS_ACTION_INDEX] == NULL) {
+		Godot::print("Failed to create the Thumbstick Y Axis action.");
+		return;
+	}
+
 	XrPath selectClickPath[HANDCOUNT];
 	xrStringToPath(instance, "/user/hand/left/input/select/click", &selectClickPath[HAND_LEFT]);
 	xrStringToPath(instance, "/user/hand/right/input/select/click", &selectClickPath[HAND_RIGHT]);
@@ -665,6 +677,14 @@ OpenXRApi::OpenXRApi() {
 	XrPath bPath[HANDCOUNT];
 	xrStringToPath(instance, "/user/hand/left/input/b/click", &bPath[HAND_LEFT]);
 	xrStringToPath(instance, "/user/hand/right/input/b/click", &bPath[HAND_RIGHT]);
+    
+	XrPath thumbstickXAxisPath[HANDCOUNT];
+	xrStringToPath(instance, "/user/hand/left/input/thumbstick/x", &thumbstickXAxisPath[HAND_LEFT]);
+	xrStringToPath(instance, "/user/hand/right/input/thumbstick/x", &thumbstickXAxisPath[HAND_RIGHT]);
+
+	XrPath thumbstickYAxisPath[HANDCOUNT];
+	xrStringToPath(instance, "/user/hand/left/input/thumbstick/y", &thumbstickYAxisPath[HAND_LEFT]);
+	xrStringToPath(instance, "/user/hand/right/input/thumbstick/y", &thumbstickYAxisPath[HAND_RIGHT]);
 
 	// khr simple controller
 	{
@@ -683,9 +703,11 @@ OpenXRApi::OpenXRApi() {
 			this->actions[TRIGGER_ACTION_INDEX],
 			this->actions[GRAB_ACTION_INDEX],
 			this->actions[MENU_ACTION_INDEX],
+			this->actions[THUMBSTICK_X_AXIS_ACTION_INDEX],
+			this->actions[THUMBSTICK_Y_AXIS_ACTION_INDEX]
 		};
-		XrPath *paths[] = { aimPosePath, triggerPath, aPath, bPath };
-		int num_actions = sizeof(actions) / sizeof(actions[0]);
+		XrPath *paths[] = { aimPosePath, triggerPath, aPath, bPath, thumbstickXAxisPath, thumbstickYAxisPath };
+		int const num_actions = sizeof(actions) / sizeof(actions[0]);
 		if (!suggestActions("/interaction_profiles/valve/index_controller", actions, paths, num_actions)) {
 			return;
 		}
@@ -1135,6 +1157,12 @@ void OpenXRApi::update_controllers() {
 	XrActionStatePose poseStates[HANDCOUNT];
 	getActionStates(actions[POSE_ACTION_INDEX], XR_TYPE_ACTION_STATE_POSE, (void **)poseStates);
 
+	XrActionStateFloat thumbstickXAxisStates[HANDCOUNT];
+	getActionStates(actions[THUMBSTICK_X_AXIS_ACTION_INDEX], XR_TYPE_ACTION_STATE_FLOAT, (void **)thumbstickXAxisStates);
+
+	XrActionStateFloat thumbstickYAxisStates[HANDCOUNT];
+	getActionStates(actions[THUMBSTICK_Y_AXIS_ACTION_INDEX], XR_TYPE_ACTION_STATE_FLOAT, (void **)thumbstickYAxisStates);
+
 	XrSpaceLocation spaceLocation[HANDCOUNT];
 
 	for (int i = 0; i < HANDCOUNT; i++) {
@@ -1178,6 +1206,8 @@ void OpenXRApi::update_controllers() {
 		const int triggerButton = 15;
 		const int grabButton = 2;
 		const int menuButton = 1;
+		const int joystick_x_axis[HANDCOUNT] = {0, 2};
+		const int joystick_y_axis[HANDCOUNT] = {1, 3};
 
 #if DEBUG_INPUT
 		Godot::print("OpenXR {0}: trigger active {1} changed {2} state {3}", i,
@@ -1204,6 +1234,22 @@ void OpenXRApi::update_controllers() {
 		}
 		if (menuStates[i].isActive && menuStates[i].changedSinceLastSync) {
 			arvr_api->godot_arvr_set_controller_button(godot_controllers[i], menuButton, menuStates[i].currentState);
+		}
+		{
+			XrActionStateFloat const thumb_x_state = thumbstickXAxisStates[i];
+			/* TODO Myy : Check if we lose more performance branching or updating ? */
+			if (thumb_x_state.isActive && thumb_x_state.changedSinceLastSync) {
+				arvr_api->godot_arvr_set_controller_axis(godot_controllers[i], joystick_x_axis[i], thumb_x_state.currentState, true);
+				Godot::print("Hand {0} - X - State : {1}", i, thumb_x_state.currentState);
+			}
+		}
+		{
+			XrActionStateFloat const thumb_y_state = thumbstickYAxisStates[i];
+			if (thumb_y_state.isActive && thumb_y_state.changedSinceLastSync) {
+				/* OpenXR maps up to positive, but Godot expect up to negative */
+				arvr_api->godot_arvr_set_controller_axis(godot_controllers[i], joystick_y_axis[i], -thumb_y_state.currentState, true);
+				Godot::print("Hand {0} - Y - State : {1}", i, thumb_y_state.currentState);
+			}
 		}
 	};
 }

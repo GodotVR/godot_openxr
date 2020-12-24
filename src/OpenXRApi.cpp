@@ -1240,7 +1240,7 @@ void OpenXRApi::update_controllers() {
 			/* TODO Myy : Check if we lose more performance branching or updating ? */
 			if (thumb_x_state.isActive && thumb_x_state.changedSinceLastSync) {
 				arvr_api->godot_arvr_set_controller_axis(godot_controllers[i], joystick_x_axis[i], thumb_x_state.currentState, true);
-				Godot::print("Hand {0} - X - State : {1}", i, thumb_x_state.currentState);
+				//Godot::print("Hand {0} - X - State : {1}", i, thumb_x_state.currentState);
 			}
 		}
 		{
@@ -1248,7 +1248,7 @@ void OpenXRApi::update_controllers() {
 			if (thumb_y_state.isActive && thumb_y_state.changedSinceLastSync) {
 				/* OpenXR maps up to positive, but Godot expect up to negative */
 				arvr_api->godot_arvr_set_controller_axis(godot_controllers[i], joystick_y_axis[i], -thumb_y_state.currentState, true);
-				Godot::print("Hand {0} - Y - State : {1}", i, thumb_y_state.currentState);
+				//Godot::print("Hand {0} - Y - State : {1}", i, thumb_y_state.currentState);
 			}
 		}
 	};

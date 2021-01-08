@@ -11,10 +11,12 @@ CLANG_FORMAT_FILE_EXTS=(".c" ".h" ".cpp" ".hpp" ".cc" ".hh" ".cxx" ".m" ".mm" ".
 # Loops through all text files tracked by Git.
 git grep -zIl '' |
 while IFS= read -rd '' f; do
-    # Exclude some files.
+    # Exclude 3rd party files.
     if [[ "$f" == "glad"* ]]; then
         continue
     elif [[ "$f" == "godot-cpp"* ]]; then
+        continue
+    elif [[ "$f" == "demo/addons/godot-xr-tools"* ]]; then
         continue
     elif [[ "$f" == "openxr_loader_windows"* ]]; then
         continue

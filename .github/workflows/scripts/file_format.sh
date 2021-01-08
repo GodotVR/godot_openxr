@@ -14,10 +14,12 @@ IFS=$'\n\t'
 # Loops through all text files tracked by Git.
 git grep -zIl '' |
 while IFS= read -rd '' f; do
-    # Exclude some files.
+    # Exclude 3rd party files
     if [[ "$f" == "glad"* ]]; then
         continue
     elif [[ "$f" == "godot-cpp"* ]]; then
+        continue
+    elif [[ "$f" == "demo/addons/godot-xr-tools"* ]]; then
         continue
     elif [[ "$f" == "openxr_loader_windows"* ]]; then
         continue

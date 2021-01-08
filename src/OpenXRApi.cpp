@@ -73,7 +73,7 @@ void OpenXRApi::openxr_release_api() {
 		// decrease use count
 		singleton->use_count--;
 
-		Godot::print("OpenXR: decreased use count to %i", singleton->use_count);
+		Godot::print("OpenXR: decreased use count to {0}", singleton->use_count);
 	} else {
 		// cleanup openxr
 		Godot::print("OpenXR releasing OpenXR context");
@@ -87,7 +87,7 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 	if (singleton != NULL) {
 		// increase use count
 		singleton->use_count++;
-		Godot::print("OpenXR increased use count to %i", singleton->use_count);
+		Godot::print("OpenXR increased use count to {0}", singleton->use_count);
 	} else {
 		// init openxr
 		Godot::print("OpenXR initialising OpenXR context");
@@ -774,7 +774,7 @@ OpenXRApi::OpenXRApi() {
 	}
 
 	actions[MENU_ACTION_INDEX] = createAction(XR_ACTION_TYPE_BOOLEAN_INPUT, "menu", "Menu Button");
-	if (actions[GRAB_ACTION_INDEX] == NULL) {
+	if (actions[MENU_ACTION_INDEX] == NULL) {
 		return;
 	}
 

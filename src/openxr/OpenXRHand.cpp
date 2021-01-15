@@ -14,10 +14,12 @@ void OpenXRHand::_register_methods() {
 	register_method("get_hand", &OpenXRHand::get_hand);
 	register_method("set_hand", &OpenXRHand::set_hand);
 	register_property<OpenXRHand, int>("hand", &OpenXRHand::set_hand, &OpenXRHand::get_hand, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Left,Right");
+
+	register_method("is_active", &OpenXRHand::is_active);
 }
 
 OpenXRHand::OpenXRHand() {
-	hand = OpenXRApi::HAND_LEFT;
+	hand = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
@@ -77,6 +79,8 @@ void OpenXRHand::_ready() {
 void OpenXRHand::_physics_process(float delta) {
 	if (openxr_api == NULL) {
 		return;
+	} else if (!openxr_api->is_initialised()) {
+		return;
 	}
 
 	const int parents[XR_HAND_JOINT_COUNT_EXT]{
@@ -108,21 +112,36 @@ void OpenXRHand::_physics_process(float delta) {
 		24, // XR_HAND_JOINT_LITTLE_TIP_EXT = 25,
 	};
 
+	// we cache the inverse of our transforms so we can quickly calculate local transforms
+	Transform inv_transforms[XR_HAND_JOINT_COUNT_EXT];
+
 	const HandTracker *hand_tracker = openxr_api->get_hand_tracker(hand);
-	const float ws = ARVRServer::get_singleton()->get_world_scale();
+	ARVRServer *server = ARVRServer::get_singleton();
+	const float ws = server->get_world_scale();
+	Transform reference_frame = server->get_reference_frame();
 
 	if (hand_tracker->is_initialised && hand_tracker->locations.isActive) {
 		for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-			if (joints[i] != NULL) {
-				const XrPosef &pose = hand_tracker->joint_locations[i].pose;
+			const XrPosef &pose = hand_tracker->joint_locations[i].pose;
+			XrSpaceLocationFlags flags = hand_tracker->joint_locations[i].locationFlags;
+			Transform t;
 
-				Transform t = openxr_api->transform_from_pose(pose, ws);
-				if (parents[i] != -1) {
+			if ((flags & (XR_SPACE_LOCATION_ORIENTATION_VALID_BIT + XR_SPACE_LOCATION_POSITION_VALID_BIT)) == (XR_SPACE_LOCATION_ORIENTATION_VALID_BIT + XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
+				// only use if valid
+				t = openxr_api->transform_from_pose(pose, ws);
+			}
+
+			// store the inverse to make live easier later on
+			inv_transforms[i] = t.inverse();
+
+			if (joints[i] != NULL) {
+				if (parents[i] == -1) {
+					// apply our reference frame to our root frame
+					t = reference_frame * t;
+				} else {
+					// transform to local
 					int parent = parents[i];
-					if (joints[parent] != NULL) {
-						Transform inv_p = joints[parent]->get_global_transform().inverse();
-						t = inv_p * t;
-					}
+					t = inv_transforms[parent] * t;
 				}
 
 				// and set our local transform, note that our for our palm we use our global tracking position which relates it to the XR origin point
@@ -138,20 +157,22 @@ void OpenXRHand::_physics_process(float delta) {
 	}
 }
 
-int OpenXRHand::get_hand() const {
-	if (hand == OpenXRApi::HAND_LEFT) {
-		return 0;
-	} else if (hand == OpenXRApi::HAND_RIGHT) {
-		return 1;
-	} else {
-		return 0;
+bool OpenXRHand::is_active() const {
+	if (openxr_api == NULL) {
+		return false;
+	} else if (!openxr_api->is_initialised()) {
+		return false;
 	}
+
+	const HandTracker *hand_tracker = openxr_api->get_hand_tracker(hand);
+
+	return (hand_tracker->is_initialised && hand_tracker->locations.isActive);
+}
+
+int OpenXRHand::get_hand() const {
+	return hand;
 }
 
 void OpenXRHand::set_hand(int p_hand) {
-	if (p_hand == 1) {
-		hand = OpenXRApi::HAND_RIGHT;
-	} else {
-		hand = OpenXRApi::HAND_LEFT;
-	}
+	hand = p_hand == 1 ? 1 : 0;
 }

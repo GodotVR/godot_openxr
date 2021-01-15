@@ -2,7 +2,6 @@
 // Our main ARVRInterface code for our OpenXR GDNative module
 
 #include "ARVRInterface.h"
-#include "xrmath.h"
 
 typedef struct arvr_data_struct {
 	OpenXRApi *openxr_api;
@@ -41,6 +40,8 @@ void godot_arvr_set_anchor_detection_is_enabled(void *p_data, bool p_enable){
 godot_bool godot_arvr_is_stereo(const void *p_data) {
 	godot_bool ret;
 
+	// TODO we should check our configuration and see if we are setup for stereo (hmd) or mono output (tablet)
+
 	ret = true;
 
 	return ret;
@@ -50,7 +51,13 @@ godot_bool godot_arvr_is_initialized(const void *p_data) {
 	godot_bool ret;
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
-	ret = arvr_data == NULL ? false : arvr_data->openxr_api != NULL;
+	if (arvr_data == NULL) {
+		ret = false;
+	} else if (arvr_data->openxr_api == NULL) {
+		ret = false;
+	} else {
+		ret = arvr_data->openxr_api->is_initialised();
+	}
 
 	return ret;
 };
@@ -66,10 +73,11 @@ godot_bool godot_arvr_initialize(void *p_data) {
 
 	// We (already) have our API instance? cool!
 	if (arvr_data->openxr_api != NULL) {
-		// TODO reset state if necessary
+		// not initialise
+		arvr_data->openxr_api->initialize();
 
-		// We're good
-		ret = true;
+		// Are we good ?
+		ret = arvr_data->openxr_api->is_initialised();
 	}
 
 	// and return our result
@@ -80,16 +88,10 @@ void godot_arvr_uninitialize(void *p_data) {
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
 	if (arvr_data->openxr_api != NULL) {
-		// note, this will already be removed as the primary interface
-		// by ARVRInterfaceGDNative
+		// cleanup
+		arvr_data->openxr_api->uninitialize();
 
-		// detach all our devices
-		/*
-		for (uint32_t i = 0; i < vr::k_unMaxTrackedDeviceCount; i++) {
-		  godot_detach_device(arvr_data, i);
-		};
-		*/
-
+		// and release
 		OpenXRApi::openxr_release_api();
 		arvr_data->openxr_api = NULL;
 	};
@@ -113,6 +115,21 @@ godot_vector2 godot_arvr_get_render_targetsize(const void *p_data) {
 	return size;
 };
 
+void set_default_pos(godot_transform *p_transform, godot_real p_world_scale, godot_int p_eye) {
+	godot::Transform *t = (godot::Transform *)p_transform;
+	godot::api->godot_transform_new_identity(p_transform);
+
+	// if we're not tracking, don't put our head on the floor...
+	t->origin.y = 1.5 * p_world_scale;
+
+	// overkill but..
+	if (p_eye == 1) {
+		t->origin.x = 0.03 * p_world_scale;
+	} else if (p_eye == 2) {
+		t->origin.x = -0.03 * p_world_scale;
+	}
+}
+
 godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, godot_transform *p_cam_transform) {
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 	godot_transform transform_for_eye;
@@ -120,26 +137,29 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 	godot_transform ret;
 	godot_real world_scale = godot::arvr_api->godot_arvr_get_worldscale();
 
-	if (p_eye == 0) {
-		// this is used for head positioning, it should return the position center between the eyes
-		if (!arvr_data->openxr_api->get_head_center(world_scale, &transform_for_eye)) {
-			godot::api->godot_transform_new_identity(&transform_for_eye);
-		}
-	} else if (arvr_data->openxr_api != NULL) {
-		// printf("Get view matrix for eye %d\n", p_eye);
-		if (p_eye == 1) {
-			if (!arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye)) {
-				godot::api->godot_transform_new_identity(&transform_for_eye);
-			}
-		} else if (p_eye == 2) {
-			if (!arvr_data->openxr_api->get_view_transform(1, world_scale, &transform_for_eye)) {
-				godot::api->godot_transform_new_identity(&transform_for_eye);
+	if (arvr_data->openxr_api != NULL) {
+		if (p_eye == 0) {
+			// this is used for head positioning, it should return the position center between the eyes
+			if (!arvr_data->openxr_api->get_head_center(world_scale, &transform_for_eye)) {
+				set_default_pos(&transform_for_eye, world_scale, p_eye);
 			}
 		} else {
-			// TODO does this ever happen?
-			godot::api->godot_transform_new_identity(&transform_for_eye);
-			printf("matrix for eye %d: no\n", p_eye);
+			// printf("Get view matrix for eye %d\n", p_eye);
+			if (p_eye == 1) {
+				if (!arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye)) {
+					set_default_pos(&transform_for_eye, world_scale, p_eye);
+				}
+			} else if (p_eye == 2) {
+				if (!arvr_data->openxr_api->get_view_transform(1, world_scale, &transform_for_eye)) {
+					set_default_pos(&transform_for_eye, world_scale, p_eye);
+				}
+			} else {
+				// TODO does this ever happen?
+				set_default_pos(&transform_for_eye, world_scale, p_eye);
+			}
 		}
+	} else {
+		set_default_pos(&transform_for_eye, world_scale, p_eye);
 	}
 
 	// Now construct our full transform, the order may be in reverse, have
@@ -206,6 +226,8 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 		// printf("Blit: %0.2f, %0.2f - %0.2f,
 		// %0.2f\n",screen_rect.position.x, screen_rect.position.y,
 		// screen_rect.size.x, screen_rect.size.y);
+
+		// !BAS! We don't have support for this but if keep_3d_linear is true we should tell the blit to do an sRGB conversion or our preview will be too dark.
 
 		godot::arvr_api->godot_arvr_blit(0, p_render_target, (godot_rect2 *)&screen_rect);
 	};

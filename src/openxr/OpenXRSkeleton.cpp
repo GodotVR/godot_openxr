@@ -17,7 +17,7 @@ void OpenXRSkeleton::_register_methods() {
 }
 
 OpenXRSkeleton::OpenXRSkeleton() {
-	hand = OpenXRApi::HAND_LEFT;
+	hand = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
@@ -76,6 +76,8 @@ void OpenXRSkeleton::_ready() {
 
 void OpenXRSkeleton::_physics_process(float delta) {
 	if (openxr_api == NULL) {
+		return;
+	} else if (!openxr_api->is_initialised()) {
 		return;
 	}
 
@@ -156,19 +158,9 @@ void OpenXRSkeleton::_physics_process(float delta) {
 }
 
 int OpenXRSkeleton::get_hand() const {
-	if (hand == OpenXRApi::HAND_LEFT) {
-		return 0;
-	} else if (hand == OpenXRApi::HAND_RIGHT) {
-		return 1;
-	} else {
-		return 0;
-	}
+	return hand;
 }
 
 void OpenXRSkeleton::set_hand(int p_hand) {
-	if (p_hand == 1) {
-		hand = OpenXRApi::HAND_RIGHT;
-	} else {
-		hand = OpenXRApi::HAND_LEFT;
-	}
+	hand = p_hand == 1 ? 1 : 0;
 }

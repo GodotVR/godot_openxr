@@ -30,3 +30,8 @@ func update_lengths():
 func _physics_process(delta):
 	# (we do this in physics because OpenXR updates positions in physics)
 	update_lengths()
+
+func _process(delta):
+	# cheating because we can't extend gdns scripts...
+	var parent = get_parent()
+	parent.visible = parent.is_active()

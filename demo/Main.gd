@@ -23,3 +23,7 @@ func _process(delta):
 		$FPSController.translation -= $FPSController.transform.basis.z * delta;
 	elif (Input.is_key_pressed(KEY_DOWN)):
 		$FPSController.translation += $FPSController.transform.basis.z * delta;
+
+	# this is a little dirty but we're going to just tie the trigger input of our controllers to their haptic output for testing
+	$FPSController/LeftHandController.rumble = $FPSController/LeftHandController.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
+	$FPSController/RightHandController.rumble = $FPSController/RightHandController.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)

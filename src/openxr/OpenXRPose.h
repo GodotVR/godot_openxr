@@ -11,16 +11,17 @@ namespace godot {
 class OpenXRPose : public Spatial {
 	GODOT_CLASS(OpenXRPose, Spatial)
 
-	// For now hardcoded enums but this may need to become string based, we'll see.
-	enum Poses {
-		POSE_LEFT_HAND,
-		POSE_RIGHT_HAND,
-		POSE_MAX
-	};
-
 private:
 	OpenXRApi *openxr_api;
-	Poses pose;
+	bool invisible_if_inactive = true;
+	String action;
+	String path;
+
+	// cache action and path
+	bool fail_cache = false;
+	Action *_action;
+	XrPath _path;
+	bool check_action_and_path();
 
 public:
 	static void _register_methods();
@@ -31,8 +32,16 @@ public:
 	OpenXRPose();
 	~OpenXRPose();
 
-	int get_pose() const;
-	void set_pose(int p_pose);
+	bool is_active();
+
+	bool get_invisible_if_inactive() const;
+	void set_invisible_if_inactive(bool hide);
+
+	String get_action() const;
+	void set_action(const String p_action);
+
+	String get_path() const;
+	void set_path(const String p_path);
 };
 } // namespace godot
 

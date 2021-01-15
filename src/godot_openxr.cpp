@@ -5,6 +5,7 @@
 // with loads of help from Thomas "Karroffel" Herzog
 
 #include "godot_openxr.h"
+#include "openxr/OpenXRConfig.h"
 #include "openxr/OpenXRHand.h"
 #include "openxr/OpenXRPose.h"
 #include "openxr/OpenXRSkeleton.h"
@@ -26,6 +27,7 @@ void GDN_EXPORT godot_openxr_gdnative_singleton() {
 void GDN_EXPORT godot_openxr_nativescript_init(void *p_handle) {
 	godot::Godot::nativescript_init(p_handle);
 
+	godot::register_tool_class<godot::OpenXRConfig>();
 	godot::register_class<godot::OpenXRHand>();
 	godot::register_class<godot::OpenXRPose>();
 	godot::register_class<godot::OpenXRSkeleton>();

@@ -101,6 +101,7 @@ elif env['platform'] == "linux":
 # Complete godot-cpp library path
 if env['target'] in ('debug', 'd'):
     godot_cpp_library += '.debug.64'
+    env.Append(CCFLAGS = [ '-DDEBUG' ])
 else:
     godot_cpp_library += '.release.64'
 
@@ -129,10 +130,9 @@ if openxr_library_path != "":
 
 env.Append(LIBS=['openxr_loader'])
 
-sources += Glob('src/*.c')
 sources += Glob('src/*.cpp')
-sources += Glob('src/*/*.c')
 sources += Glob('src/*/*.cpp')
+sources += Glob('src/*/*/*.cpp')
 
 library = env.SharedLibrary(target=target_path + env['target_name'], source=sources)
 Default(library)

@@ -14,7 +14,7 @@ class OpenXRSkeleton : public Skeleton {
 
 private:
 	OpenXRApi *openxr_api;
-	OpenXRApi::Hands hand;
+	int hand;
 
 	int64_t bones[XR_HAND_JOINT_COUNT_EXT];
 

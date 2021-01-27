@@ -219,27 +219,31 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 bool OpenXRApi::initialiseExtensions() {
 	XrResult result;
 
-	// Maybe we should remove the error checking here, if the extension is not supported, we won't be doing anything with this.
+	if (hand_tracking_ext_supported) {
+		result = xrGetInstanceProcAddr(instance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT_ptr);
+		if (!xr_result(result, "Failed to obtain xrCreateHandTrackerEXT function pointer")) {
+			return false;
+		}
 
-	result = xrGetInstanceProcAddr(instance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT_ptr);
-	if (!xr_result(result, "Failed to obtain xrCreateHandTrackerEXT function pointer")) {
-		return false;
-	}
+		result = xrGetInstanceProcAddr(instance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT_ptr);
+		if (!xr_result(result, "Failed to obtain xrDestroyHandTrackerEXT function pointer")) {
+			return false;
+		}
 
-	result = xrGetInstanceProcAddr(instance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT_ptr);
-	if (!xr_result(result, "Failed to obtain xrDestroyHandTrackerEXT function pointer")) {
-		return false;
-	}
-
-	result = xrGetInstanceProcAddr(instance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT_ptr);
-	if (!xr_result(result, "Failed to obtain xrLocateHandJointsEXT function pointer")) {
-		return false;
+		result = xrGetInstanceProcAddr(instance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT_ptr);
+		if (!xr_result(result, "Failed to obtain xrLocateHandJointsEXT function pointer")) {
+			return false;
+		}
 	}
 
 	return true;
 }
 
 void OpenXRApi::initialiseHandTracking() {
+	if (!hand_tracking_ext_supported) {
+		return;
+	}
+
 	XrResult result;
 
 	XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {
@@ -361,7 +365,10 @@ OpenXRApi::OpenXRApi() {
 
 	uint32_t enabledExtensionCount = 0;
 	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
-	enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
+	if (isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
+		hand_tracking_ext_supported = true;
+	}
 
 	if (monado_stick_on_ball_ext) {
 		enabledExtensions[enabledExtensionCount++] = XR_MND_BALL_ON_STICK_EXTENSION_NAME;

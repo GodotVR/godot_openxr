@@ -80,6 +80,7 @@ public:
 private:
 	static OpenXRApi *singleton;
 	bool successful_init;
+	bool hand_tracking_ext_supported = false;
 	bool hand_tracking_supported = false;
 	int use_count;
 

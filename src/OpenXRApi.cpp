@@ -1100,6 +1100,11 @@ XrResult OpenXRApi::acquire_image(int eye) {
 }
 
 void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture_support) {
+	// no need to do anything if we're stopping or idle
+	if (state == XR_SESSION_STATE_STOPPING || state == XR_SESSION_STATE_IDLE) {
+		return;
+	}
+
 	// printf("Render eye %d texture %d\n", eye, texid);
 	XrResult result;
 
@@ -1504,7 +1509,7 @@ void OpenXRApi::process_openxr() {
 
 				state = event->state;
 				Godot::print("OpenXR EVENT: session state changed to {0}", state);
-				if (event->state >= XR_SESSION_STATE_STOPPING) {
+				if (event->state >= XR_SESSION_STATE_EXITING) {
 					Godot::print_error("Abort Mission!", __FUNCTION__, __FILE__, __LINE__);
 					running = false;
 					return;
@@ -1562,6 +1567,11 @@ void OpenXRApi::process_openxr() {
 		// processed all events in the queue
 	} else {
 		Godot::print_error("OpenXR Failed to poll events!", __FUNCTION__, __FILE__, __LINE__);
+		return;
+	}
+
+	// no need to do anything if we're stopping or idle
+	if (state == XR_SESSION_STATE_STOPPING || state == XR_SESSION_STATE_IDLE) {
 		return;
 	}
 

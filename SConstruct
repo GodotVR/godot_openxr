@@ -46,9 +46,11 @@ if env['platform'] == "windows":
         env['CC'] = 'clang'
 
         if env['target'] in ('debug', 'd'):
-            env.Append(CCFLAGS = ['-fPIC', '-g3','-Og', '-std=c++17'])
+            env.Append(CCFLAGS = ['-fPIC', '-g3','-Og'])
+            env.Append(CXXFLAGS = ['-fPIC', '-g3','-Og', '-std=c++17'])
         else:
-            env.Append(CCFLAGS = ['-fPIC','-O3', '-std=c++17'])
+            env.Append(CCFLAGS = ['-fPIC','-O3'])
+            env.Append(CXXFLAGS = ['-fPIC','-O3', '-std=c++17'])
     else:
         # This makes sure to keep the session environment variables on windows,
         # that way you can run scons in a vs 2017 prompt and it will find all the required tools

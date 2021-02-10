@@ -8,3 +8,6 @@
 *.lib
 *.obj
 logs
+.vscode
+*.pdb
+*.ilk

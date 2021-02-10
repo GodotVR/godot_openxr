@@ -56,7 +56,8 @@ if env['platform'] == "windows":
 
         env.Append(CCFLAGS = ['-DWIN32', '-D_WIN32', '-D_WINDOWS', '-W3', '-GR', '-D_CRT_SECURE_NO_WARNINGS','-std:c++latest'])
         if env['target'] in ('debug', 'd'):
-            env.Append(CCFLAGS = ['-EHsc', '-D_DEBUG', '/MDd'])
+            env.Append(CCFLAGS = ['-Od', '-EHsc', '-D_DEBUG', '/MDd', '/Zi', '/FS'])
+            env.Append(LINKFLAGS = ['/DEBUG'])
         else:
             env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MD'])
 

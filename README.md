@@ -172,7 +172,6 @@ There is a demo project contained within this repository as well that shows how 
 
 ## Using this module in your own project
 
-
 Example: Converting a godot-openvr project
 
 1. Remove the `addons/godot-openvr` directory from the project.
@@ -182,6 +181,11 @@ Example: Converting a godot-openvr project
 Since the module is laid out like godot-openvr, the basic documentation for integrating OpenVR into a project also applies to OpenXR.
 
 The only differences should be: Since there is no OpenXR asset on the store, the godot-openxr directory has to be manually put into the project's addon/ directory and in the project's gdscript the `OpenXR` string has to be used in the `find_interface()` call.
+
+## Hooks
+
+When contributing to the source code for the plugin we highly recommend you installed clang-format and copy the contents of the `hooks` folder into the folder `.git/hooks/`.
+This will ensure clang-format is run on any changed files before commiting the changes to github and prevent disappointment when formatting issues prevent changes from being merged.
 
 ## License
 

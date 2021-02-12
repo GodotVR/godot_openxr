@@ -1199,6 +1199,10 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 			return;
 		}
 	}
+
+	// TODO: should not be necessary, but is for SteamVR 1.16.4 (but not 1.15.x)
+	glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable,
+			graphics_binding_gl.glxContext);
 }
 
 void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection) {
@@ -1459,6 +1463,10 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 		return 0;
 	}
 
+	// TODO: should not be necessary, but is for SteamVR 1.16.4 (but not 1.15.x)
+	glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable,
+			graphics_binding_gl.glxContext);
+
 	// process should be called by now but just in case...
 	if (state > XR_SESSION_STATE_UNKNOWN && buffer_index != NULL) {
 		// make sure we know that we're rendering directly to our
@@ -1617,6 +1625,10 @@ void OpenXRApi::process_openxr() {
 		// TODO: Tell godot not do render VR to save resources.
 		// See render_openxr() for the corresponding early exit.
 	}
+
+	// TODO: should not be necessary, but is for SteamVR 1.16.4 (but not 1.15.x)
+	glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable,
+			graphics_binding_gl.glxContext);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

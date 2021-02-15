@@ -8,3 +8,4 @@ Other people who have helped out by submitting fixes, enhancements, etc are:
 - [Joey Ferwerda](https://github.com/TheOnlyJoey)
 - [Philipp Zabel](https://github.com/pH5)
 - [Douglas Xie](https://github.com/Douglas-3Glasses)
+- [Aaron Franke](https://github.com/aaronfranke)

@@ -22,6 +22,10 @@ config/icon="res://icon.png"
 
 window/vsync/use_vsync=false
 
+[editor_plugins]
+
+enabled=PoolStringArray( "res://addons/godot-openxr/plugin.cfg" )
+
 [gdnative]
 
 singletons=[ "res://addons/godot-openxr/godot_openxr.gdnlib" ]

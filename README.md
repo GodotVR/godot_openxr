@@ -2,7 +2,7 @@
 
 ## Versions
 
-Requires Godot 3.2.4 (currently in beta), does not (yet) work with Godot 4.
+Requires Godot 3.3, does not (yet) work with Godot 4.
 
 Note: The godot engine (the full engine, not this plugin) must be compiled in release_debug mode, i.e. with
 

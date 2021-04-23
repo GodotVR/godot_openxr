@@ -98,10 +98,9 @@ Get Monado with `git clone https://gitlab.freedesktop.org/monado/monado.git`. Op
 
 2. Get the preview broker
 
-This is currently not open source. It will be open sourced once the approach to its implementation stabilizes.
+Source code of the current draft of the broker is available here: https://gitlab.freedesktop.org/monado/utilities/draft-openxr-android-broker-impl
 
-Install this apk on your android device:
-https://cdn.discordapp.com/attachments/608975708638806017/806995278199914496/broker_impl-debug.apk
+An apk of this broker is available here: https://cdn.discordapp.com/attachments/608975708638806017/806995278199914496/broker_impl-debug.apk
 
 3. Compile the plugin
 

@@ -90,7 +90,7 @@ scons platform=linux use_llvm=yes
 
 Generic OpenXR on Android is only available as a Tech preview. It is not endorsed by Khronos (yet?).
 
-Only the monado runtime implements the preview of the generic Android OpenXR loader.
+Only the monado runtime supports the preview of the generic Android OpenXR loader, it will probably not work on Oculus Quest.
 
 1. Setup Monado
 
@@ -103,6 +103,8 @@ Source code of the current draft of the broker is available here: https://gitlab
 An apk of this broker is available here: https://cdn.discordapp.com/attachments/608975708638806017/806995278199914496/broker_impl-debug.apk
 
 3. Compile the plugin
+
+A build of the tech preview of the openxr loader for android will be taken automatically from https://bintray.com/rpavlik/maven/org.khronos.openxr%3Aopenxr_loader_for_android.
 
 The godot-cpp bindings do have to be generated manually:
 

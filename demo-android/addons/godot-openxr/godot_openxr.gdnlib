@@ -1,0 +1,16 @@
+[general]
+
+singleton=true
+load_once=true
+symbol_prefix="godot_openxr_"
+reloadable=false
+
+[entry]
+
+Windows.64="res://addons/godot-openxr/bin/win64/libgodot_openxr.dll"
+X11.64="res://addons/godot-openxr/bin/linux/libgodot_openxr.so"
+
+[dependencies]
+
+Windows.64=[ "res://addons/godot-openxr/bin/win64/openxr_loader.dll" ]
+X11.64=[  ]

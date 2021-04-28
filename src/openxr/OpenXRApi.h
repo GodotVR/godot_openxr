@@ -29,15 +29,15 @@
 
 #ifdef WIN32
 #define XR_USE_PLATFORM_WIN32
-#else
-#define XR_USE_PLATFORM_XLIB
-#endif
 #define XR_USE_GRAPHICS_API_OPENGL
 
-#ifdef WIN32
 #include <glad/glad.h>
-#else
-// linux
+#endif
+
+#if defined(__linux__) && !defined(__ANDROID__)
+#define XR_USE_PLATFORM_XLIB
+#define XR_USE_GRAPHICS_API_OPENGL
+
 #define GL_GLEXT_PROTOTYPES 1
 #define GL3_PROTOTYPES 1
 #include <GL/gl.h>
@@ -45,6 +45,13 @@
 
 #include <GL/glx.h>
 #include <X11/Xlib.h>
+#endif
+
+#ifdef __ANDROID__
+#define XR_USE_PLATFORM_ANDROID
+#define XR_USE_GRAPHICS_API_OPENGL_ES
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
 #endif
 
 // #include <gdnative/gdnative.h>
@@ -157,10 +164,18 @@ private:
 	bool keep_3d_linear = true;
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
-#else
-	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
 #endif
+
+#if defined(__linux__) && !defined(__ANDROID__)
+	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
 	XrSwapchainImageOpenGLKHR **images = NULL;
+#endif
+
+#ifdef __ANDROID__
+	XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
+	XrSwapchainImageOpenGLESKHR **images = NULL;
+#endif
+
 	XrSwapchain *swapchains = NULL;
 	uint32_t view_count;
 	XrViewConfigurationView *configuration_views = NULL;

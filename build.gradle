@@ -1,0 +1,70 @@
+apply from: 'config.gradle'
+
+buildscript {
+    apply from: 'config.gradle'
+
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath 'com.android.tools.build:gradle:4.1.1'
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlinVersion"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+
+        // TODO: repo for test build of openxr loader
+        maven {
+            url  "https://dl.bintray.com/rpavlik/maven"
+        }
+    }
+}
+
+def outputDir = "build/outputs"
+
+task clean(type: Delete) {
+    dependsOn(":OpenXRMobile:clean")
+
+    delete(rootProject.buildDir)
+
+    // Delete the contents of the outputs directory
+    delete(outputDir)
+}
+
+/**
+ * Generate the plugin binaries.
+ */
+task generatePluginBinary(type: Copy) {
+    dependsOn(":OpenXRMobile:assembleDebug")
+    dependsOn(":OpenXRMobile:assembleRelease")
+    from("plugin/build/outputs/aar")
+    into("$outputDir/pluginBin")
+}
+
+/**
+ * Generate the plugin native shared libraries.
+ * This is mostly to be used by maintainers to update the https://github.com/GodotVR/godot-oculus-mobile-asset repo.
+ */
+task generateSharedLibs(type: Copy) {
+    dependsOn(":OpenXRMobile:externalNativeBuildDebug")
+    dependsOn(":OpenXRMobile:externalNativeBuildRelease")
+
+    // Specify the base directory. All following 'into' targets will be relative
+    // to this directory.
+    into("$outputDir/sharedLibs")
+
+    // Copy the generated debug shared libs into the outputs directory
+    from("plugin/build/intermediates/cmake/debug/obj") {
+        into("debug")
+    }
+
+    // Copy the generated release shared libs into the outputs directory
+    from("plugin/build/intermediates/cmake/release/obj") {
+        into("release")
+    }
+}

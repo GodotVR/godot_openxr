@@ -1,0 +1,40 @@
+[gd_scene load_steps=5 format=2]
+
+[ext_resource path="res://assets/texturehaven.com/brown_planks_03/brown_planks_03.tres" type="Material" id=1]
+[ext_resource path="res://assets/texturehaven.com/green_metal_rust/green_metal_rust.tres" type="Material" id=2]
+
+[sub_resource type="CubeMesh" id=1]
+resource_name = "Leg"
+material = ExtResource( 1 )
+size = Vector3( 0.2, 1, 0.2 )
+
+[sub_resource type="CubeMesh" id=3]
+material = ExtResource( 2 )
+size = Vector3( 2.2, 0.1, 1.2 )
+
+[node name="Table" type="Spatial"]
+
+[node name="Leg1" type="MeshInstance" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, 0.5 )
+mesh = SubResource( 1 )
+material/0 = null
+
+[node name="Leg2" type="MeshInstance" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, 0.5 )
+mesh = SubResource( 1 )
+material/0 = null
+
+[node name="Leg3" type="MeshInstance" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, -0.5 )
+mesh = SubResource( 1 )
+material/0 = null
+
+[node name="Leg4" type="MeshInstance" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, -0.5 )
+mesh = SubResource( 1 )
+material/0 = null
+
+[node name="Surface" type="MeshInstance" parent="."]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0 )
+mesh = SubResource( 3 )
+material/0 = null

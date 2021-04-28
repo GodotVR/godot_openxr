@@ -1,0 +1,28 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=4
+
+[application]
+
+config/name="Godot OpenXR demo"
+run/main_scene="res://Main.tscn"
+config/icon="res://icon.png"
+
+[debug]
+
+settings/stdout/verbose_stdout=true
+
+[display]
+
+window/vsync/use_vsync=false
+
+[gdnative]
+
+singletons=[ "res://addons/godot-openxr/godot_openxr.gdnlib" ]
+singletons_disabled=[  ]

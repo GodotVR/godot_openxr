@@ -16,12 +16,9 @@ On the other hand the godot_openxr plugin can be compiled in debug mode without 
 
 ## Status
 
-* This plugin only supports Linux/X11. Windows support is in early WIP.
-* VR is tested with SteamVR and Monado
-* Explicit support for controller input with interaction profile:
-  * Valve Index Controller
-  * Monado Playstation Move Controller
-* Limited support for other controllers via Khronos Simple interaction profile.
+* This plugin supports Linux/X11 and Windows.
+* VR is tested with SteamVR, Monado and Oculus runtimes. Oculus runtime support is WIP.
+* Support for most common controllers, additional controllers can be configured using OpenXRConfig.
 
 ## Building this module
 

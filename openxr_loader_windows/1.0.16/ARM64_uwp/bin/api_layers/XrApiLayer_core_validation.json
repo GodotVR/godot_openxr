@@ -1,0 +1,10 @@
+{
+    "file_format_version": "1.0.0",
+    "api_layer": {
+        "name": "XR_APILAYER_LUNARG_core_validation",
+        "library_path": "./XrApiLayer_core_validation.dll",
+        "api_version": "1.0",
+        "implementation_version": "1",
+        "description": "API Layer to perform validation of api calls and parameters as they occur"
+    }
+}

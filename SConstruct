@@ -37,8 +37,8 @@ sources = []
 if env['platform'] == "windows":
     target_path += "win64/"
     godot_cpp_library += '.windows'
-    openxr_include_path += "openxr_loader_windows/1.0.12/include/"
-    openxr_library_path += "openxr_loader_windows/1.0.12/x64/lib"
+    openxr_include_path += "openxr_loader_windows/1.0.16/include/"
+    openxr_library_path += "openxr_loader_windows/1.0.16/x64/lib"
 
     # Check some environment settings
     if env['use_llvm']:

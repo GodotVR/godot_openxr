@@ -89,7 +89,7 @@ jobs:
         name: build-files-windows
         path: |
           demo/addons/godot-openxr/bin/win64/libgodot_openxr.dll
-          openxr_loader_windows/1.0.12/x64/bin/openxr_loader.dll
+          openxr_loader_windows/1.0.16/x64/bin/openxr_loader.dll
       if: matrix.os == 'windows-latest'
 
   # This job collects the build output and assembles the final asset (artifact)
@@ -113,7 +113,7 @@ jobs:
           cp -r godot_openxr/demo/addons/godot-openxr addons
           cp build-files-linux/libgodot_openxr.so addons/godot-openxr/bin/linux/libgodot_openxr.so
           cp build-files-windows/demo/addons/godot-openxr/bin/win64/libgodot_openxr.dll addons/godot-openxr/bin/win64/libgodot_openxr.dll
-          cp build-files-windows/openxr_loader_windows/1.0.12/x64/bin/openxr_loader.dll addons/godot-openxr/bin/win64/openxr_loader.dll
+          cp build-files-windows/openxr_loader_windows/1.0.16/x64/bin/openxr_loader.dll addons/godot-openxr/bin/win64/openxr_loader.dll
       - name: Calculate GIT short ref
         run: |
           cd godot_openxr

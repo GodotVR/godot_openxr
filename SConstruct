@@ -1,5 +1,5 @@
 #!python
-import os, subprocess
+import os
 
 # Reads variables from an optional file.
 customs = ['../custom.py']
@@ -7,6 +7,14 @@ opts = Variables(customs, ARGUMENTS)
 
 # Gets the standard flags CC, CCX, etc.
 env = Environment(ENV = os.environ)
+
+try:
+    # Enable module to generate a compilation database if supported
+    env.Tool('compilation_db')
+    cdb_supported = True
+except Exception as e:
+    print('Scons tool "compilation_db" not supported')
+    cdb_supported = False
 
 # Define our parameters
 opts.Add(EnumVariable('platform', "Platform", 'windows', ['linux', 'windows']))
@@ -16,6 +24,8 @@ opts.AddVariables(
     PathVariable('target_name', 'The library name.', 'libgodot_openxr', PathVariable.PathAccept),
 )
 opts.Add(BoolVariable('use_llvm', "Use the LLVM / Clang compiler", 'no'))
+if cdb_supported:
+    opts.Add(BoolVariable('generate_cdb', 'Generate compile_commands.json', 'no'))
 
 # Updates the environment with the option variables.
 opts.Update(env)
@@ -141,6 +151,9 @@ sources += Glob('src/*/*/*.cpp')
 
 library = env.SharedLibrary(target=target_path + env['target_name'], source=sources)
 Default(library)
+
+if cdb_supported and env['generate_cdb']:
+    Default(env.CompilationDatabase('compile_commands.json'))
 
 # Generates help for the -h scons option.
 Help(opts.GenerateHelpText(env))

@@ -139,9 +139,16 @@ public:
 	};
 
 private:
+	enum ActionSetStatus {
+		ACTION_SET_UNINITIALISED,
+		ACTION_SET_INITIALISED,
+		ACTION_SET_FAILED
+	};
+
 	static OpenXRApi *singleton;
 	bool initialised = false;
 	bool running = false;
+	ActionSetStatus actionset_status = ACTION_SET_UNINITIALISED;
 	int use_count = 1;
 
 	// extensions

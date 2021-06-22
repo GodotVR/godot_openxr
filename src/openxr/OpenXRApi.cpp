@@ -1092,6 +1092,13 @@ bool OpenXRApi::initialiseSwapChains() {
 }
 
 bool OpenXRApi::initialiseActionSets() {
+	if (actionset_status != ACTION_SET_UNINITIALISED) {
+		return actionset_status == ACTION_SET_INITIALISED;
+	}
+
+	// assume failure until we succeed..
+	actionset_status = ACTION_SET_FAILED;
+
 	Godot::print("OpenXR initialiseActionSets");
 
 	parse_action_sets(action_sets_json);
@@ -1128,6 +1135,8 @@ bool OpenXRApi::initialiseActionSets() {
 		}
 	}
 
+	// yeah!
+	actionset_status = ACTION_SET_INITIALISED;
 	return true;
 }
 

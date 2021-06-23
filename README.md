@@ -1,23 +1,13 @@
-#GDNative driver for OpenXR
+# GDNative driver for OpenXR
 
 ## Versions
 
 Requires Godot 3.3, does not (yet) work with Godot 4.
 
-Note: The godot engine (the full engine, not this plugin) must be compiled in release_debug mode, i.e. with
-
-    scons platform=x11 target=release_debug
-
-If godot engine is compiled with `target=debug` instead, you might get a (bogus) error from monado
-
-    client_gl_compositor_init - Needed extension GL_EXT_memory_object_fd not supported
-
-On the other hand the godot_openxr plugin can be compiled in debug mode without issues.
-
 ## Status
 
 * This plugin supports Linux/X11 and Windows.
-* VR is tested with SteamVR, Monado and Oculus runtimes. Oculus runtime support is WIP.
+* VR is tested with SteamVR, Monado and Oculus runtimes.
 * Support for most common controllers, additional controllers can be configured using OpenXRConfig.
 
 ## Building this module

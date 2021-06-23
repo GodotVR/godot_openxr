@@ -14,10 +14,15 @@ void OpenXRSkeleton::_register_methods() {
 	register_method("get_hand", &OpenXRSkeleton::get_hand);
 	register_method("set_hand", &OpenXRSkeleton::set_hand);
 	register_property<OpenXRSkeleton, int>("hand", &OpenXRSkeleton::set_hand, &OpenXRSkeleton::get_hand, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Left,Right");
+
+	register_method("get_motion_range", &OpenXRSkeleton::get_motion_range);
+	register_method("set_motion_range", &OpenXRSkeleton::set_motion_range);
+	register_property<OpenXRSkeleton, int>("motion_range", &OpenXRSkeleton::set_motion_range, &OpenXRSkeleton::get_motion_range, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Unobstructed,Conform to controller");
 }
 
 OpenXRSkeleton::OpenXRSkeleton() {
 	hand = 0;
+	motion_range = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
@@ -79,6 +84,8 @@ void OpenXRSkeleton::_ready() {
 			Godot::print("Couldn't obtain bone for {0}", bone_name);
 		}
 	}
+
+	_set_motion_range();
 }
 
 void OpenXRSkeleton::_physics_process(float delta) {
@@ -148,4 +155,34 @@ int OpenXRSkeleton::get_hand() const {
 
 void OpenXRSkeleton::set_hand(int p_hand) {
 	hand = p_hand == 1 ? 1 : 0;
+}
+
+int OpenXRSkeleton::get_motion_range() const {
+	return motion_range;
+}
+
+void OpenXRSkeleton::set_motion_range(int p_motion_range) {
+	motion_range = p_motion_range;
+	_set_motion_range();
+}
+
+void OpenXRSkeleton::_set_motion_range() {
+	if (openxr_api == NULL) {
+		return;
+	}
+
+	XrHandJointsMotionRangeEXT xr_motion_range;
+	switch (motion_range) {
+		case 0:
+			xr_motion_range = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
+			break;
+		case 1:
+			xr_motion_range = XR_HAND_JOINTS_MOTION_RANGE_CONFORMING_TO_CONTROLLER_EXT;
+			break;
+		default:
+			xr_motion_range = XR_HAND_JOINTS_MOTION_RANGE_CONFORMING_TO_CONTROLLER_EXT;
+			break;
+	}
+
+	openxr_api->set_motion_range(hand, xr_motion_range);
 }

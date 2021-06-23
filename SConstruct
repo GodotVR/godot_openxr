@@ -74,6 +74,9 @@ elif env['platform'] == "linux":
     target_path += "linux/"
     godot_cpp_library += '.linux'
 
+    # make sure we have access to the correct headers, cheating here a little.
+    openxr_include_path += "openxr_loader_windows/1.0.16/include/"
+
     # note, on linux the OpenXR SDK is installed in /usr and should be accessible
     if env['use_llvm']:
         env['CXX'] = 'clang++'

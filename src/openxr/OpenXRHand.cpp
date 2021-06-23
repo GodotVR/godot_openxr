@@ -15,11 +15,16 @@ void OpenXRHand::_register_methods() {
 	register_method("set_hand", &OpenXRHand::set_hand);
 	register_property<OpenXRHand, int>("hand", &OpenXRHand::set_hand, &OpenXRHand::get_hand, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Left,Right");
 
+	register_method("get_motion_range", &OpenXRHand::get_motion_range);
+	register_method("set_motion_range", &OpenXRHand::set_motion_range);
+	register_property<OpenXRHand, int>("motion_range", &OpenXRHand::set_motion_range, &OpenXRHand::get_motion_range, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Unobstructed,Conform to controller");
+
 	register_method("is_active", &OpenXRHand::is_active);
 }
 
 OpenXRHand::OpenXRHand() {
 	hand = 0;
+	motion_range = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
@@ -74,6 +79,8 @@ void OpenXRHand::_ready() {
 			printf("Couldn't obtain joint for %s\n", node_names[i]);
 		}
 	}
+
+	_set_motion_range();
 }
 
 void OpenXRHand::_physics_process(float delta) {
@@ -175,4 +182,34 @@ int OpenXRHand::get_hand() const {
 
 void OpenXRHand::set_hand(int p_hand) {
 	hand = p_hand == 1 ? 1 : 0;
+}
+
+int OpenXRHand::get_motion_range() const {
+	return motion_range;
+}
+
+void OpenXRHand::set_motion_range(int p_motion_range) {
+	motion_range = p_motion_range;
+	_set_motion_range();
+}
+
+void OpenXRHand::_set_motion_range() {
+	if (openxr_api == NULL) {
+		return;
+	}
+
+	XrHandJointsMotionRangeEXT xr_motion_range;
+	switch (motion_range) {
+		case 0:
+			xr_motion_range = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
+			break;
+		case 1:
+			xr_motion_range = XR_HAND_JOINTS_MOTION_RANGE_CONFORMING_TO_CONTROLLER_EXT;
+			break;
+		default:
+			xr_motion_range = XR_HAND_JOINTS_MOTION_RANGE_CONFORMING_TO_CONTROLLER_EXT;
+			break;
+	}
+
+	openxr_api->set_motion_range(hand, xr_motion_range);
 }

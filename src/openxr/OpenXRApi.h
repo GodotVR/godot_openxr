@@ -58,9 +58,12 @@ class OpenXRApi;
 #include "openxr/actions/actionset.h"
 
 // TODO move hand tracker logic into it's own source files, I'll do a separate PR for that in due time.
+#define MAX_TRACKED_HANDS 2
+
 class HandTracker {
 public:
 	bool is_initialised = false;
+	XrHandJointsMotionRangeEXT motion_range = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
 
 	XrHandTrackerEXT hand_tracker;
 	XrHandJointLocationEXT joint_locations[XR_HAND_JOINT_COUNT_EXT];
@@ -153,6 +156,7 @@ private:
 
 	// extensions
 	bool hand_tracking_ext = false;
+	bool hand_motion_range_ext = false;
 	bool monado_stick_on_ball_ext = false;
 	bool hand_tracking_supported = false;
 
@@ -184,7 +188,7 @@ private:
 	bool view_pose_valid = false;
 	bool head_pose_valid = false;
 
-	HandTracker hand_trackers[2]; // Fixed for left and right hand
+	HandTracker hand_trackers[MAX_TRACKED_HANDS]; // Fixed for left and right hand
 
 	// config
 	/*
@@ -257,7 +261,10 @@ public:
 		return false;
 	};
 
-	const HandTracker *get_hand_tracker(int p_hand) { return &hand_trackers[p_hand]; };
+	// hand tracking
+	const HandTracker *get_hand_tracker(uint32_t p_hand) const;
+	XrHandJointsMotionRangeEXT get_motion_range(uint32_t p_hand) const;
+	void set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_motion_range);
 
 	// config
 	XrFormFactor get_form_factor() const;

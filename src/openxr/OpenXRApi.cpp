@@ -595,6 +595,11 @@ bool OpenXRApi::initialiseInstance() {
 	if (isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print("- Hand tracking extension found");
 		hand_tracking_ext = true;
+
+		if (isExtensionSupported(XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+			Godot::print("- Hand motion range extension found");
+			hand_motion_range_ext = true;
+		}
 	}
 
 	if (isExtensionSupported(XR_MND_BALL_ON_STICK_EXTENSION_NAME, extensionProperties, extensionCount)) {
@@ -616,6 +621,10 @@ bool OpenXRApi::initialiseInstance() {
 	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
 	if (hand_tracking_ext) {
 		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
+	}
+
+	if (hand_motion_range_ext) {
+		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME;
 	}
 
 	if (monado_stick_on_ball_ext) {
@@ -1172,6 +1181,7 @@ bool OpenXRApi::initialiseHandTracking() {
 	for (int i = 0; i < 2; i++) {
 		XrHandTrackerCreateInfoEXT createInfo = {
 			.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
+			.next = nullptr,
 			.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
 			.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
 		};
@@ -1363,14 +1373,38 @@ void OpenXRApi::uninitialize() {
 	view_pose_valid = false;
 	head_pose_valid = false;
 	hand_tracking_ext = false;
+	hand_motion_range_ext = false;
 	monado_stick_on_ball_ext = false;
-	hand_tracking_ext = false;
 	hand_tracking_supported = false;
 	initialised = false;
 }
 
 bool OpenXRApi::is_initialised() {
 	return initialised;
+}
+
+// hand tracking
+const HandTracker *OpenXRApi::get_hand_tracker(uint32_t p_hand) const {
+	if (p_hand < MAX_TRACKED_HANDS) {
+		return &hand_trackers[p_hand];
+	} else {
+		return nullptr;
+	}
+}
+
+XrHandJointsMotionRangeEXT OpenXRApi::get_motion_range(uint32_t p_hand) const {
+	if (p_hand < MAX_TRACKED_HANDS) {
+		return hand_trackers[p_hand].motion_range;
+	} else {
+		// just return this as the default
+		return XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
+	}
+}
+
+void OpenXRApi::set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_motion_range) {
+	if (p_hand < MAX_TRACKED_HANDS) {
+		hand_trackers[p_hand].motion_range = p_motion_range;
+	}
 }
 
 // config
@@ -1997,9 +2031,19 @@ void OpenXRApi::update_handtracking() {
 	for (int i = 0; i < 2; i++) {
 		XrHandJointsLocateInfoEXT locateInfo = {
 			.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
+			.next = nullptr,
 			.baseSpace = play_space,
 			.time = time,
 		};
+		XrHandJointsMotionRangeInfoEXT motionRangeInfo;
+
+		if (hand_motion_range_ext) {
+			motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
+			motionRangeInfo.next = nullptr;
+			motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
+
+			locateInfo.next = &motionRangeInfo;
+		}
 
 		result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
 		if (xr_result(result, "failed to get tracking for hand {0}!", i)) {

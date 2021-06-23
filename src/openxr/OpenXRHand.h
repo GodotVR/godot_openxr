@@ -15,8 +15,10 @@ class OpenXRHand : public Spatial {
 private:
 	OpenXRApi *openxr_api;
 	int hand;
+	int motion_range;
 
 	Spatial *joints[XR_HAND_JOINT_COUNT_EXT];
+	void _set_motion_range();
 
 public:
 	static void _register_methods();
@@ -32,6 +34,9 @@ public:
 
 	int get_hand() const;
 	void set_hand(int p_hand);
+
+	int get_motion_range() const;
+	void set_motion_range(int p_motion_range);
 };
 } // namespace godot
 

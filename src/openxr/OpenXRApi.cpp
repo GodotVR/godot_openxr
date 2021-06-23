@@ -1692,8 +1692,12 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 	if (!running || state >= XR_SESSION_STATE_STOPPING)
 		return;
 
+	// ignore our output
+	if (!frameState.shouldRender)
+		return;
+
 	// must have valid view pose for projection_views[eye].pose to submit layer
-	if (!frameState.shouldRender || !view_pose_valid) {
+	if (!view_pose_valid) {
 		/* Godot 3.1: we acquire and release the image below in this function.
 		 * Godot 3.2+: get_external_texture_for_eye() on acquires the image,
 		 * therefore we have to release it here.
@@ -2125,7 +2129,7 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 	}
 
 	// this won't prevent us from rendering but we won't output to OpenXR
-	if (!running || state >= XR_SESSION_STATE_STOPPING)
+	if (!running || state >= XR_SESSION_STATE_STOPPING || !frameState.shouldRender)
 		return 0;
 
 	// this only gets called from Godot 3.2 and newer, allows us to use
@@ -2324,17 +2328,18 @@ void OpenXRApi::process_openxr() {
 		}
 	}
 
-	XrFrameBeginInfo frameBeginInfo = {
-		.type = XR_TYPE_FRAME_BEGIN_INFO,
-		.next = NULL
-	};
-
-	result = xrBeginFrame(session, &frameBeginInfo);
-	if (!xr_result(result, "failed to begin frame!")) {
-		return;
-	}
-
 	if (frameState.shouldRender) {
+		// let's start our frame..
+		XrFrameBeginInfo frameBeginInfo = {
+			.type = XR_TYPE_FRAME_BEGIN_INFO,
+			.next = NULL
+		};
+
+		result = xrBeginFrame(session, &frameBeginInfo);
+		if (!xr_result(result, "failed to begin frame!")) {
+			return;
+		}
+	} else {
 		// TODO: Tell godot not do render VR to save resources.
 		// See render_openxr() for the corresponding early exit.
 	}

@@ -91,7 +91,10 @@ XrAction Action::get_action() const {
 }
 
 bool Action::get_as_bool(XrPath p_path) {
-	if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
+	if (!xr_api->is_running()) {
+		// not running
+		return false;
+	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised
 		return false;
 	} else if (type != XR_ACTION_TYPE_BOOLEAN_INPUT) {
@@ -120,7 +123,10 @@ bool Action::get_as_bool(XrPath p_path) {
 }
 
 float Action::get_as_float(XrPath p_path) {
-	if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
+	if (!xr_api->is_running()) {
+		// not running
+		return 0.0;
+	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised
 		return 0.0;
 	} else if (type != XR_ACTION_TYPE_FLOAT_INPUT) {
@@ -149,7 +155,10 @@ float Action::get_as_float(XrPath p_path) {
 }
 
 Vector2 Action::get_as_vector(XrPath p_path) {
-	if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
+	if (!xr_api->is_running()) {
+		// not running
+		return Vector2();
+	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised
 		return Vector2();
 	} else if (type != XR_ACTION_TYPE_VECTOR2F_INPUT) {
@@ -178,7 +187,10 @@ Vector2 Action::get_as_vector(XrPath p_path) {
 }
 
 bool Action::is_pose_active(XrPath p_path) {
-	if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
+	if (!xr_api->is_running()) {
+		// not running
+		return false;
+	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised
 		Godot::print("Pose not initialised");
 		return false;
@@ -207,7 +219,10 @@ bool Action::is_pose_active(XrPath p_path) {
 }
 
 Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
-	if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
+	if (!xr_api->is_running()) {
+		// not running
+		return Transform();
+	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised or setup fully
 		return Transform();
 	} else if (type != XR_ACTION_TYPE_POSE_INPUT) {
@@ -262,7 +277,10 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 }
 
 void Action::do_haptic_pulse(const XrPath p_path, XrDuration p_duration, float p_frequency, float p_amplitude) {
-	if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
+	if (!xr_api->is_running()) {
+		// not running
+		return;
+	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised or setup fully
 		return;
 	} else if (type != XR_ACTION_TYPE_VIBRATION_OUTPUT) {

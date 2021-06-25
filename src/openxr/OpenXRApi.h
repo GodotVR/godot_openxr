@@ -151,7 +151,6 @@ private:
 	static OpenXRApi *singleton;
 	bool initialised = false;
 	bool running = false;
-	ActionSetStatus actionset_status = ACTION_SET_UNINITIALISED;
 	int use_count = 1;
 
 	// extensions
@@ -160,6 +159,7 @@ private:
 	bool monado_stick_on_ball_ext = false;
 	bool hand_tracking_supported = false;
 
+	XrViewConfigurationType view_config_type = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
 	XrInstance instance = XR_NULL_HANDLE;
 	XrSystemId systemId;
 	XrSession session = XR_NULL_HANDLE;
@@ -213,13 +213,30 @@ private:
 	bool isExtensionSupported(const char *extensionName, XrExtensionProperties *instanceExtensionProperties, uint32_t instanceExtensionCount);
 	bool isViewConfigSupported(XrViewConfigurationType type, XrSystemId systemId);
 	bool isReferenceSpaceSupported(XrReferenceSpaceType type);
+
 	bool initialiseInstance();
 	bool initialiseExtensions();
 	bool initialiseSession();
 	bool initialiseSpaces();
+	void cleanupSpaces();
 	bool initialiseSwapChains();
-	bool initialiseActionSets();
+	void cleanupSwapChains();
 	bool initialiseHandTracking();
+
+	bool loadActionSets();
+	bool bindActionSets();
+	void unbindActionSets();
+	void cleanupActionSets();
+
+	bool on_state_idle();
+	bool on_state_ready();
+	bool on_state_synchronized();
+	bool on_state_visible();
+	bool on_state_focused();
+	bool on_state_stopping();
+	bool on_state_loss_pending();
+	bool on_state_existing();
+
 	bool check_graphics_requirements_gl(XrSystemId system_id);
 	XrResult acquire_image(int eye);
 	void update_actions();
@@ -239,6 +256,7 @@ public:
 	bool is_initialised();
 	bool initialize();
 	void uninitialize();
+	bool is_running();
 
 	XrInstance get_instance() { return instance; };
 	XrSession get_session() { return session; };

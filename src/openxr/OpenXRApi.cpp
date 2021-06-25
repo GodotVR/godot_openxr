@@ -748,13 +748,12 @@ bool OpenXRApi::initialiseSession() {
 
 	// TODO We should add a setting to our config whether we want stereo support and check that here.
 
-	XrViewConfigurationType viewConfigType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
-	if (!isViewConfigSupported(viewConfigType, systemId)) {
+	if (!isViewConfigSupported(view_config_type, systemId)) {
 		Godot::print_error("OpenXR Stereo View Configuration not supported!", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
-	result = xrEnumerateViewConfigurationViews(instance, systemId, viewConfigType, 0, &view_count, NULL);
+	result = xrEnumerateViewConfigurationViews(instance, systemId, view_config_type, 0, &view_count, NULL);
 	if (!xr_result(result, "Failed to get view configuration view count!")) {
 		return false;
 	}
@@ -765,7 +764,7 @@ bool OpenXRApi::initialiseSession() {
 		configuration_views[i].next = NULL;
 	}
 
-	result = xrEnumerateViewConfigurationViews(instance, systemId, viewConfigType, view_count, &view_count, configuration_views);
+	result = xrEnumerateViewConfigurationViews(instance, systemId, view_config_type, view_count, &view_count, configuration_views);
 	if (!xr_result(result, "Failed to enumerate view configuration views!")) {
 		return false;
 	}
@@ -850,18 +849,6 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
-	XrSessionBeginInfo sessionBeginInfo = {
-		.type = XR_TYPE_SESSION_BEGIN_INFO,
-		.next = NULL,
-		.primaryViewConfigurationType = viewConfigType
-	};
-	result = xrBeginSession(session, &sessionBeginInfo);
-	if (!xr_result(result, "Failed to begin session!")) {
-		// cleanup and exit
-		uninitialize();
-		return false;
-	}
-
 	return true;
 }
 
@@ -918,6 +905,18 @@ bool OpenXRApi::initialiseSpaces() {
 	}
 
 	return true;
+}
+
+void OpenXRApi::cleanupSpaces() {
+	// destroy our spaces
+	if (play_space != XR_NULL_HANDLE) {
+		xrDestroySpace(play_space);
+		play_space = XR_NULL_HANDLE;
+	}
+	if (view_space != XR_NULL_HANDLE) {
+		xrDestroySpace(view_space);
+		view_space = XR_NULL_HANDLE;
+	}
 }
 
 bool OpenXRApi::initialiseSwapChains() {
@@ -1122,53 +1121,30 @@ bool OpenXRApi::initialiseSwapChains() {
 	return true;
 }
 
-bool OpenXRApi::initialiseActionSets() {
-	if (actionset_status != ACTION_SET_UNINITIALISED) {
-		return actionset_status == ACTION_SET_INITIALISED;
+void OpenXRApi::cleanupSwapChains() {
+	if (swapchains != NULL) {
+		free(swapchains);
+		swapchains = NULL;
 	}
-
-	// assume failure until we succeed..
-	actionset_status = ACTION_SET_FAILED;
-
-	Godot::print("OpenXR initialiseActionSets");
-
-	parse_action_sets(action_sets_json);
-	parse_interaction_profiles(interaction_profiles_json);
-
-	// finally attach our action sets, that locks everything in place
-	for (uint64_t i = 0; i < action_sets.size(); i++) {
-		ActionSet *action_set = action_sets[i];
-
-		if (!action_set->attach()) {
-			// Just report this
-			Godot::print("Couldn't attach action set {0}", action_set->get_name());
-		} else {
-			Godot::print("Attached action set {0}", action_set->get_name());
+	if (projection_views != NULL) {
+		free(projection_views);
+		projection_views = NULL;
+	}
+	if (images != NULL) {
+		for (uint32_t i = 0; i < view_count; i++) {
+			free(images[i]);
 		}
+		free(images);
+		images = NULL;
 	}
-
-	// NOTE: outputting what we find here for debugging, should probably make this silent in due time or just have one line with missing actions.
-	// a developer that is not using the internal actions but defines their own may not care about these missing
-
-	// Init our input paths and godot controllers for our mapping to
-	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
-		XrResult res = xrStringToPath(instance, inputmaps[i].name, &inputmaps[i].toplevel_path);
-		xr_result(res, "OpenXR Couldn't obtain path for {0}", inputmaps[i].name);
+	if (projectionLayer != NULL) {
+		free(projectionLayer);
+		projectionLayer = NULL;
 	}
-
-	// find our default actions
-	for (uint64_t i = 0; i < ACTION_MAX; i++) {
-		default_actions[i].action = get_action(default_actions[i].name);
-		if (default_actions[i].action != NULL) {
-			Godot::print("OpenXR found internal action {0}", default_actions[i].name);
-		} else {
-			Godot::print("OpenXR didn't find internal action {0}", default_actions[i].name);
-		}
+	if (views != NULL) {
+		free(views);
+		views = NULL;
 	}
-
-	// yeah!
-	actionset_status = ACTION_SET_INITIALISED;
-	return true;
 }
 
 bool OpenXRApi::initialiseHandTracking() {
@@ -1235,6 +1211,85 @@ bool OpenXRApi::initialiseHandTracking() {
 	return true;
 }
 
+bool OpenXRApi::loadActionSets() {
+#ifdef DEBUG
+	Godot::print("OpenXR loadActionSets");
+#endif
+
+	parse_action_sets(action_sets_json);
+	parse_interaction_profiles(interaction_profiles_json);
+
+	return true;
+}
+
+bool OpenXRApi::bindActionSets() {
+#ifdef DEBUG
+	Godot::print("OpenXR bindActionSets");
+#endif
+
+	// finally attach our action sets, that locks everything in place
+	for (uint64_t i = 0; i < action_sets.size(); i++) {
+		ActionSet *action_set = action_sets[i];
+
+		if (!action_set->attach()) {
+			// Just report this
+			Godot::print("Couldn't attach action set {0}", action_set->get_name());
+		} else {
+			Godot::print("Attached action set {0}", action_set->get_name());
+		}
+	}
+
+	// NOTE: outputting what we find here for debugging, should probably make this silent in due time or just have one line with missing actions.
+	// a developer that is not using the internal actions but defines their own may not care about these missing
+
+	// Init our input paths and godot controllers for our mapping to
+	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
+		XrResult res = xrStringToPath(instance, inputmaps[i].name, &inputmaps[i].toplevel_path);
+		xr_result(res, "OpenXR Couldn't obtain path for {0}", inputmaps[i].name);
+	}
+
+	// find our default actions
+	for (uint64_t i = 0; i < ACTION_MAX; i++) {
+		default_actions[i].action = get_action(default_actions[i].name);
+		if (default_actions[i].action != NULL) {
+			Godot::print("OpenXR found internal action {0}", default_actions[i].name);
+		} else {
+			Godot::print("OpenXR didn't find internal action {0}", default_actions[i].name);
+		}
+	}
+
+	return true;
+}
+
+void OpenXRApi::unbindActionSets() {
+	// cleanup our controller mapping
+	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
+		inputmaps[i].toplevel_path = XR_NULL_PATH;
+		inputmaps[i].active_profile = XR_NULL_PATH;
+		if (inputmaps[i].godot_controller >= 0) {
+			arvr_api->godot_arvr_remove_controller(inputmaps[i].godot_controller);
+			inputmaps[i].godot_controller = -1;
+		}
+	}
+
+	// reset our default actions
+	for (uint64_t i = 0; i < ACTION_MAX; i++) {
+		default_actions[i].action = NULL;
+	}
+}
+
+void OpenXRApi::cleanupActionSets() {
+	unbindActionSets();
+
+	// clear out our action sets
+	while (!action_sets.empty()) {
+		ActionSet *action_set = action_sets.back();
+		delete action_set;
+
+		action_sets.pop_back();
+	}
+}
+
 OpenXRApi::OpenXRApi() {
 	// We set this to true if we init everything correctly
 	initialised = false;
@@ -1278,30 +1333,11 @@ bool OpenXRApi::initialize() {
 		return false;
 	}
 
-	if (!initialiseSpaces()) {
+	if (!loadActionSets()) {
 		// cleanup and exit
 		uninitialize();
 		return false;
 	}
-
-	if (!initialiseSwapChains()) {
-		// cleanup and exit
-		uninitialize();
-		return false;
-	}
-
-	/* moved to session focussed
-	if (!initialiseActionSets()) {
-		// !BAS! do we care about this failing?
-
-		// cleanup and exit
-		uninitialize();
-		return false;
-	}
-	*/
-
-	// initialise hand tracking, it's fine if this fails
-	initialiseHandTracking();
 
 	// We've made it!
 	initialised = true;
@@ -1313,49 +1349,16 @@ OpenXRApi::~OpenXRApi() {
 }
 
 void OpenXRApi::uninitialize() {
-	if (session != XR_NULL_HANDLE) {
+	if (running && session != XR_NULL_HANDLE) {
 		xrEndSession(session);
 		// we destroy this further down..
 	}
 
-	// cleanup our controller mapping
-	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
-		inputmaps[i].toplevel_path = XR_NULL_PATH;
-		inputmaps[i].active_profile = XR_NULL_PATH;
-		if (inputmaps[i].godot_controller >= 0) {
-			arvr_api->godot_arvr_remove_controller(inputmaps[i].godot_controller);
-			inputmaps[i].godot_controller = -1;
-		}
-	}
+	cleanupActionSets();
+	cleanupSwapChains();
+	cleanupSpaces();
 
-	// reset our default actions
-	for (uint64_t i = 0; i < ACTION_MAX; i++) {
-		default_actions[i].action = NULL;
-	}
-
-	// clear out our action sets
-	while (!action_sets.empty()) {
-		ActionSet *action_set = action_sets.back();
-		delete action_set;
-
-		action_sets.pop_back();
-	}
-
-	// destroy our spaces
-	if (play_space != XR_NULL_HANDLE) {
-		xrDestroySpace(play_space);
-		play_space = XR_NULL_HANDLE;
-	}
-	if (view_space != XR_NULL_HANDLE) {
-		xrDestroySpace(view_space);
-		view_space = XR_NULL_HANDLE;
-	}
-
-	// free our buffers
-	if (projection_views != NULL) {
-		free(projection_views);
-		projection_views = NULL;
-	}
+	// cleanup our session and instance
 	if (configuration_views) {
 		free(configuration_views);
 		configuration_views = NULL;
@@ -1364,27 +1367,6 @@ void OpenXRApi::uninitialize() {
 		free(buffer_index);
 		buffer_index = NULL;
 	}
-	if (swapchains != NULL) {
-		free(swapchains);
-		swapchains = NULL;
-	}
-	if (images != NULL) {
-		for (uint32_t i = 0; i < view_count; i++) {
-			free(images[i]);
-		}
-		free(images);
-		images = NULL;
-	}
-	if (projectionLayer != NULL) {
-		free(projectionLayer);
-		projectionLayer = NULL;
-	}
-	if (views != NULL) {
-		free(views);
-		views = NULL;
-	}
-
-	// cleanup our session and instance
 	if (session != XR_NULL_HANDLE) {
 		xrDestroySession(session);
 		session = XR_NULL_HANDLE;
@@ -1403,6 +1385,79 @@ void OpenXRApi::uninitialize() {
 	monado_stick_on_ball_ext = false;
 	hand_tracking_supported = false;
 	initialised = false;
+}
+
+bool OpenXRApi::is_running() {
+	if (!initialised) {
+		return false;
+	} else {
+		return running;
+	}
+}
+
+bool OpenXRApi::on_state_idle() {
+	return true;
+}
+
+bool OpenXRApi::on_state_ready() {
+	XrSessionBeginInfo sessionBeginInfo = {
+		.type = XR_TYPE_SESSION_BEGIN_INFO,
+		.next = NULL,
+		.primaryViewConfigurationType = view_config_type
+	};
+
+	XrResult result = xrBeginSession(session, &sessionBeginInfo);
+	if (!xr_result(result, "Failed to begin session!")) {
+		return false;
+	}
+
+	// ignore failure on these for now, may need to improve this..
+	// also need to find out if some of these should be moved further on..
+	initialiseSpaces();
+	initialiseSwapChains();
+	initialiseHandTracking();
+
+	bindActionSets();
+
+	running = true;
+
+	return true;
+}
+
+bool OpenXRApi::on_state_synchronized() {
+	return true;
+}
+
+bool OpenXRApi::on_state_visible() {
+	return true;
+}
+
+bool OpenXRApi::on_state_focused() {
+	return true;
+}
+
+bool OpenXRApi::on_state_stopping() {
+	if (running) {
+		xrEndSession(session);
+		running = false;
+	}
+
+	// need to cleanup various things which would otherwise be re-allocated if we have a state change back to ready
+	// note that cleaning up our action sets will invalidate many of the OpenXR nodes so we need to improve that as well.
+	unbindActionSets();
+	cleanupSwapChains();
+	cleanupSpaces();
+
+	return true;
+}
+
+bool OpenXRApi::on_state_loss_pending() {
+	return true;
+}
+
+bool OpenXRApi::on_state_existing() {
+	// we may want to trigger a signal back to the application to tell it, it should quit.
+	return true;
 }
 
 bool OpenXRApi::is_initialised() {
@@ -1505,7 +1560,7 @@ Action *OpenXRApi::get_action(const char *p_name) {
 bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
 	// we'll use Godots build in JSON parser, good enough for this :)
 
-	if (!is_initialised()) {
+	if (instance == XR_NULL_HANDLE) {
 		Godot::print("OpenXR can't parse the action sets before OpenXR is initialised.");
 		return false;
 	}
@@ -1597,7 +1652,7 @@ bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
 bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 	// We can push our interaction profiles directly to OpenXR. No need to keep them in memory.
 
-	if (!is_initialised()) {
+	if (instance == XR_NULL_HANDLE) {
 		Godot::print("OpenXR can't parse the interaction profiles before OpenXR is initialised.");
 		return false;
 	}
@@ -1747,17 +1802,12 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 	// printf("Render eye %d texture %d\n", eye, texid);
 	XrResult result;
 
-	// TODO: save resources in some states where we don't need to do
-	// anything
-	if (!running || state >= XR_SESSION_STATE_STOPPING)
-		return;
-
-	// ignore our output
-	if (!frameState.shouldRender)
+	// TODO: save resources don't react on rendering if we're not running (session hasn't begun or has ended)
+	if (!running)
 		return;
 
 	// must have valid view pose for projection_views[eye].pose to submit layer
-	if (!view_pose_valid) {
+	if (!frameState.shouldRender || !view_pose_valid) {
 		/* Godot 3.1: we acquire and release the image below in this function.
 		 * Godot 3.2+: get_external_texture_for_eye() on acquires the image,
 		 * therefore we have to release it here.
@@ -1852,7 +1902,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection) {
 	XrMatrix4x4f matrix;
 
-	if (!initialised) {
+	if (!initialised || !running) {
 		CameraMatrix *cm = (CameraMatrix *)p_projection;
 
 		cm->set_perspective(60.0, 1.0, p_z_near, p_z_far, false);
@@ -1895,7 +1945,7 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 void OpenXRApi::update_actions() {
 	XrResult result;
 
-	if (!initialised) {
+	if (!initialised || !running) {
 		return;
 	}
 
@@ -1922,6 +1972,11 @@ void OpenXRApi::update_actions() {
 				active_sets.push_back(active_set);
 			}
 		}
+	}
+
+	if (active_sets.size() == 0) {
+		// no active sets, no reason to sync.
+		return;
 	}
 
 	// Godot::print("Synching {0} active action sets", active_sets.size());
@@ -2099,10 +2154,6 @@ void OpenXRApi::recommended_rendertarget_size(uint32_t *width, uint32_t *height)
 }
 
 void OpenXRApi::transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *matrix, float p_world_scale) {
-	if (!initialised) {
-		return;
-	}
-
 	godot_basis basis;
 	godot_vector3 origin;
 	float *basis_ptr =
@@ -2131,7 +2182,7 @@ void OpenXRApi::transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *mat
 };
 
 bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *transform_for_eye) {
-	if (!initialised) {
+	if (!initialised || !running) {
 		return false;
 	}
 
@@ -2151,7 +2202,7 @@ bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *
 }
 
 bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
-	if (!initialised) {
+	if (!initialised || !running) {
 		return false;
 	}
 
@@ -2199,7 +2250,7 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 	}
 
 	// this won't prevent us from rendering but we won't output to OpenXR
-	if (!running || state >= XR_SESSION_STATE_STOPPING || !frameState.shouldRender)
+	if (!running || state >= XR_SESSION_STATE_STOPPING)
 		return 0;
 
 	// this only gets called from Godot 3.2 and newer, allows us to use
@@ -2250,7 +2301,7 @@ void OpenXRApi::process_openxr() {
 			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
 				XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtimeEvent;
 				Godot::print("OpenXR EVENT: instance loss pending at {0}!", event->lossTime);
-				running = false;
+				// running = false;
 				return;
 			} break;
 			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
@@ -2274,16 +2325,35 @@ void OpenXRApi::process_openxr() {
 					Godot::print("OpenXR EVENT: session state changed to UNKNOWN - {0}", state);
 				} else {
 					Godot::print("OpenXR EVENT: session state changed to {0}", session_states[state]);
-				}
-				if (event->state >= XR_SESSION_STATE_STOPPING) {
-					// may need to unregister action sets here?!?
 
-					Godot::print_error("Abort Mission!", __FUNCTION__, __FILE__, __LINE__);
-					running = false;
-					return;
-				} else if (event->state == XR_SESSION_STATE_FOCUSED) {
-					// here we finish some of our initialisations
-					initialiseActionSets();
+					switch (state) {
+						case XR_SESSION_STATE_IDLE:
+							on_state_idle();
+							break;
+						case XR_SESSION_STATE_READY:
+							on_state_ready();
+							break;
+						case XR_SESSION_STATE_SYNCHRONIZED:
+							on_state_synchronized();
+							break;
+						case XR_SESSION_STATE_VISIBLE:
+							on_state_visible();
+							break;
+						case XR_SESSION_STATE_FOCUSED:
+							on_state_focused();
+							break;
+						case XR_SESSION_STATE_STOPPING:
+							on_state_stopping();
+							break;
+						case XR_SESSION_STATE_LOSS_PENDING:
+							on_state_loss_pending();
+							break;
+						case XR_SESSION_STATE_EXITING:
+							on_state_existing();
+							break;
+						default:
+							break;
+					}
 				}
 			} break;
 			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
@@ -2351,6 +2421,10 @@ void OpenXRApi::process_openxr() {
 		return;
 	}
 
+	if (!running) {
+		return;
+	}
+
 	XrFrameWaitInfo frameWaitInfo = {
 		.type = XR_TYPE_FRAME_WAIT_INFO,
 		.next = NULL
@@ -2398,18 +2472,18 @@ void OpenXRApi::process_openxr() {
 		}
 	}
 
-	if (frameState.shouldRender) {
-		// let's start our frame..
-		XrFrameBeginInfo frameBeginInfo = {
-			.type = XR_TYPE_FRAME_BEGIN_INFO,
-			.next = NULL
-		};
+	// let's start our frame..
+	XrFrameBeginInfo frameBeginInfo = {
+		.type = XR_TYPE_FRAME_BEGIN_INFO,
+		.next = NULL
+	};
 
-		result = xrBeginFrame(session, &frameBeginInfo);
-		if (!xr_result(result, "failed to begin frame!")) {
-			return;
-		}
-	} else {
+	result = xrBeginFrame(session, &frameBeginInfo);
+	if (!xr_result(result, "failed to begin frame!")) {
+		return;
+	}
+
+	if (frameState.shouldRender) {
 		// TODO: Tell godot not do render VR to save resources.
 		// See render_openxr() for the corresponding early exit.
 	}

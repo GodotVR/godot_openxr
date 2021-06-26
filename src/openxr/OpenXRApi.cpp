@@ -445,15 +445,21 @@ OpenXRApi *OpenXRApi::singleton = NULL;
 void OpenXRApi::openxr_release_api() {
 	if (singleton == NULL) {
 		// nothing to release
+#ifdef DEBUG
 		Godot::print("OpenXR: tried to release non-existent OpenXR context\n");
+#endif
 	} else if (singleton->use_count > 1) {
 		// decrease use count
 		singleton->use_count--;
 
+#ifdef DEBUG
 		Godot::print("OpenXR: decreased use count to {0}", singleton->use_count);
+#endif
 	} else {
 		// cleanup openxr
+#ifdef DEBUG
 		Godot::print("OpenXR releasing OpenXR context");
+#endif
 
 		delete singleton;
 		singleton = NULL;
@@ -464,13 +470,18 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 	if (singleton != NULL) {
 		// increase use count
 		singleton->use_count++;
+
+#ifdef DEBUG
 		Godot::print("OpenXR increased use count to {0}", singleton->use_count);
+#endif
 	} else {
 		singleton = new OpenXRApi();
 		if (singleton == NULL) {
 			Godot::print_error("OpenXR interface creation failed", __FUNCTION__, __FILE__, __LINE__);
+#ifdef DEBUG
 		} else {
 			Godot::print("OpenXR interface creation successful");
+#endif
 		}
 	}
 
@@ -558,8 +569,9 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 bool OpenXRApi::initialiseInstance() {
 	XrResult result;
 
+#ifdef DEBUG
 	Godot::print("OpenXR initialiseInstance");
-
+#endif
 	uint32_t extensionCount = 0;
 	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
 
@@ -678,7 +690,11 @@ bool OpenXRApi::initialiseExtensions() {
 	XrResult result;
 
 	// Maybe we should remove the error checking here, if the extension is not supported, we won't be doing anything with this.
+
+#ifdef DEBUG
 	Godot::print("OpenXR initialiseExtensions");
+#endif
+
 	if (hand_tracking_ext) {
 		// TODO move this into hand tracker source
 		result = xrGetInstanceProcAddr(instance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT_ptr);
@@ -703,7 +719,9 @@ bool OpenXRApi::initialiseExtensions() {
 bool OpenXRApi::initialiseSession() {
 	XrResult result;
 
+#ifdef DEBUG
 	Godot::print("OpenXR initialiseSession");
+#endif
 
 	// TODO: Support AR?
 	XrSystemGetInfo systemGetInfo = {
@@ -850,7 +868,9 @@ bool OpenXRApi::initialiseSession() {
 bool OpenXRApi::initialiseSpaces() {
 	XrResult result;
 
+#ifdef DEBUG
 	Godot::print("OpenXR initialiseSpaces");
+#endif
 
 	XrPosef identityPose = {
 		.orientation = { .x = 0, .y = 0, .z = 0, .w = 1.0 },
@@ -903,7 +923,9 @@ bool OpenXRApi::initialiseSpaces() {
 bool OpenXRApi::initialiseSwapChains() {
 	XrResult result;
 
+#ifdef DEBUG
 	Godot::print("OpenXR initialiseSwapChains");
+#endif
 
 	uint32_t swapchainFormatCount;
 	result = xrEnumerateSwapchainFormats(session, 0, &swapchainFormatCount, NULL);
@@ -1156,7 +1178,9 @@ bool OpenXRApi::initialiseHandTracking() {
 		return false;
 	}
 
+#ifdef DEBUG
 	Godot::print("OpenXR initialiseHandTracking");
+#endif
 
 	XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {
 		.type = XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT,
@@ -1223,7 +1247,9 @@ OpenXRApi::OpenXRApi() {
 bool OpenXRApi::initialize() {
 	if (initialised) {
 		// Already initialised, shouldn't be called in this case..
+#ifdef DEBUG
 		Godot::print("Initialize called when interface is already initialized.");
+#endif
 		return true;
 	}
 

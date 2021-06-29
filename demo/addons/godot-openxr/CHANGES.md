@@ -1,6 +1,10 @@
 Changes to the Godot OpenXR asset
 =================================
 
+1.0.2
+-------------------
+- Fix folder structure of godot_openxr.zip created by Github actions
+
 1.0.1
 -------------------
 - Fix crash issue on Oculus Link when taking headset off and putting it back on

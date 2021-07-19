@@ -39,7 +39,7 @@ OpenXR on desktop PCs usually requires using a loader provided by Khronos, you c
 
 On Linux the loader and include files should be installed system wide via package manager (or manually) within the `/usr` folder structure and they should be picked up automatically.
 
-On Windows a precompiled version of the loaded can be found in `openxr_loader_windows`, currently only the x86 version is used.
+On Windows a precompiled version of the loaded can be found in `openxr_loader`, currently only the x86 version is used.
 You can download the latest version from: https://github.com/KhronosGroup/OpenXR-SDK/releases
 
 ### Compiling the plugin

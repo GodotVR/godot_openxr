@@ -23,6 +23,7 @@ opts.AddVariables(
     PathVariable('target_path', 'The path where the lib is installed.', 'demo/addons/godot-openxr/bin/'),
     PathVariable('target_name', 'The library name.', 'libgodot_openxr', PathVariable.PathAccept),
 )
+opts.Add(PathVariable('openxr_loader_path', 'The path where our openxr loader is located.', 'openxr_loader/1.0.16/'))
 opts.Add(BoolVariable('use_llvm', "Use the LLVM / Clang compiler", 'no'))
 if cdb_supported:
     opts.Add(BoolVariable('generate_cdb', 'Generate compile_commands.json', 'no'))
@@ -42,13 +43,19 @@ openxr_library_path = ""
 
 # Source files to include
 sources = []
+openxr_loader_dll_source = ""
+openxr_loader_dll_target = ""
 
 # Platform dependent settings
 if env['platform'] == "windows":
     target_path += "win64/"
     godot_cpp_library += '.windows'
-    openxr_include_path += "openxr_loader_windows/1.0.16/include/"
-    openxr_library_path += "openxr_loader_windows/1.0.16/x64/lib"
+    openxr_include_path += env['openxr_loader_path'] + "include/"
+    openxr_library_path += env['openxr_loader_path'] + "x64/lib"
+
+    # copy our loaded dll
+    openxr_loader_dll_source = env['openxr_loader_path'] + "x64/bin/openxr_loader.dll"
+    openxr_loader_dll_target = target_path + "openxr_loader.dll"
 
     # Check some environment settings
     if env['use_llvm']:
@@ -85,7 +92,7 @@ elif env['platform'] == "linux":
     godot_cpp_library += '.linux'
 
     # make sure we have access to the correct headers, cheating here a little.
-    openxr_include_path += "openxr_loader_windows/1.0.16/include/"
+    openxr_include_path += env['openxr_loader_path'] + "include/"
 
     # note, on linux the OpenXR SDK is installed in /usr and should be accessible
     if env['use_llvm']:
@@ -151,6 +158,12 @@ sources += Glob('src/*/*/*.cpp')
 
 library = env.SharedLibrary(target=target_path + env['target_name'], source=sources)
 Default(library)
+
+if openxr_loader_dll_target != '':
+    env.AddPostAction(library, Copy(
+        openxr_loader_dll_target,
+        openxr_loader_dll_source
+    ))
 
 if cdb_supported and env['generate_cdb']:
     Default(env.CompilationDatabase('compile_commands.json'))

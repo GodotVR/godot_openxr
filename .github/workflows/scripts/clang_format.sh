@@ -18,7 +18,7 @@ while IFS= read -rd '' f; do
         continue
     elif [[ "$f" == "demo/addons/godot-xr-tools"* ]]; then
         continue
-    elif [[ "$f" == "openxr_loader_windows"* ]]; then
+    elif [[ "$f" == "openxr_loader"* ]]; then
         continue
     elif [[ "$f" == ".github"* ]]; then
         continue

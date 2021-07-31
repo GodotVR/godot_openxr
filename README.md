@@ -173,6 +173,8 @@ This will ensure clang-format is run on any changed files before commiting the c
 
 The source code for the module is released under MIT license (see license file).
 
+The hand models in the plugin are Copyright (c) Valve, see the folder for their license file.
+
 ## About this repository
 
 This repository is a fork of godot_openhmd which was created and is maintained by [Bastiaan Olij](https://github.com/BastiaanOlij) a.k.a. Mux213

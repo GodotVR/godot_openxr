@@ -1,11 +1,10 @@
-[gd_scene load_steps=17 format=2]
+[gd_scene load_steps=19 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Ground.tscn" type="PackedScene" id=2]
 [ext_resource path="res://Table.tscn" type="PackedScene" id=3]
 [ext_resource path="res://addons/godot-openxr/scenes/first_person_controller_vr.tscn" type="PackedScene" id=4]
-[ext_resource path="res://addons/godot-openxr/scenes/right_hand_nodes.tscn" type="PackedScene" id=5]
-[ext_resource path="res://addons/godot-openxr/scenes/left_hand_nodes.tscn" type="PackedScene" id=6]
+[ext_resource path="res://addons/godot-openxr/assets/valve_hand_models/textures/vr_glove_color.jpg" type="Texture" id=5]
 [ext_resource path="res://addons/godot-openxr/scenes/XRPose.tscn" type="PackedScene" id=7]
 [ext_resource path="res://addons/godot-xr-tools/objects/Viewport_2D_in_3D.tscn" type="PackedScene" id=8]
 [ext_resource path="res://ControllerInfo.tscn" type="PackedScene" id=9]
@@ -13,19 +12,25 @@
 [ext_resource path="res://addons/godot-xr-tools/functions/Function_Direct_movement.tscn" type="PackedScene" id=11]
 [ext_resource path="res://Screen.tscn" type="PackedScene" id=12]
 [ext_resource path="res://addons/godot-xr-tools/functions/Function_pointer.tscn" type="PackedScene" id=13]
+[ext_resource path="res://addons/godot-openxr/scenes/left_hand_mesh.tscn" type="PackedScene" id=14]
+[ext_resource path="res://addons/godot-openxr/scenes/right_hand_mesh.tscn" type="PackedScene" id=15]
 
-[sub_resource type="CapsuleMesh" id=1]
+[sub_resource type="CapsuleMesh" id=5]
 radius = 0.1
 mid_height = 0.1
 
-[sub_resource type="CapsuleMesh" id=2]
+[sub_resource type="CapsuleMesh" id=6]
 radius = 0.03
 mid_height = 0.04
 
-[sub_resource type="CylinderMesh" id=3]
+[sub_resource type="CylinderMesh" id=7]
 top_radius = 0.01
 bottom_radius = 0.01
 height = 0.05
+
+[sub_resource type="SphereMesh" id=4]
+radius = 0.01
+height = 0.02
 
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
@@ -41,13 +46,13 @@ directional_shadow_max_distance = 20.0
 [node name="ShadowHead" type="MeshInstance" parent="FPSController/ARVRCamera" index="0"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, -0.0187781, 0.103895 )
 layers = 524288
-mesh = SubResource( 1 )
+mesh = SubResource( 5 )
 material/0 = null
 
 [node name="ShadowHMD" type="MeshInstance" parent="FPSController/ARVRCamera" index="1"]
 transform = Transform( -1.62921e-07, 0, 1, 0, 1, 0, -1, 0, -1.62921e-07, 1.44924e-09, 0, 0.00889538 )
 layers = 524288
-mesh = SubResource( 2 )
+mesh = SubResource( 6 )
 material/0 = null
 
 [node name="LeftHandController" parent="FPSController" index="2"]
@@ -97,7 +102,7 @@ action = "godot/grip_pose"
 
 [node name="Grip" type="MeshInstance" parent="FPSController/Left_grip_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
-mesh = SubResource( 3 )
+mesh = SubResource( 7 )
 material/0 = null
 
 [node name="Right_aim_pose" parent="FPSController" instance=ExtResource( 7 )]
@@ -106,15 +111,37 @@ path = "/user/hand/right"
 
 [node name="Grip" type="MeshInstance" parent="FPSController/Right_aim_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
-mesh = SubResource( 3 )
+mesh = SubResource( 7 )
 material/0 = null
 
-[node name="Left_hand" parent="FPSController" instance=ExtResource( 6 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
+[node name="LeftHand" parent="FPSController" instance=ExtResource( 14 )]
+motion_range = 1
 
-[node name="Right_hand" parent="FPSController" instance=ExtResource( 5 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.5, 1, -0.5 )
-motion_range = 0
+[node name="Skeleton" parent="FPSController/LeftHand/HandModel/Armature001" index="0"]
+motion_range = 1
+
+[node name="IndexTip" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
+transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.076153, 0.0915428, -0.715277, 0.692819, 0.0345973, 0.0355402, -0.164767 )
+
+[node name="ShowIndexTip" type="MeshInstance" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton/IndexTip" index="0"]
+visible = false
+mesh = SubResource( 4 )
+material/0 = null
+
+[node name="RightHand" parent="FPSController" instance=ExtResource( 15 )]
+motion_range = 1
+albedo_texture = ExtResource( 5 )
+
+[node name="Skeleton" parent="FPSController/RightHand/HandModel/Armature" index="0"]
+motion_range = 1
+
+[node name="IndexTip" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="1"]
+transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.69282, 0.977075, -0.19881, -0.0761527, -0.0345978, -0.164767, -0.0355401 )
+
+[node name="ShowIndexTip" type="MeshInstance" parent="FPSController/RightHand/HandModel/Armature/Skeleton/IndexTip" index="0"]
+visible = false
+mesh = SubResource( 4 )
+material/0 = null
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )
@@ -128,3 +155,7 @@ scene = ExtResource( 12 )
 collision_layer = 1024
 
 [editable path="FPSController"]
+[editable path="FPSController/LeftHand"]
+[editable path="FPSController/LeftHand/HandModel"]
+[editable path="FPSController/RightHand"]
+[editable path="FPSController/RightHand/HandModel"]

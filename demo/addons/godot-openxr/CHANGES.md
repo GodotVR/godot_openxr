@@ -4,6 +4,7 @@ Changes to the Godot OpenXR asset
 1.0.3
 -------------------
 - Copy loader dll in place when compiling
+- Added mesh based hand scenes using Valve OpenXR hand meshes
 
 1.0.2
 -------------------

@@ -9,6 +9,7 @@
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
 #include <OS.hpp>
+#include <ProjectSettings.hpp>
 
 using namespace godot;
 
@@ -654,20 +655,18 @@ bool OpenXRApi::initialiseInstance() {
 		.next = NULL,
 		.createFlags = 0,
 		.applicationInfo = {
-	// TODO: get application name from godot
-	// TODO: establish godot version -> uint32_t versioning
 #ifdef __GCC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
 				{ .applicationName = "Godot OpenXR Plugin" },
 #else
 				.applicationName = "Godot OpenXR Plugin",
 #endif
-				.applicationVersion = 1,
+				.applicationVersion = 1, // We don't maintain a version for the application at this time.
 #ifdef __GCC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
-				{ .engineName = "Godot Engine" },
+				{ .engineName = "Godot Game Engine" },
 #else
-				.engineName = "Godot Engine",
+				.engineName = "Godot Game Engine",
 #endif
-				.engineVersion = 0,
+				.engineVersion = 3, // TODO: establish godot version -> uint32_t versioning
 				.apiVersion = XR_CURRENT_API_VERSION,
 		},
 		.enabledApiLayerCount = 0,
@@ -675,6 +674,19 @@ bool OpenXRApi::initialiseInstance() {
 		.enabledExtensionCount = enabledExtensionCount,
 		.enabledExtensionNames = enabledExtensions,
 	};
+
+	// Check if we can get a project name from our project...
+	String project_name = ProjectSettings::get_singleton()->get_setting("application/config/name");
+	if (project_name.length() > 0) {
+		CharString name_cs = project_name.utf8();
+		int32_t len = name_cs.length();
+		if (len < XR_MAX_APPLICATION_NAME_SIZE) {
+			strcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data());
+		} else {
+			memcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data(), XR_MAX_APPLICATION_NAME_SIZE);
+			instanceCreateInfo.applicationInfo.applicationName[XR_MAX_APPLICATION_NAME_SIZE] = '/0';
+		}
+	}
 
 	result = xrCreateInstance(&instanceCreateInfo, &instance);
 	if (!xr_result(result, "Failed to create XR instance.")) {

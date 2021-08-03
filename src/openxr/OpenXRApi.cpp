@@ -680,11 +680,11 @@ bool OpenXRApi::initialiseInstance() {
 	if (project_name.length() > 0) {
 		CharString name_cs = project_name.utf8();
 		int32_t len = name_cs.length();
-		if (len < XR_MAX_APPLICATION_NAME_SIZE) {
+		if (len < XR_MAX_APPLICATION_NAME_SIZE - 1) {
 			strcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data());
 		} else {
-			memcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data(), XR_MAX_APPLICATION_NAME_SIZE);
-			instanceCreateInfo.applicationInfo.applicationName[XR_MAX_APPLICATION_NAME_SIZE] = '\0';
+			memcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data(), XR_MAX_APPLICATION_NAME_SIZE - 1);
+			instanceCreateInfo.applicationInfo.applicationName[XR_MAX_APPLICATION_NAME_SIZE - 1] = '\0';
 		}
 	}
 

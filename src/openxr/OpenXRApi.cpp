@@ -684,7 +684,7 @@ bool OpenXRApi::initialiseInstance() {
 			strcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data());
 		} else {
 			memcpy(instanceCreateInfo.applicationInfo.applicationName, name_cs.get_data(), XR_MAX_APPLICATION_NAME_SIZE);
-			instanceCreateInfo.applicationInfo.applicationName[XR_MAX_APPLICATION_NAME_SIZE] = '/0';
+			instanceCreateInfo.applicationInfo.applicationName[XR_MAX_APPLICATION_NAME_SIZE] = '\0';
 		}
 	}
 

@@ -1,0 +1,55 @@
+apply plugin: "com.android.library"
+apply plugin: "kotlin-android"
+
+android {
+    buildToolsVersion = versions.buildTools
+    compileSdkVersion versions.compileSdk
+    ndkVersion versions.ndkVersion
+
+    defaultConfig {
+        minSdkVersion versions.minSdk
+        targetSdkVersion versions.targetSdk
+        versionCode 100003
+        versionName '1.0.3'
+        setProperty("archivesBaseName", "godotopenxr.${versionName}")
+
+        externalNativeBuild {
+            cmake {
+                cppFlags "-std=c++14"
+            }
+        }
+
+        ndk {
+            abiFilters "arm64-v8a"
+        }
+    }
+
+    sourceSets {
+        main {
+            assets.srcDirs += ['../demo/addons/godot-openxr/config']
+        }
+    }
+
+    externalNativeBuild {
+        cmake {
+            path "CMakeLists.txt"
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+
+    buildFeatures {
+        prefabPublishing true
+    }
+
+    prefab {
+        godot_openxr {
+            headers "../src"
+        }
+    }
+}
+
+dependencies {}

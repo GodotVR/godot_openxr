@@ -8,7 +8,6 @@
 #include <CameraMatrix.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
-#include <OS.hpp>
 #include <ProjectSettings.hpp>
 
 using namespace godot;
@@ -606,6 +605,28 @@ bool OpenXRApi::initialiseInstance() {
 #ifdef DEBUG
 	Godot::print("OpenXR initialiseInstance");
 #endif
+
+#ifdef ANDROID
+	// Initialize the loader
+	PFN_xrInitializeLoaderKHR initialize_loader_khr = nullptr;
+	result = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)(&initialize_loader_khr));
+	if (!xr_result(result, "Failed to retrieve pointer to xrInitializeLoaderKHR")) {
+		return false;
+	}
+
+	JNIEnv *env = android_api->godot_android_get_env();
+	JavaVM *vm;
+	env->GetJavaVM(&vm);
+	jobject activity_object = env->NewGlobalRef(android_api->godot_android_get_activity());
+
+	XrLoaderInitInfoAndroidKHR loader_init_info_android = {
+		.type = XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR,
+		.next = XR_NULL_HANDLE,
+		.applicationVM = vm,
+		.applicationContext = activity_object
+	};
+	initialize_loader_khr((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
+#endif
 	uint32_t extensionCount = 0;
 	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
 
@@ -632,11 +653,26 @@ bool OpenXRApi::initialiseInstance() {
 		return false;
 	}
 
+#ifdef ANDROID
+	if (!isExtensionSupported(XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print_error("OpenXR Runtime does not support OpenGLES extension!", __FUNCTION__, __FILE__, __LINE__);
+		free(extensionProperties);
+		return false;
+	}
+
+	if (!isExtensionSupported(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print_error("OpenXR Runtime does not support android instance extension!", __FUNCTION__, __FILE__, __LINE__);
+		free(extensionProperties);
+		return false;
+	}
+
+#else
 	if (!isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
 		free(extensionProperties);
 		return false;
 	}
+#endif
 
 	if (isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print("- Hand tracking extension found");
@@ -664,7 +700,12 @@ bool OpenXRApi::initialiseInstance() {
 	}
 
 	uint32_t enabledExtensionCount = 0;
+#ifdef ANDROID
+	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME;
+	enabledExtensions[enabledExtensionCount++] = XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME;
+#else
 	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
+#endif
 	if (hand_tracking_ext) {
 		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
 	}
@@ -720,6 +761,18 @@ bool OpenXRApi::initialiseInstance() {
 			instanceCreateInfo.applicationInfo.applicationName[XR_MAX_APPLICATION_NAME_SIZE - 1] = '\0';
 		}
 	}
+
+#ifdef ANDROID
+	XrInstanceCreateInfoAndroidKHR androidCreateInfo = {
+		.type = XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR,
+		.next = NULL,
+	};
+
+	androidCreateInfo.applicationVM = vm;
+	androidCreateInfo.applicationActivity = activity_object;
+
+	instanceCreateInfo.next = &androidCreateInfo;
+#endif
 
 	result = xrCreateInstance(&instanceCreateInfo, &instance);
 	if (!xr_result(result, "Failed to create XR instance.")) {
@@ -842,14 +895,11 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
+	OS *os = OS::get_singleton();
+
 	// TODO: support wayland
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
-
-	OS *os = OS::get_singleton();
-
-	// this will be 0 for GLES3, 1 for GLES2, not sure yet for Vulkan.
-	int video_driver = os->get_current_video_driver();
 
 #ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
@@ -864,7 +914,15 @@ bool OpenXRApi::initialiseSession() {
 		Godot::print_error("OpenXR Windows native handle API is missing, please use a newer version of Godot!", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
+#elif ANDROID
+	graphics_binding_gl = XrGraphicsBindingOpenGLESAndroidKHR{
+		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR,
+		.next = NULL,
+	};
 
+	graphics_binding_gl.display = eglGetCurrentDisplay();
+	graphics_binding_gl.config = (EGLConfig)0; // https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/master/src/tests/hello_xr/graphicsplugin_opengles.cpp#L122
+	graphics_binding_gl.context = eglGetCurrentContext();
 #else
 	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
@@ -1023,27 +1081,43 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
-	keep_3d_linear = true; // assume we need to keep our render buffer in linear color space
+	keep_3d_linear = true; // This will only work correctly for GLES2 from Godot 3.4 onwards
 
 	Godot::print("OpenXR Swapchain Formats");
 	for (uint64_t i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
-		// printf("Found %llX\n", swapchainFormats[i]);
+		// Godot::print("Found {0}\n", swapchainFormats[i]);
 #ifdef WIN32
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
+		if (swapchainFormats[i] == GL_RGBA8) {
+			swapchainFormatToUse = swapchainFormats[i];
+			Godot::print("OpenXR Using RGBA swapchain.");
+		}
+#elif ANDROID
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
+			swapchainFormatToUse = swapchainFormats[i];
+			Godot::print("OpenXR Using SRGB swapchain.");
+			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
+		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
 		}
 #else
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
@@ -1055,7 +1129,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
 	if (swapchainFormatToUse == 0) {
 		swapchainFormatToUse = swapchainFormats[0];
-		Godot::print("OpenXR Couldn't find prefered swapchain format, using %llX", swapchainFormatToUse);
+		Godot::print("OpenXR Couldn't find prefered swapchain format, using {0}", swapchainFormatToUse);
 	}
 
 	free(swapchainFormats);
@@ -1067,7 +1141,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	}
 
 	// Damn you microsoft for not supporting this!!
-	//uint32_t swapchainLength[view_count];
+	// uint32_t swapchainLength[view_count];
 	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 	if (swapchainLength == NULL) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain lengths", __FUNCTION__, __FILE__, __LINE__);
@@ -1103,7 +1177,11 @@ bool OpenXRApi::initialiseSwapChains() {
 		}
 	}
 
+#ifdef ANDROID
+	images = (XrSwapchainImageOpenGLESKHR **)malloc(sizeof(XrSwapchainImageOpenGLESKHR **) * view_count);
+#else
 	images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
+#endif
 	if (images == NULL) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain images", __FUNCTION__, __FILE__, __LINE__);
 		return false;
@@ -1115,14 +1193,22 @@ bool OpenXRApi::initialiseSwapChains() {
 	}
 
 	for (uint32_t i = 0; i < view_count; i++) {
+#ifdef ANDROID
+		images[i] = (XrSwapchainImageOpenGLESKHR *)malloc(sizeof(XrSwapchainImageOpenGLESKHR) * swapchainLength[i]);
+#else
 		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchainLength[i]);
+#endif
 		if (images[i] == NULL) {
 			Godot::print_error("OpenXR Couldn't allocate memory for swap chain image", __FUNCTION__, __FILE__, __LINE__);
 			return false;
 		}
 
 		for (uint64_t j = 0; j < swapchainLength[i]; j++) {
+#ifdef ANDROID
+			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
+#else
 			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+#endif
 			images[i][j].next = NULL;
 		}
 	}
@@ -1381,6 +1467,10 @@ bool OpenXRApi::initialize() {
 		return false;
 	}
 #endif
+
+	// get our video driver setting from Godot.
+	OS *os = OS::get_singleton();
+	video_driver = os->get_current_video_driver();
 
 	if (!initialiseInstance()) {
 		// cleanup and exit
@@ -1813,8 +1903,27 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 }
 
 bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
+#ifdef ANDROID
+	XrGraphicsRequirementsOpenGLESKHR opengl_reqs = {
+		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR,
+		.next = NULL
+	};
+
+	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = NULL;
+	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLESGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLESGraphicsRequirementsKHR);
+
+	if (!xr_result(result, "Failed to get xrGetOpenGLESGraphicsRequirementsKHR fp!")) {
+		return false;
+	}
+
+	result = pfnGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_reqs);
+	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
+		return false;
+	}
+#else
 	XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
-		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR, .next = NULL
+		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR,
+		.next = NULL
 	};
 
 	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = NULL;
@@ -1828,6 +1937,7 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
 		return false;
 	}
+#endif
 
 	XrVersion desired_opengl_version = XR_MAKE_VERSION(3, 3, 0);
 	if (desired_opengl_version > opengl_reqs.maxApiVersionSupported || desired_opengl_version < opengl_reqs.minApiVersionSupported) {
@@ -1919,6 +2029,8 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 
 		glBindTexture(GL_TEXTURE_2D, texid);
 #ifdef WIN32
+		glCopyTexSubImage2D(
+#elif ANDROID
 		glCopyTexSubImage2D(
 #else
 		glCopyTextureSubImage2D(
@@ -2519,7 +2631,10 @@ void OpenXRApi::process_openxr() {
 	}
 
 	update_actions();
+	// TODO: Tends to crash randomly on Quest, needs to investigate.
+#ifndef ANDROID
 	update_handtracking();
+#endif
 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,

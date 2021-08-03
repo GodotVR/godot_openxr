@@ -1,0 +1,4 @@
+rootProject.name = "Godot OpenXR Plugin"
+
+include ":GodotOpenXR"
+project(":GodotOpenXR").projectDir = file("android")

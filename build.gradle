@@ -1,0 +1,64 @@
+apply from: 'config.gradle'
+
+buildscript {
+    apply from: 'config.gradle'
+
+    repositories {
+        google()
+        jcenter()
+    }
+    dependencies {
+        classpath "com.android.tools.build:gradle:$versions.gradlePluginVersion"
+        classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$versions.kotlinVersion"
+    }
+}
+
+allprojects {
+    repositories {
+        google()
+        jcenter()
+    }
+}
+
+def outputDir = "build/outputs"
+
+task clean(type: Delete) {
+    dependsOn(":GodotOpenXR:clean")
+
+    delete(rootProject.buildDir)
+
+    // Delete the contents of the outputs directory
+    delete(outputDir)
+}
+
+/**
+ * Generate the plugin binaries.
+ */
+task generatePluginBinary(type: Copy) {
+    dependsOn(":GodotOpenXR:assembleDebug")
+    dependsOn(":GodotOpenXR:assembleRelease")
+    from("android/build/outputs/aar")
+    into("$outputDir/pluginBin")
+}
+
+/**
+ * Generate the plugin native shared libraries.
+ */
+task generateSharedLibs(type: Copy) {
+    dependsOn(":GodotOpenXR:externalNativeBuildDebug")
+    dependsOn(":GodotOpenXR:externalNativeBuildRelease")
+
+    // Specify the base directory. All following 'into' targets will be relative
+    // to this directory.
+    into("$outputDir/sharedLibs")
+
+    // Copy the generated debug shared libs into the outputs directory
+    from("android/build/intermediates/cmake/debug/obj") {
+        into("debug")
+    }
+
+    // Copy the generated release shared libs into the outputs directory
+    from("android/build/intermediates/cmake/release/obj") {
+        into("release")
+    }
+}

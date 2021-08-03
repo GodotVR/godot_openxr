@@ -4,15 +4,16 @@ importer="texture"
 type="StreamTexture"
 path.s3tc="res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.s3tc.stex"
 path.etc2="res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.etc2.stex"
+path.etc="res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.etc.stex"
 metadata={
-"imported_formats": [ "s3tc", "etc2" ],
+"imported_formats": [ "s3tc", "etc2", "etc" ],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/wahooney.itch.io/green_grid.png"
-dest_files=[ "res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.s3tc.stex", "res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.etc2.stex" ]
+dest_files=[ "res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.s3tc.stex", "res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.etc2.stex", "res://.import/green_grid.png-e9d81b3d42c428786d9997769a6729a2.etc.stex" ]
 
 [params]
 

@@ -8,7 +8,6 @@
 #include <CameraMatrix.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
-#include <OS.hpp>
 #include <ProjectSettings.hpp>
 
 using namespace godot;
@@ -16,44 +15,37 @@ using namespace godot;
 ////////////////////////////////////////////////////////////////////////////////
 // Extension functions
 
-XrResult (*xrCreateHandTrackerEXT_ptr)(
-		XrSession session,
-		const XrHandTrackerCreateInfoEXT *createInfo,
-		XrHandTrackerEXT *handTracker) = NULL;
+PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_ptr = nullptr;
 
 XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
 		XrSession session,
 		const XrHandTrackerCreateInfoEXT *createInfo,
 		XrHandTrackerEXT *handTracker) {
-	if (xrCreateHandTrackerEXT_ptr == NULL) {
+	if (xrCreateHandTrackerEXT_ptr == nullptr) {
 		return XR_ERROR_HANDLE_INVALID;
 	}
 
 	return (*xrCreateHandTrackerEXT_ptr)(session, createInfo, handTracker);
 };
 
-XrResult (*xrDestroyHandTrackerEXT_ptr)(
-		XrHandTrackerEXT handTracker) = NULL;
+PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_ptr = nullptr;
 
 XRAPI_ATTR XrResult XRAPI_CALL xrDestroyHandTrackerEXT(
 		XrHandTrackerEXT handTracker) {
-	if (xrDestroyHandTrackerEXT_ptr == NULL) {
+	if (xrDestroyHandTrackerEXT_ptr == nullptr) {
 		return XR_ERROR_HANDLE_INVALID;
 	}
 
 	return (*xrDestroyHandTrackerEXT_ptr)(handTracker);
 };
 
-XrResult (*xrLocateHandJointsEXT_ptr)(
-		XrHandTrackerEXT handTracker,
-		const XrHandJointsLocateInfoEXT *locateInfo,
-		XrHandJointLocationsEXT *locations) = NULL;
+PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_ptr = nullptr;
 
 XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
 		XrHandTrackerEXT handTracker,
 		const XrHandJointsLocateInfoEXT *locateInfo,
 		XrHandJointLocationsEXT *locations) {
-	if (xrLocateHandJointsEXT_ptr == NULL) {
+	if (xrLocateHandJointsEXT_ptr == nullptr) {
 		return XR_ERROR_HANDLE_INVALID;
 	}
 
@@ -606,6 +598,28 @@ bool OpenXRApi::initialiseInstance() {
 #ifdef DEBUG
 	Godot::print("OpenXR initialiseInstance");
 #endif
+
+#ifdef ANDROID
+	// Initialize the loader
+	PFN_xrInitializeLoaderKHR initialize_loader_khr = nullptr;
+	result = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)(&initialize_loader_khr));
+	if (!xr_result(result, "Failed to retrieve pointer to xrInitializeLoaderKHR")) {
+		return false;
+	}
+
+	JNIEnv *env = android_api->godot_android_get_env();
+	JavaVM *vm;
+	env->GetJavaVM(&vm);
+	jobject activity_object = env->NewGlobalRef(android_api->godot_android_get_activity());
+
+	XrLoaderInitInfoAndroidKHR loader_init_info_android = {
+		.type = XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR,
+		.next = XR_NULL_HANDLE,
+		.applicationVM = vm,
+		.applicationContext = activity_object
+	};
+	initialize_loader_khr((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
+#endif
 	uint32_t extensionCount = 0;
 	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
 
@@ -632,11 +646,26 @@ bool OpenXRApi::initialiseInstance() {
 		return false;
 	}
 
+#ifdef ANDROID
+	if (!isExtensionSupported(XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print_error("OpenXR Runtime does not support OpenGLES extension!", __FUNCTION__, __FILE__, __LINE__);
+		free(extensionProperties);
+		return false;
+	}
+
+	if (!isExtensionSupported(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print_error("OpenXR Runtime does not support android instance extension!", __FUNCTION__, __FILE__, __LINE__);
+		free(extensionProperties);
+		return false;
+	}
+
+#else
 	if (!isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
 		free(extensionProperties);
 		return false;
 	}
+#endif
 
 	if (isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print("- Hand tracking extension found");
@@ -664,7 +693,12 @@ bool OpenXRApi::initialiseInstance() {
 	}
 
 	uint32_t enabledExtensionCount = 0;
+#ifdef ANDROID
+	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME;
+	enabledExtensions[enabledExtensionCount++] = XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME;
+#else
 	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
+#endif
 	if (hand_tracking_ext) {
 		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
 	}
@@ -721,6 +755,18 @@ bool OpenXRApi::initialiseInstance() {
 		}
 	}
 
+#ifdef ANDROID
+	XrInstanceCreateInfoAndroidKHR androidCreateInfo = {
+		.type = XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR,
+		.next = NULL,
+	};
+
+	androidCreateInfo.applicationVM = vm;
+	androidCreateInfo.applicationActivity = activity_object;
+
+	instanceCreateInfo.next = &androidCreateInfo;
+#endif
+
 	result = xrCreateInstance(&instanceCreateInfo, &instance);
 	if (!xr_result(result, "Failed to create XR instance.")) {
 		free(enabledExtensions);
@@ -744,7 +790,11 @@ bool OpenXRApi::initialiseInstance() {
 			XR_VERSION_PATCH(instanceProps.runtimeVersion));
 
 	if (strcmp(instanceProps.runtimeName, "SteamVR/OpenXR") == 0) {
-#ifdef __linux__
+#ifdef WIN32
+		// not applicable
+#elif ANDROID
+		// not applicable
+#elif __linux__
 		Godot::print("Running on Linux, using SteamVR workaround for issue https://github.com/ValveSoftware/SteamVR-for-Linux/issues/421");
 #endif
 		is_steamvr = true;
@@ -842,14 +892,11 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
+	OS *os = OS::get_singleton();
+
 	// TODO: support wayland
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
-
-	OS *os = OS::get_singleton();
-
-	// this will be 0 for GLES3, 1 for GLES2, not sure yet for Vulkan.
-	int video_driver = os->get_current_video_driver();
 
 #ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
@@ -864,7 +911,15 @@ bool OpenXRApi::initialiseSession() {
 		Godot::print_error("OpenXR Windows native handle API is missing, please use a newer version of Godot!", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
+#elif ANDROID
+	graphics_binding_gl = XrGraphicsBindingOpenGLESAndroidKHR{
+		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR,
+		.next = NULL,
+	};
 
+	graphics_binding_gl.display = eglGetCurrentDisplay();
+	graphics_binding_gl.config = (EGLConfig)0; // https://github.com/KhronosGroup/OpenXR-SDK-Source/blob/master/src/tests/hello_xr/graphicsplugin_opengles.cpp#L122
+	graphics_binding_gl.context = eglGetCurrentContext();
 #else
 	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
@@ -1023,27 +1078,43 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
-	keep_3d_linear = true; // assume we need to keep our render buffer in linear color space
+	keep_3d_linear = true; // This will only work correctly for GLES2 from Godot 3.4 onwards
 
 	Godot::print("OpenXR Swapchain Formats");
 	for (uint64_t i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
-		// printf("Found %llX\n", swapchainFormats[i]);
+		// Godot::print("Found {0}\n", swapchainFormats[i]);
 #ifdef WIN32
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
+		if (swapchainFormats[i] == GL_RGBA8) {
+			swapchainFormatToUse = swapchainFormats[i];
+			Godot::print("OpenXR Using RGBA swapchain.");
+		}
+#elif ANDROID
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
+			swapchainFormatToUse = swapchainFormats[i];
+			Godot::print("OpenXR Using SRGB swapchain.");
+			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
+		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
 		}
 #else
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
@@ -1055,7 +1126,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
 	if (swapchainFormatToUse == 0) {
 		swapchainFormatToUse = swapchainFormats[0];
-		Godot::print("OpenXR Couldn't find prefered swapchain format, using %llX", swapchainFormatToUse);
+		Godot::print("OpenXR Couldn't find prefered swapchain format, using {0}", swapchainFormatToUse);
 	}
 
 	free(swapchainFormats);
@@ -1067,7 +1138,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	}
 
 	// Damn you microsoft for not supporting this!!
-	//uint32_t swapchainLength[view_count];
+	// uint32_t swapchainLength[view_count];
 	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 	if (swapchainLength == NULL) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain lengths", __FUNCTION__, __FILE__, __LINE__);
@@ -1103,7 +1174,11 @@ bool OpenXRApi::initialiseSwapChains() {
 		}
 	}
 
+#ifdef ANDROID
+	images = (XrSwapchainImageOpenGLESKHR **)malloc(sizeof(XrSwapchainImageOpenGLESKHR **) * view_count);
+#else
 	images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
+#endif
 	if (images == NULL) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain images", __FUNCTION__, __FILE__, __LINE__);
 		return false;
@@ -1115,14 +1190,22 @@ bool OpenXRApi::initialiseSwapChains() {
 	}
 
 	for (uint32_t i = 0; i < view_count; i++) {
+#ifdef ANDROID
+		images[i] = (XrSwapchainImageOpenGLESKHR *)malloc(sizeof(XrSwapchainImageOpenGLESKHR) * swapchainLength[i]);
+#else
 		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchainLength[i]);
+#endif
 		if (images[i] == NULL) {
 			Godot::print_error("OpenXR Couldn't allocate memory for swap chain image", __FUNCTION__, __FILE__, __LINE__);
 			return false;
 		}
 
 		for (uint64_t j = 0; j < swapchainLength[i]; j++) {
+#ifdef ANDROID
+			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
+#else
 			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
+#endif
 			images[i][j].next = NULL;
 		}
 	}
@@ -1246,36 +1329,26 @@ bool OpenXRApi::initialiseHandTracking() {
 	}
 
 	for (int i = 0; i < 2; i++) {
-		XrHandTrackerCreateInfoEXT createInfo = {
-			.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
-			.next = nullptr,
-			.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
-			.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
-		};
-
-		result = xrCreateHandTrackerEXT(session, &createInfo, &hand_trackers[i].hand_tracker);
-		if (!xr_result(result, "Failed to obtain hand tracking information")) {
-			// not successful? then we do nothing.
-			hand_trackers[i].is_initialised = false;
-		} else {
-			hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
-			hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
-			hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
-
-			hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
-			hand_trackers[i].locations.next = &hand_trackers[i].velocities;
-			hand_trackers[i].locations.isActive = false;
-			hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
-			hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
-
-			hand_trackers[i].is_initialised = true;
-		}
+		// we'll do this later
+		hand_trackers[i].is_initialised = false;
+		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
 	}
 
 	printf("Hand tracking is supported\n");
 
 	hand_tracking_supported = true;
 	return true;
+}
+
+void OpenXRApi::cleanupHandTracking() {
+	for (int i = 0; i < 2; i++) {
+		if (hand_trackers[i].hand_tracker != XR_NULL_HANDLE) {
+			xrDestroyHandTrackerEXT(hand_trackers[i].hand_tracker);
+
+			hand_trackers[i].is_initialised = false;
+			hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
+		}
+	}
 }
 
 bool OpenXRApi::loadActionSets() {
@@ -1343,6 +1416,13 @@ void OpenXRApi::unbindActionSets() {
 	for (uint64_t i = 0; i < ACTION_MAX; i++) {
 		default_actions[i].action = NULL;
 	}
+
+	// reset our spaces
+	for (uint64_t i = 0; i < action_sets.size(); i++) {
+		ActionSet *action_set = action_sets[i];
+
+		action_set->reset_spaces();
+	}
 }
 
 void OpenXRApi::cleanupActionSets() {
@@ -1381,6 +1461,10 @@ bool OpenXRApi::initialize() {
 		return false;
 	}
 #endif
+
+	// get our video driver setting from Godot.
+	OS *os = OS::get_singleton();
+	video_driver = os->get_current_video_driver();
 
 	if (!initialiseInstance()) {
 		// cleanup and exit
@@ -1422,6 +1506,7 @@ void OpenXRApi::uninitialize() {
 	}
 
 	cleanupActionSets();
+	cleanupHandTracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1512,6 +1597,7 @@ bool OpenXRApi::on_state_stopping() {
 	// need to cleanup various things which would otherwise be re-allocated if we have a state change back to ready
 	// note that cleaning up our action sets will invalidate many of the OpenXR nodes so we need to improve that as well.
 	unbindActionSets();
+	cleanupHandTracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1813,8 +1899,27 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 }
 
 bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
+#ifdef ANDROID
+	XrGraphicsRequirementsOpenGLESKHR opengl_reqs = {
+		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR,
+		.next = NULL
+	};
+
+	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = NULL;
+	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLESGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLESGraphicsRequirementsKHR);
+
+	if (!xr_result(result, "Failed to get xrGetOpenGLESGraphicsRequirementsKHR fp!")) {
+		return false;
+	}
+
+	result = pfnGetOpenGLESGraphicsRequirementsKHR(instance, system_id, &opengl_reqs);
+	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
+		return false;
+	}
+#else
 	XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
-		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR, .next = NULL
+		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR,
+		.next = NULL
 	};
 
 	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = NULL;
@@ -1828,6 +1933,7 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 	if (!xr_result(result, "Failed to get OpenGL graphics requirements!")) {
 		return false;
 	}
+#endif
 
 	XrVersion desired_opengl_version = XR_MAKE_VERSION(3, 3, 0);
 	if (desired_opengl_version > opengl_reqs.maxApiVersionSupported || desired_opengl_version < opengl_reqs.minApiVersionSupported) {
@@ -1920,6 +2026,8 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		glBindTexture(GL_TEXTURE_2D, texid);
 #ifdef WIN32
 		glCopyTexSubImage2D(
+#elif ANDROID
+		glCopyTexSubImage2D(
 #else
 		glCopyTextureSubImage2D(
 #endif
@@ -1965,7 +2073,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		}
 	}
 
-#ifdef __linux__
+#ifdef WIN32
+	// not applicable
+#elif ANDROID
+	// not applicable
+#elif __linux__
 	// TODO: should not be necessary, but is for SteamVR since 1.16.x
 	if (is_steamvr) {
 		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
@@ -2009,10 +2121,8 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 
 	XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL, views[eye].fov, p_z_near, p_z_far);
 
-	// printf("Projection Matrix: ");
 	for (int i = 0; i < 16; i++) {
 		p_projection[i] = matrix.m[i];
-		// printf("%f ", p_projection[i]);
 	}
 }
 
@@ -2175,7 +2285,7 @@ void OpenXRApi::update_actions() {
 }
 
 void OpenXRApi::update_handtracking() {
-	if (!initialised) {
+	if (!initialised || !running) {
 		return;
 	}
 
@@ -2187,34 +2297,65 @@ void OpenXRApi::update_handtracking() {
 	XrResult result;
 
 	for (int i = 0; i < 2; i++) {
-		XrHandJointsLocateInfoEXT locateInfo = {
-			.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
-			.next = nullptr,
-			.baseSpace = play_space,
-			.time = time,
-		};
-		XrHandJointsMotionRangeInfoEXT motionRangeInfo;
+		if (hand_trackers[i].hand_tracker == XR_NULL_HANDLE) {
+			XrHandTrackerCreateInfoEXT createInfo = {
+				.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
+				.next = nullptr,
+				.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
+				.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
+			};
 
-		if (hand_motion_range_ext) {
-			motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
-			motionRangeInfo.next = nullptr;
-			motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
+			result = xrCreateHandTrackerEXT(session, &createInfo, &hand_trackers[i].hand_tracker);
+			if (!xr_result(result, "Failed to obtain hand tracking information")) {
+				// not successful? then we do nothing.
+				hand_trackers[i].is_initialised = false;
+			} else {
+				hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
+				hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
+				hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
 
-			locateInfo.next = &motionRangeInfo;
+				hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
+				hand_trackers[i].locations.next = &hand_trackers[i].velocities;
+				hand_trackers[i].locations.isActive = false;
+				hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
+				hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
+
+				hand_trackers[i].is_initialised = true;
+			}
 		}
 
-		result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
-		if (xr_result(result, "failed to get tracking for hand {0}!", i)) {
-			// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
-			const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
-			if (
-					!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
-				hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
-				// printf("Hand %i inactive\n", i);
-			} else {
-				// we have our hand tracking info....
+		if (hand_trackers[i].is_initialised) {
+			XrHandJointsLocateInfoEXT locateInfo = {
+				.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
+				.next = nullptr,
+				.baseSpace = play_space,
+				.time = time,
+			};
+			XrHandJointsMotionRangeInfoEXT motionRangeInfo;
 
-				// printf("Hand %i: (%.2f, %.2f, %.2f)\n", i, palm.position.x, palm.position.y, palm.position.z);
+			if (hand_motion_range_ext) {
+				motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
+				motionRangeInfo.next = nullptr;
+				motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
+
+				locateInfo.next = &motionRangeInfo;
+			}
+
+			Godot::print("Obtaining hand joint info for {0}", i);
+
+			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
+			if (xr_result(result, "failed to get tracking for hand {0}!", i)) {
+				// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
+				const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
+				if (
+						!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
+					hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
+					// printf("Hand %i inactive\n", i);
+				} else {
+					// we have our hand tracking info....
+
+					Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
+				}
 			}
 		}
 	}
@@ -2338,7 +2479,11 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 		return 0;
 	}
 
-#ifdef __linux__
+#ifdef WIN32
+	// not applicable
+#elif ANDROID
+	// not applicable
+#elif __linux__
 	// TODO: should not be necessary, but is for SteamVR since 1.16.x
 	if (is_steamvr) {
 		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
@@ -2519,7 +2664,10 @@ void OpenXRApi::process_openxr() {
 	}
 
 	update_actions();
+	// TODO: Tends to crash randomly on Quest, needs to investigate.
+#ifndef ANDROID
 	update_handtracking();
+#endif
 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,
@@ -2572,7 +2720,11 @@ void OpenXRApi::process_openxr() {
 		// See render_openxr() for the corresponding early exit.
 	}
 
-#ifdef __linux__
+#ifdef WIN32
+	// not applicable
+#elif ANDROID
+	// not applicable
+#elif __linux__
 	// TODO: should not be necessary, but is for SteamVR since 1.16.x
 	if (is_steamvr) {
 		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);

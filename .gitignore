@@ -2,7 +2,6 @@
 *.os
 *.so
 *.dylib
-.import
 *.dblite
 *.exp
 *.lib
@@ -13,3 +12,22 @@ logs
 *.ilk
 compile_commands.json
 .cache
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+android/build
+android/.cxx
+
+# Ignore intellij configuration files and directories
+.idea
+*.iml
+
+# Local configuration file (sdk path, etc)
+local.properties
+
+# Ignore build folder, need to fix gradlew config because this should be android/build
+build
+
+# Godot metadata files

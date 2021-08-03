@@ -36,6 +36,7 @@ public:
 
 	XrActionSet get_action_set();
 	bool attach();
+	void reset_spaces();
 };
 
 #endif /* !OPENXR_ACTIONSET_H */

@@ -98,7 +98,6 @@ collide_with_areas = true
 
 [node name="Left_grip_pose" parent="FPSController" instance=ExtResource( 7 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
-action = "godot/grip_pose"
 
 [node name="Grip" type="MeshInstance" parent="FPSController/Left_grip_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
@@ -106,8 +105,6 @@ mesh = SubResource( 3 )
 material/0 = null
 
 [node name="Right_aim_pose" parent="FPSController" instance=ExtResource( 7 )]
-action = "godot/grip_pose"
-path = "/user/hand/right"
 
 [node name="Grip" type="MeshInstance" parent="FPSController/Right_aim_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )

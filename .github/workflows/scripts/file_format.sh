@@ -23,6 +23,12 @@ while IFS= read -rd '' f; do
         continue
     elif [[ "$f" == "openxr_loader"* ]]; then
         continue
+    elif [[ "$f" == "gradle"* ]]; then
+        continue
+    elif [[ "$f" == "build"* ]]; then
+        continue
+    elif [[ "$f" == "android"* ]]; then
+        continue
     elif [[ "$f" == "api.json" ]]; then
         continue
     fi

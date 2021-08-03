@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        package="org.godotengine.plugin.vr.openxr">
+
+    <uses-feature
+        android:name="android.hardware.vr.headtracking"
+        android:required="true"
+        android:version="1"
+        tools:node="replace"/>
+
+    <application>
+
+        <meta-data
+            android:name="com.samsung.android.vr.application.mode"
+            android:value="vr_only"
+            tools:node="replace" />
+
+        <meta-data
+                android:name="com.oculus.supportedDevices"
+                android:value="quest|delmar"
+                tools:node="replace" />
+
+        <!-- Enable Android views rendering. -->
+        <meta-data
+                android:name="com.oculus.always_draw_view_root"
+                android:value="true"
+                tools:node="replace" />
+
+    </application>
+
+</manifest>

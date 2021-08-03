@@ -4,15 +4,16 @@ importer="texture"
 type="StreamTexture"
 path.s3tc="res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.s3tc.stex"
 path.etc2="res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.etc2.stex"
+path.etc="res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.etc.stex"
 metadata={
-"imported_formats": [ "s3tc", "etc2" ],
+"imported_formats": [ "s3tc", "etc2", "etc" ],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/texturehaven.com/green_metal_rust/green_metal_rust_spec_1k.jpg"
-dest_files=[ "res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.s3tc.stex", "res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.etc2.stex" ]
+dest_files=[ "res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.s3tc.stex", "res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.etc2.stex", "res://.import/green_metal_rust_spec_1k.jpg-ef0fa78d750e7b79d1bd3c0731c1cbc2.etc.stex" ]
 
 [params]
 

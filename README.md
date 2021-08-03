@@ -68,6 +68,17 @@ apt install clang
 scons platform=linux use_llvm=yes
 ```
 
+### Compiling for Android
+
+For Android (Oculus Quest) the build process is slightly different. Note that currently the build process assumes that `godot-cpp` was build for either windows or linux plugin, if not you will need to manually run the python script that creates the wrapper code.
+
+On Android we use `gradlew` instead of `scons` for building the library. The toolset should be installed automatically if you install Android Studio.
+
+To build run:
+```
+gradlew generateSharedLibs
+```
+
 ## Debugging
 
 If you want to debug the module make sure you use a copy of the godot binary build with either `target=release_debug` or `target=debug` provided to scons and that you build the plugin using `target=debug`. This will ensure debugging symbol files are created.

@@ -298,16 +298,26 @@ int godot_arvr_get_external_depth_for_eye(void *p_data, int p_eye) {
 }
 
 const godot_arvr_interface_gdnative interface_struct = {
-	GODOTVR_API_MAJOR, GODOTVR_API_MINOR, godot_arvr_constructor,
-	godot_arvr_destructor, godot_arvr_get_name, godot_arvr_get_capabilities,
+	{ GODOTVR_API_MAJOR, GODOTVR_API_MINOR },
+	godot_arvr_constructor,
+	godot_arvr_destructor,
+	godot_arvr_get_name,
+	godot_arvr_get_capabilities,
 	godot_arvr_get_anchor_detection_is_enabled,
-	godot_arvr_set_anchor_detection_is_enabled, godot_arvr_is_stereo,
-	godot_arvr_is_initialized, godot_arvr_initialize, godot_arvr_uninitialize,
-	godot_arvr_get_render_targetsize, godot_arvr_get_transform_for_eye,
-	godot_arvr_fill_projection_for_eye, godot_arvr_commit_for_eye,
+	godot_arvr_set_anchor_detection_is_enabled,
+	godot_arvr_is_stereo,
+	godot_arvr_is_initialized,
+	godot_arvr_initialize,
+	godot_arvr_uninitialize,
+	godot_arvr_get_render_targetsize,
+	godot_arvr_get_transform_for_eye,
+	godot_arvr_fill_projection_for_eye,
+	godot_arvr_commit_for_eye,
 	godot_arvr_process,
 	// only available in Godot 3.2+
-	godot_arvr_get_external_texture_for_eye, godot_arvr_notification, godot_arvr_get_camera_feed_id,
+	godot_arvr_get_external_texture_for_eye,
+	godot_arvr_notification,
+	godot_arvr_get_camera_feed_id,
 	// only available in Godot 3.3+
 	godot_arvr_get_external_depth_for_eye
 };

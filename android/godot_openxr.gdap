@@ -1,0 +1,5 @@
+[config]
+
+name="GodotOpenXR"
+binary_type="local"
+binary="godotopenxr_1.0.3-release.aar"

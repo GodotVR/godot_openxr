@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
+        package="org.godotengine.plugin.vr.openxr">
+
+    <application>
+
+        <meta-data
+                android:name="org.godotengine.plugin.v1.GodotOpenXR"
+                android:value="org.godotengine.plugin.vr.openxr.GodotOpenXRPlugin" />
+
+        <meta-data
+                android:name="com.oculus.supportedDevices"
+                android:value="quest|delmar"
+                tools:node="replace" />
+
+        <!-- Enable Android views rendering. -->
+        <meta-data
+                android:name="com.oculus.always_draw_view_root"
+                android:value="true"
+                tools:node="replace" />
+
+    </application>
+
+</manifest>

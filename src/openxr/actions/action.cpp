@@ -37,44 +37,23 @@ Action::Action(OpenXRApi *p_api, XrActionSet p_action_set, XrActionType p_type, 
 	if (!p_api->xr_result(result, "failed to create {0} action", name)) {
 		return;
 	}
-
-	if (type == XR_ACTION_TYPE_POSE_INPUT) {
-		// if this is a pose we need to define spaces
-
-		XrActionSpaceCreateInfo actionSpaceInfo = {
-			.type = XR_TYPE_ACTION_SPACE_CREATE_INFO,
-			.next = NULL,
-			.action = handle,
-			.poseInActionSpace = {
-					.orientation = {
-							.w = 1.f } },
-		};
-
-		for (int i = 0; i < p_toplevel_path_count; i++) {
-			actionSpaceInfo.subactionPath = toplevel_paths[i].toplevel_path;
-
-			XrResult result = xrCreateActionSpace(xr_api->session, &actionSpaceInfo, &toplevel_paths[i].space);
-			if (!xr_api->xr_result(result, "failed to create pose space")) {
-				return;
-			}
-
-#ifdef DEBUG
-			Godot::print("Created space for {0}/{1}", name, i);
-#endif
-		}
-	}
 }
 
 Action::~Action() {
 	// no need to delete our paths, we don't own them but we do need to delete our spaces
-	for (int i = 0; i < toplevel_paths.size(); i++) {
-		if (toplevel_paths[i].space != XR_NULL_HANDLE) {
-			xrDestroySpace(toplevel_paths[i].space);
-		}
-	}
+	reset_spaces();
 
 	if (handle != XR_NULL_HANDLE) {
 		xrDestroyAction(handle);
+	}
+}
+
+void Action::reset_spaces() {
+	for (int i = 0; i < toplevel_paths.size(); i++) {
+		if (toplevel_paths[i].space != XR_NULL_HANDLE) {
+			xrDestroySpace(toplevel_paths[i].space);
+			toplevel_paths[i].space = XR_NULL_HANDLE;
+		}
 	}
 }
 
@@ -240,6 +219,30 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 		if (index == 0xFFFFFFFF) {
 			// couldn't find it?
 			return Transform();
+		}
+
+		if (toplevel_paths[index].space == XR_NULL_HANDLE) {
+			// if this is a pose we need to define spaces
+
+			XrActionSpaceCreateInfo actionSpaceInfo = {
+				.type = XR_TYPE_ACTION_SPACE_CREATE_INFO,
+				.next = NULL,
+				.action = handle,
+				.poseInActionSpace = {
+						.orientation = {
+								.w = 1.f } },
+			};
+
+			actionSpaceInfo.subactionPath = toplevel_paths[index].toplevel_path;
+
+			XrResult result = xrCreateActionSpace(xr_api->session, &actionSpaceInfo, &toplevel_paths[index].space);
+			if (!xr_api->xr_result(result, "failed to create pose space")) {
+				return Transform();
+			}
+
+#ifdef DEBUG
+			Godot::print("Created space for {0}/{1}", name, index);
+#endif
 		}
 
 		XrSpaceLocation location;

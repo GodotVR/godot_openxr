@@ -29,6 +29,8 @@ public:
 	Action(OpenXRApi *p_api, XrActionSet p_action_set, XrActionType p_type, const godot::String &p_name, const godot::String &p_localised_name, int p_toplevel_path_count, const XrPath *p_toplevel_paths);
 	~Action();
 
+	void reset_spaces();
+
 	XrActionType get_type() const;
 	godot::String get_name() const;
 

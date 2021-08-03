@@ -7,6 +7,7 @@
 #define OPENXR_API_H
 
 #include <Godot.hpp>
+#include <OS.hpp>
 #include <Transform.hpp>
 #include <Vector2.hpp>
 
@@ -29,13 +30,22 @@
 
 #ifdef WIN32
 #define XR_USE_PLATFORM_WIN32
+#define XR_USE_GRAPHICS_API_OPENGL
+#elif ANDROID
+#define XR_USE_PLATFORM_ANDROID
+#define XR_USE_GRAPHICS_API_OPENGL_ES
 #else
 #define XR_USE_PLATFORM_XLIB
-#endif
 #define XR_USE_GRAPHICS_API_OPENGL
+#endif
 
 #ifdef WIN32
 #include <glad/glad.h>
+#elif ANDROID
+#include <EGL/egl.h>
+#include <EGL/eglext.h>
+#include <GLES3/gl3.h>
+#include <GLES3/gl3ext.h>
 #else
 // linux
 #define GL_GLEXT_PROTOTYPES 1
@@ -154,6 +164,7 @@ private:
 	bool initialised = false;
 	bool running = false;
 	int use_count = 1;
+	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
 
 	// extensions
 	bool hand_tracking_ext = false;
@@ -172,10 +183,14 @@ private:
 	bool keep_3d_linear = true;
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
+	XrSwapchainImageOpenGLKHR **images = NULL;
+#elif ANDROID
+	XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
+	XrSwapchainImageOpenGLESKHR **images = NULL;
 #else
 	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
-#endif
 	XrSwapchainImageOpenGLKHR **images = NULL;
+#endif
 	XrSwapchain *swapchains = NULL;
 	uint32_t view_count;
 	XrViewConfigurationView *configuration_views = NULL;
@@ -225,7 +240,9 @@ private:
 	void cleanupSpaces();
 	bool initialiseSwapChains();
 	void cleanupSwapChains();
+
 	bool initialiseHandTracking();
+	void cleanupHandTracking();
 
 	bool loadActionSets();
 	bool bindActionSets();

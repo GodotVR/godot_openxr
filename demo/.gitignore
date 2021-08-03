@@ -1,0 +1,12 @@
+# ignore our import cache folder
+.import
+
+# export can have local file names and such
+export_presets.cfg
+
+# ignore our android template folder
+android
+.build_version
+
+# ignore macOS directory cache
+.DS_Store

@@ -2,8 +2,8 @@
 
 [ext_resource path="res://addons/godot-openxr/assets/valve_hand_models/left_hand.glb" type="PackedScene" id=1]
 [ext_resource path="res://addons/godot-openxr/scenes/hand_mesh.gd" type="Script" id=2]
-[ext_resource path="res://addons/godot-openxr/OpenXRSkeleton.gdns" type="Script" id=3]
-[ext_resource path="res://addons/godot-openxr/OpenXRPose.gdns" type="Script" id=4]
+[ext_resource path="res://addons/godot-openxr/config/OpenXRSkeleton.gdns" type="Script" id=3]
+[ext_resource path="res://addons/godot-openxr/config/OpenXRPose.gdns" type="Script" id=4]
 [ext_resource path="res://addons/godot-openxr/assets/valve_hand_models/textures/vr_glove_color_red.jpg" type="Texture" id=5]
 [ext_resource path="res://addons/godot-openxr/assets/valve_hand_models/textures/vr_glove_normal.png" type="Texture" id=6]
 

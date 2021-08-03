@@ -13,3 +13,13 @@ logs
 *.ilk
 compile_commands.json
 .cache
+
+# Ignore Gradle project-specific cache directory
+.gradle
+
+# Ignore Gradle build output directory
+android/build
+android/.cxx
+
+# Ignore build folder, need to fix gradlew config because this should be android/build
+build

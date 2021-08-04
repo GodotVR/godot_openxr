@@ -76,7 +76,7 @@ On Android we use `gradlew` instead of `scons` for building the library. The too
 
 To build run:
 ```
-gradlew generateSharedLibs
+gradlew generatePluginBinary
 ```
 
 ## Debugging

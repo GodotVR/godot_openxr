@@ -20,7 +20,7 @@ allprojects {
     }
 }
 
-def outputDir = "build/outputs"
+def outputDir = "android/build/outputs"
 
 task clean(type: Delete) {
     dependsOn(":GodotOpenXR:clean")

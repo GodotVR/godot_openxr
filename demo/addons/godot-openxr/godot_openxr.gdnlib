@@ -9,10 +9,10 @@ reloadable=false
 
 Windows.64="res://addons/godot-openxr/bin/win64/libgodot_openxr.dll"
 X11.64="res://addons/godot-openxr/bin/linux/libgodot_openxr.so"
-Android.64="res://addons/godot-openxr/bin/android/libgodot_openxr.aar"
+Android.64="res://addons/godot-openxr/bin/android/libgodot_openxr.so"
 
 [dependencies]
 
 Windows.64=[ "res://addons/godot-openxr/bin/win64/openxr_loader.dll" ]
 X11.64=[  ]
-Android.64=[  ]
+Android.64=[ "res://addons/godot-openxr/bin/android/libopenxr_loader.so" ]

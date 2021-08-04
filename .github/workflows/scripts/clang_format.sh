@@ -24,6 +24,8 @@ while IFS= read -rd '' f; do
         continue
     elif [[ "$f" == "build"* ]]; then
         continue
+    elif [[ "$f" == "android"* ]]; then
+        continue
     elif [[ "$f" == ".github"* ]]; then
         continue
     fi

@@ -3,7 +3,18 @@
         xmlns:tools="http://schemas.android.com/tools"
         package="org.godotengine.plugin.vr.openxr">
 
+    <uses-feature
+        android:name="android.hardware.vr.headtracking"
+        android:required="true"
+        android:version="1"
+        tools:node="replace"/>
+
     <application>
+
+        <meta-data
+            android:name="com.samsung.android.vr.application.mode"
+            android:value="vr_only"
+            tools:node="replace" />
 
         <meta-data
                 android:name="org.godotengine.plugin.v1.GodotOpenXR"

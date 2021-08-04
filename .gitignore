@@ -21,5 +21,12 @@ compile_commands.json
 android/build
 android/.cxx
 
+# Ignore intellij configuration files and directories
+.idea
+*.iml
+
+# Local configuration file (sdk path, etc)
+local.properties
+
 # Ignore build folder, need to fix gradlew config because this should be android/build
 build

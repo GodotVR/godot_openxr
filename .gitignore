@@ -30,3 +30,9 @@ local.properties
 
 # Ignore build folder, need to fix gradlew config because this should be android/build
 build
+
+# Godot metadata files
+*.import
+demo/android
+.build_version
+export_presets.cfg

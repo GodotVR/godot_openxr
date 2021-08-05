@@ -6,7 +6,7 @@ Requires Godot 3.3, does not (yet) work with Godot 4.
 
 ## Status
 
-* This plugin supports Linux/X11 and Windows.
+* This plugin supports Linux/X11, Windows and Android (Oculus Quest only).
 * VR is tested with SteamVR, Monado and Oculus runtimes.
 * Support for most common controllers, additional controllers can be configured using OpenXRConfig.
 
@@ -78,6 +78,31 @@ To build run:
 ```
 gradlew generateSharedLibs
 ```
+
+## Prebuild libraries
+If you do not want to compile the OpenXR plugin yourself you will find releases with prebuild copies of the plugin.
+Simply download and unzip the contents into your Godot project.
+
+## Running on Android/Quest
+
+On Windows and Linux you can just run your XR project straight from the editor without the need to further configure things but Android requires a few extra steps.
+
+First of all read up on the instructions here to setup Godot for exporting to Android: https://docs.godotengine.org/en/stable/getting_started/workflow/export/exporting_for_android.html
+
+Then using your Oculus app connected to your Quest and enable developer mode: https://developer.oculus.com/documentation/native/android/mobile-device-setup/
+
+Connect your Quest to your PC with a USB cable, your Quest should prompt you whether this PC is allowed to do USB debugging, make sure to enable this.
+
+Finally in Godot go to `Project->export` and create a new Android export.
+- Untick `Armeabi-v 7a`
+- Set `XR mode` to `Oculus Mobile VR`
+- Set `Degrees Of Freedom` to `6DOF`
+
+If you've done all steps correctly there should be an Android icon visible in your toolbar, click it to push a build out to your Quest.
+
+> Note that building and deploying on Quest takes a minute or two, as OpenXR can work on your Quest over link it is good advice to test your game this way while building it and only occasionally push it onto the Quest to check for performance issues.
+
+> It is advisable to use the GLES2 display driver when building your VR game for the Quest and to disable post production effects such as DOF and glow.
 
 ## Debugging
 
@@ -188,7 +213,12 @@ The hand models in the plugin are Copyright (c) Valve, see the folder for their 
 
 ## About this repository
 
-This repository is a fork of godot_openhmd which was created and is maintained by [Bastiaan Olij](https://github.com/BastiaanOlij) a.k.a. Mux213
-OpenXR implementation was created by [Christoph Haag](https://github.com/ChristophHaag/)
+This repository is mainly being maintained by:
+- [Christoph Haag](https://github.com/ChristophHaag/) who is responsible for Linux support of this plugin.
+- [Bastiaan Olij](https://github.com/BastiaanOlij) who is responsible for Windows and Android support of this plugin.
+
+Special thanks goes to [Fredia Huya-Kouadio](https://github.com/m4gr3d) who developed the original Oculus Quest plugin for Godot and who has been instrumental in getting Android support working.
+
+See contributors file for other people involved in this plugin.
 
 Originally hosted on https://gitlab.freedesktop.org/monado/demos/godot_openxr now lives on https://github.com/GodotVR/godot_openxr

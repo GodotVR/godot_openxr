@@ -573,6 +573,25 @@ bool OpenXRApi::initialiseInstance() {
 #ifdef DEBUG
 	Godot::print("OpenXR initialiseInstance");
 #endif
+
+#ifdef ANDROID
+	// Initialize the loader
+	PFN_xrInitializeLoaderKHR initialize_loader_khr = nullptr;
+	result = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)(&initialize_loader_khr));
+	if (!xr_result(result, "Failed to retrieve pointer to xrInitializeLoaderKHR")) {
+		return false;
+	}
+
+	XrLoaderInitInfoAndroidKHR loader_init_info_android = {
+		.type = XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR,
+		.next = XR_NULL_HANDLE,
+		.applicationVM = android_api->godot_android_get_env(),
+		.applicationContext = android_api->godot_android_get_activity()
+	};
+	initialize_loader_khr((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
+	Godot::print("OpenXR - Completed loader initialization...");
+#endif
+
 	uint32_t extensionCount = 0;
 	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
 

@@ -3,6 +3,7 @@ Changes to the Godot OpenXR asset
 
 1.0.3
 -------------------
+- Implemented Android build (currently using Oculus loader, Quest support only)
 - Copy loader dll in place when compiling
 - Added mesh based hand scenes using Valve OpenXR hand meshes
 - Updated to OpenXR 1.0.18

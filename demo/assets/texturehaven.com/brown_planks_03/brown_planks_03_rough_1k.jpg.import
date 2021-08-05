@@ -4,15 +4,16 @@ importer="texture"
 type="StreamTexture"
 path.s3tc="res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.s3tc.stex"
 path.etc2="res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.etc2.stex"
+path.etc="res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.etc.stex"
 metadata={
-"imported_formats": [ "s3tc", "etc2" ],
+"imported_formats": [ "s3tc", "etc2", "etc" ],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://assets/texturehaven.com/brown_planks_03/brown_planks_03_rough_1k.jpg"
-dest_files=[ "res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.s3tc.stex", "res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.etc2.stex" ]
+dest_files=[ "res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.s3tc.stex", "res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.etc2.stex", "res://.import/brown_planks_03_rough_1k.jpg-c9c58224726f056bff3ba24831ee5c6a.etc.stex" ]
 
 [params]
 

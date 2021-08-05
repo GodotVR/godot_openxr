@@ -161,6 +161,7 @@ private:
 	bool initialised = false;
 	bool running = false;
 	int use_count = 1;
+	int video_driver = 0; // this will be 0 for GLES3, 1 for GLES2
 
 	// extensions
 	bool hand_tracking_ext = false;

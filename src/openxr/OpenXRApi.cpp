@@ -582,16 +582,19 @@ bool OpenXRApi::initialiseInstance() {
 		return false;
 	}
 
+	JNIEnv *env = android_api->godot_android_get_env();
+	JavaVM *vm;
+	env->GetJavaVM(&vm);
+	jobject activity_object = env->NewGlobalRef(android_api->godot_android_get_activity());
+
 	XrLoaderInitInfoAndroidKHR loader_init_info_android = {
 		.type = XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR,
 		.next = XR_NULL_HANDLE,
-		.applicationVM = android_api->godot_android_get_env(),
-		.applicationContext = android_api->godot_android_get_activity()
+		.applicationVM = vm,
+		.applicationContext = activity_object
 	};
 	initialize_loader_khr((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
-	Godot::print("OpenXR - Completed loader initialization...");
 #endif
-
 	uint32_t extensionCount = 0;
 	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
 
@@ -733,8 +736,8 @@ bool OpenXRApi::initialiseInstance() {
 		.next = NULL,
 	};
 
-	androidCreateInfo.applicationVM = android_api->godot_android_get_env();
-	androidCreateInfo.applicationActivity = android_api->godot_android_get_activity();
+	androidCreateInfo.applicationVM = vm;
+	androidCreateInfo.applicationActivity = activity_object;
 
 	instanceCreateInfo.next = &androidCreateInfo;
 #endif
@@ -1081,7 +1084,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	}
 
 	// Damn you microsoft for not supporting this!!
-	//uint32_t swapchainLength[view_count];
+	// uint32_t swapchainLength[view_count];
 	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 	if (swapchainLength == NULL) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain lengths", __FUNCTION__, __FILE__, __LINE__);
@@ -2550,7 +2553,10 @@ void OpenXRApi::process_openxr() {
 	}
 
 	update_actions();
+	// TODO: Tends to crash randomly on Quest, needs to investigate.
+#ifndef ANDROID
 	update_handtracking();
+#endif
 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,

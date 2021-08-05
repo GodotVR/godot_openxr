@@ -8,3 +8,4 @@ This plugin has mostly been developed by:
 Other people who have helped out by submitting fixes, enhancements, etc are:
 - [Aaron Franke](https://github.com/aaronfranke)
 - [Benedikt](https://github.com/beniwtv)
+- [Fredia Huya-Kouadio](https://github.com/m4gr3d)

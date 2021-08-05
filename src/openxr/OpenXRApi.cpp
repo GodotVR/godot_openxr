@@ -841,14 +841,11 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
+	OS *os = OS::get_singleton();
+
 	// TODO: support wayland
 	// TODO: maybe support xcb separately?
 	// TODO: support vulkan
-
-	OS *os = OS::get_singleton();
-
-	// this will be 0 for GLES3, 1 for GLES2, not sure yet for Vulkan.
-	int video_driver = os->get_current_video_driver();
 
 #ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
@@ -1030,7 +1027,7 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
-	keep_3d_linear = true; // assume we need to keep our render buffer in linear color space
+	keep_3d_linear = (video_driver == 0); // on GLES 3 assume we need to keep our render buffer in linear color space
 
 	Godot::print("OpenXR Swapchain Formats");
 	for (uint64_t i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
@@ -1410,6 +1407,10 @@ bool OpenXRApi::initialize() {
 		return false;
 	}
 #endif
+
+	// get our video driver setting from Godot.
+	OS *os = OS::get_singleton();
+	video_driver = os->get_current_video_driver();
 
 	if (!initialiseInstance()) {
 		// cleanup and exit

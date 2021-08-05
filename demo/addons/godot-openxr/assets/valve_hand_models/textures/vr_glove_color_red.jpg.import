@@ -4,15 +4,16 @@ importer="texture"
 type="StreamTexture"
 path.s3tc="res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.s3tc.stex"
 path.etc2="res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.etc2.stex"
+path.etc="res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.etc.stex"
 metadata={
-"imported_formats": [ "s3tc", "etc2" ],
+"imported_formats": [ "s3tc", "etc2", "etc" ],
 "vram_texture": true
 }
 
 [deps]
 
 source_file="res://addons/godot-openxr/assets/valve_hand_models/textures/vr_glove_color_red.jpg"
-dest_files=[ "res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.s3tc.stex", "res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.etc2.stex" ]
+dest_files=[ "res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.s3tc.stex", "res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.etc2.stex", "res://.import/vr_glove_color_red.jpg-144c959c9bcefbbe34ae424fbbf2701a.etc.stex" ]
 
 [params]
 

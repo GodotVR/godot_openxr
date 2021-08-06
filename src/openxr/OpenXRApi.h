@@ -167,6 +167,8 @@ private:
 	XrSession session = XR_NULL_HANDLE;
 	XrSessionState state = XR_SESSION_STATE_UNKNOWN;
 
+	bool is_steamvr = false;
+
 	bool keep_3d_linear = true;
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;

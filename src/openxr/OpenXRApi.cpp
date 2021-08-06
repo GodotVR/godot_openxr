@@ -695,6 +695,28 @@ bool OpenXRApi::initialiseInstance() {
 	}
 	free(enabledExtensions);
 
+	XrInstanceProperties instanceProps = {
+		.type = XR_TYPE_INSTANCE_PROPERTIES
+	};
+	result = xrGetInstanceProperties(instance, &instanceProps);
+	if (!xr_result(result, "Failed to get XR instance properties.")) {
+		// not fatal probably
+		return true;
+	}
+
+	Godot::print("Running on OpenXR runtime: {0} {1}.{2}.{3}",
+			instanceProps.runtimeName,
+			XR_VERSION_MAJOR(instanceProps.runtimeVersion),
+			XR_VERSION_MINOR(instanceProps.runtimeVersion),
+			XR_VERSION_PATCH(instanceProps.runtimeVersion));
+
+	if (strcmp(instanceProps.runtimeName, "SteamVR/OpenXR") == 0) {
+#ifdef __linux__
+		Godot::print("Running on Linux, using SteamVR workaround for issue https://github.com/ValveSoftware/SteamVR-for-Linux/issues/421");
+#endif
+		is_steamvr = true;
+	}
+
 	return true;
 }
 
@@ -1909,6 +1931,13 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 			return;
 		}
 	}
+
+#ifdef __linux__
+	// TODO: should not be necessary, but is for SteamVR since 1.16.x
+	if (is_steamvr) {
+		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
+	}
+#endif
 }
 
 void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection) {
@@ -2273,6 +2302,13 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 		return 0;
 	}
 
+#ifdef __linux__
+	// TODO: should not be necessary, but is for SteamVR since 1.16.x
+	if (is_steamvr) {
+		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
+	}
+#endif
+
 	// process should be called by now but just in case...
 	if (state > XR_SESSION_STATE_UNKNOWN && buffer_index != NULL) {
 		// make sure we know that we're rendering directly to our
@@ -2499,6 +2535,13 @@ void OpenXRApi::process_openxr() {
 		// TODO: Tell godot not do render VR to save resources.
 		// See render_openxr() for the corresponding early exit.
 	}
+
+#ifdef __linux__
+	// TODO: should not be necessary, but is for SteamVR since 1.16.x
+	if (is_steamvr) {
+		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
+	}
+#endif
 }
 
 ////////////////////////////////////////////////////////////////////////////////

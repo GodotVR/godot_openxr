@@ -60,6 +60,19 @@ XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
 	return (*xrLocateHandJointsEXT_ptr)(handTracker, locateInfo, locations);
 };
 
+
+PFN_xrSetColorSpaceFB xrSetColorSpaceFB_ptr = NULL;
+
+XRAPI_ATTR XrResult XRAPI_CALL xrSetColorSpaceFB(
+		XrSession session,
+		const XrColorSpaceFB colorspace) {
+	if (xrSetColorSpaceFB_ptr == NULL) {
+		return XR_ERROR_HANDLE_INVALID;
+	}
+
+	return (*xrSetColorSpaceFB_ptr)(session, colorspace);
+};
+
 ////////////////////////////////////////////////////////////////////////////////
 // Default action set configuration
 
@@ -595,6 +608,9 @@ bool OpenXRApi::initialiseInstance() {
 	};
 	initialize_loader_khr((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
 #endif
+
+	Godot::print("OpenXR Checking extensions");
+
 	uint32_t extensionCount = 0;
 	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
 
@@ -621,27 +637,40 @@ bool OpenXRApi::initialiseInstance() {
 		return false;
 	}
 
+#ifdef DEBUG
+	for (int i = 0; i > extensionCount; i++) {
+		Godot::print("- Found {0}", extensionProperties[i].extensionName);
+	}
+#endif
+
 #ifdef ANDROID
-	if (!isExtensionSupported(XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+	if (isExtensionSupported(XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print("- OpenGLES extension found");
+	} else {
 		Godot::print_error("OpenXR Runtime does not support OpenGLES extension!", __FUNCTION__, __FILE__, __LINE__);
 		free(extensionProperties);
 		return false;
 	}
 
-	if (!isExtensionSupported(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+	if (isExtensionSupported(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print("- Android instance extension found");
+	} else {
 		Godot::print_error("OpenXR Runtime does not support android instance extension!", __FUNCTION__, __FILE__, __LINE__);
 		free(extensionProperties);
 		return false;
 	}
 
 #else
-	if (!isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+	if (isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print("- OpenGL extension found");
+	} else {
 		Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
 		free(extensionProperties);
 		return false;
 	}
 #endif
 
+	// These extensions are optional, no need to fail if we can't find them...
 	if (isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print("- Hand tracking extension found");
 		hand_tracking_ext = true;
@@ -655,6 +684,11 @@ bool OpenXRApi::initialiseInstance() {
 	if (isExtensionSupported(XR_MND_BALL_ON_STICK_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print("- Ball on stick extension found");
 		monado_stick_on_ball_ext = true;
+	}
+
+	if (isExtensionSupported(XR_FB_COLOR_SPACE_EXTENSION_NAME, extensionProperties, extensionCount)) {
+		Godot::print("- Color space extension found");
+		color_space_ext = true;
 	}
 
 	free(extensionProperties);
@@ -684,6 +718,10 @@ bool OpenXRApi::initialiseInstance() {
 
 	if (monado_stick_on_ball_ext) {
 		enabledExtensions[enabledExtensionCount++] = XR_MND_BALL_ON_STICK_EXTENSION_NAME;
+	}
+
+	if (color_space_ext) {
+		enabledExtensions[enabledExtensionCount++] = XR_FB_COLOR_SPACE_EXTENSION_NAME;
 	}
 
 // https://stackoverflow.com/a/55926503
@@ -775,6 +813,13 @@ bool OpenXRApi::initialiseExtensions() {
 
 		result = xrGetInstanceProcAddr(instance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT_ptr);
 		if (!xr_result(result, "Failed to obtain xrLocateHandJointsEXT function pointer")) {
+			return false;
+		}
+	}
+
+	if (color_space_ext) {
+		result = xrGetInstanceProcAddr(instance, "xrSetColorSpaceFB", (PFN_xrVoidFunction *)&xrSetColorSpaceFB_ptr);
+		if (!xr_result(result, "Failed to obtain xrSetColorSpaceFB function pointer")) {
 			return false;
 		}
 	}
@@ -1211,6 +1256,14 @@ bool OpenXRApi::initialiseSwapChains() {
 		projection_views[i].subImage.imageRect.extent.height = configuration_views[i].recommendedImageRectHeight;
 	};
 
+	if (color_space_ext && !keep_3d_linear) {
+		// Tell OpenXR we're in sRGB color space...
+		result = xrSetColorSpaceFB(session, XR_COLOR_SPACE_REC709_FB);
+		if (!xr_result(result, "Failed to set color space")) {
+			return false;
+		}
+	}
+
 	return true;
 }
 
@@ -1328,7 +1381,7 @@ bool OpenXRApi::bindActionSets() {
 			// Just report this
 			Godot::print("Couldn't attach action set {0}", action_set->get_name());
 		} else {
-			Godot::print("Attached action set {0}", action_set->get_name());
+			Godot::print("OpenXR Attached action set {0}", action_set->get_name());
 		}
 	}
 

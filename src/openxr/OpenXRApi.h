@@ -168,6 +168,7 @@ private:
 	bool hand_motion_range_ext = false;
 	bool monado_stick_on_ball_ext = false;
 	bool hand_tracking_supported = false;
+	bool color_space_ext = false;
 
 	XrViewConfigurationType view_config_type = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
 	XrInstance instance = XR_NULL_HANDLE;

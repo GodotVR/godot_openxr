@@ -7,7 +7,7 @@
 #ifndef GODOT_OPENXR_H
 #define GODOT_OPENXR_H
 
-#include "ARVRInterface.h"
+#include "gdclasses/XRInterfaceOpenXR.h"
 #include <openxr/openxr.h>
 
 #ifdef __cplusplus
@@ -24,5 +24,8 @@ void GDN_EXPORT godot_openxr_nativescript_init(void *p_handle);
 #ifdef __cplusplus
 }
 #endif
+
+extern "C" const godot_arvr_interface_gdnative arvr_interface_struct;
+extern "C" const godot_gdnative_ext_arvr_1_2_api_struct *arvr_1_2_api;
 
 #endif /* !GODOT_OPENXR_H */

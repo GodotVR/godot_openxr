@@ -272,7 +272,7 @@ public:
 		composition_layer_providers.erase(provider);
 	}
 
-	bool is_initialised();
+	bool is_initialised() const;
 	bool initialize();
 	void uninitialize();
 	bool is_running();

@@ -1599,7 +1599,7 @@ bool OpenXRApi::on_state_exiting() {
 	return true;
 }
 
-bool OpenXRApi::is_initialised() {
+bool OpenXRApi::is_initialised() const {
 	return initialised;
 }
 

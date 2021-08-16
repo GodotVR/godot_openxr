@@ -63,7 +63,7 @@ set(GODOT_HEADERS_DIR "${GODOT_CPP_DIR}/godot-headers")
 
 add_definitions(-DANDROID)
 
-set(OPENXR_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../openxr_loader/1.0.16/include")
+set(OPENXR_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../openxr_loader/1.0.18/include")
 set(OPENXR_MOBILE_HEADERS_DIR "${OPENXR_MOBILE_ROOT_DIR}/Include" CACHE STRING "")
 
 set(GODOT_COMPILE_FLAGS)

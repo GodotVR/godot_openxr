@@ -115,6 +115,7 @@ public:
 		ACTION_BYM_BUTTON, // B/Y/Menu button (button 1)
 		ACTION_FRONT_BUTTON, // front trigger as button (button 15)
 		ACTION_SIDE_BUTTON, // side trigger/grip as button (button 2)
+		ACTION_JOYSTICK_BUTTON, // Click on joystick (button 14)
 
 		// Output
 		ACTION_HAPTIC, // Haptic output
@@ -138,6 +139,7 @@ public:
 		{ "bym_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "front_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "side_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
+		{ "joystick_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "haptic", XR_ACTION_TYPE_VIBRATION_OUTPUT, NULL },
 	};
 

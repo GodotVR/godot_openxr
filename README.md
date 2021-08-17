@@ -2,7 +2,7 @@
 
 ## Versions
 
-Requires Godot 3.3, does not (yet) work with Godot 4.
+Requires Godot 3.4, does not (yet) work with Godot 4.
 
 ## Status
 

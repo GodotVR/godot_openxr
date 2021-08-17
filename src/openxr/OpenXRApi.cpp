@@ -8,7 +8,6 @@
 #include <CameraMatrix.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
-#include <OS.hpp>
 #include <ProjectSettings.hpp>
 
 using namespace godot;
@@ -1027,37 +1026,43 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
 
-	keep_3d_linear = (video_driver == 0); // on GLES 3 assume we need to keep our render buffer in linear color space
+	keep_3d_linear = true; // This will only work correctly for GLES2 from Godot 3.4 onwards
 
 	Godot::print("OpenXR Swapchain Formats");
 	for (uint64_t i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
-		// printf("Found %llX\n", swapchainFormats[i]);
+		// Godot::print("Found {0}\n", swapchainFormats[i]);
 #ifdef WIN32
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
 		}
 #elif ANDROID
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
 		}
 #else
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT) {
+		/* disabling SRGB for now, we're rendering in linear color space...
+		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT && video_driver == OS::VIDEO_DRIVER_GLES3) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using SRGB swapchain.");
 			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
 		}
+		*/
 		if (swapchainFormats[i] == GL_RGBA8_EXT) {
 			swapchainFormatToUse = swapchainFormats[i];
 			Godot::print("OpenXR Using RGBA swapchain.");
@@ -1069,7 +1074,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
 	if (swapchainFormatToUse == 0) {
 		swapchainFormatToUse = swapchainFormats[0];
-		Godot::print("OpenXR Couldn't find prefered swapchain format, using %llX", swapchainFormatToUse);
+		Godot::print("OpenXR Couldn't find prefered swapchain format, using {0}", swapchainFormatToUse);
 	}
 
 	free(swapchainFormats);

@@ -7,6 +7,7 @@
 #define OPENXR_API_H
 
 #include <Godot.hpp>
+#include <OS.hpp>
 #include <Transform.hpp>
 #include <Vector2.hpp>
 
@@ -161,7 +162,7 @@ private:
 	bool initialised = false;
 	bool running = false;
 	int use_count = 1;
-	int video_driver = 0; // this will be 0 for GLES3, 1 for GLES2
+	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
 
 	// extensions
 	bool hand_tracking_ext = false;

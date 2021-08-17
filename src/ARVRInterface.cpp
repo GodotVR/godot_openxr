@@ -205,6 +205,10 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 
 	godot::Rect2 screen_rect = *(godot::Rect2 *)p_screen_rect;
 
+#ifndef ANDROID
+	// TODO check with OpenXR of the compositor outputs to a separate screen (HMD attached to computer) or to our main device (stand alone VR)
+	// We don't want this copy if we're already outputting to the main device. Assuming this is the case on Android for now.
+
 	if (p_eye == 1 && !screen_rect.has_no_area()) {
 		// blit as mono, attempt to keep our aspect ratio and center our
 		// render buffer
@@ -227,10 +231,10 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 		// %0.2f\n",screen_rect.position.x, screen_rect.position.y,
 		// screen_rect.size.x, screen_rect.size.y);
 
-		// !BAS! We don't have support for this but if keep_3d_linear is true we should tell the blit to do an sRGB conversion or our preview will be too dark.
-
+		// From Godot 3.4 onwards this should now correctly apply a linear->sRGB conversion if our render buffer remains in linear color space.
 		godot::arvr_api->godot_arvr_blit(0, p_render_target, (godot_rect2 *)&screen_rect);
 	};
+#endif
 
 	if (arvr_data->openxr_api != NULL) {
 		uint32_t texid = godot::arvr_api->godot_arvr_get_texid(p_render_target);

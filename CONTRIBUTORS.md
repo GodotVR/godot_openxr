@@ -8,3 +8,4 @@ This plugin has mostly been developed by:
 Other people who have helped out by submitting fixes, enhancements, etc are:
 - [Aaron Franke](https://github.com/aaronfranke)
 - [Benedikt](https://github.com/beniwtv)
+- [Kim Simmons](https://github.com/Zoomulator)

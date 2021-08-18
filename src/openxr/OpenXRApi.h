@@ -240,7 +240,9 @@ private:
 	void cleanupSpaces();
 	bool initialiseSwapChains();
 	void cleanupSwapChains();
+
 	bool initialiseHandTracking();
+	void cleanupHandTracking();
 
 	bool loadActionSets();
 	bool bindActionSets();

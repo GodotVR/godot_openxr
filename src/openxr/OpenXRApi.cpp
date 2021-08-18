@@ -15,44 +15,37 @@ using namespace godot;
 ////////////////////////////////////////////////////////////////////////////////
 // Extension functions
 
-XrResult (*xrCreateHandTrackerEXT_ptr)(
-		XrSession session,
-		const XrHandTrackerCreateInfoEXT *createInfo,
-		XrHandTrackerEXT *handTracker) = NULL;
+PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_ptr = nullptr;
 
 XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
 		XrSession session,
 		const XrHandTrackerCreateInfoEXT *createInfo,
 		XrHandTrackerEXT *handTracker) {
-	if (xrCreateHandTrackerEXT_ptr == NULL) {
+	if (xrCreateHandTrackerEXT_ptr == nullptr) {
 		return XR_ERROR_HANDLE_INVALID;
 	}
 
 	return (*xrCreateHandTrackerEXT_ptr)(session, createInfo, handTracker);
 };
 
-XrResult (*xrDestroyHandTrackerEXT_ptr)(
-		XrHandTrackerEXT handTracker) = NULL;
+PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_ptr = nullptr;
 
 XRAPI_ATTR XrResult XRAPI_CALL xrDestroyHandTrackerEXT(
 		XrHandTrackerEXT handTracker) {
-	if (xrDestroyHandTrackerEXT_ptr == NULL) {
+	if (xrDestroyHandTrackerEXT_ptr == nullptr) {
 		return XR_ERROR_HANDLE_INVALID;
 	}
 
 	return (*xrDestroyHandTrackerEXT_ptr)(handTracker);
 };
 
-XrResult (*xrLocateHandJointsEXT_ptr)(
-		XrHandTrackerEXT handTracker,
-		const XrHandJointsLocateInfoEXT *locateInfo,
-		XrHandJointLocationsEXT *locations) = NULL;
+PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_ptr = nullptr;
 
 XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
 		XrHandTrackerEXT handTracker,
 		const XrHandJointsLocateInfoEXT *locateInfo,
 		XrHandJointLocationsEXT *locations) {
-	if (xrLocateHandJointsEXT_ptr == NULL) {
+	if (xrLocateHandJointsEXT_ptr == nullptr) {
 		return XR_ERROR_HANDLE_INVALID;
 	}
 
@@ -1332,36 +1325,26 @@ bool OpenXRApi::initialiseHandTracking() {
 	}
 
 	for (int i = 0; i < 2; i++) {
-		XrHandTrackerCreateInfoEXT createInfo = {
-			.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
-			.next = nullptr,
-			.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
-			.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
-		};
-
-		result = xrCreateHandTrackerEXT(session, &createInfo, &hand_trackers[i].hand_tracker);
-		if (!xr_result(result, "Failed to obtain hand tracking information")) {
-			// not successful? then we do nothing.
-			hand_trackers[i].is_initialised = false;
-		} else {
-			hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
-			hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
-			hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
-
-			hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
-			hand_trackers[i].locations.next = &hand_trackers[i].velocities;
-			hand_trackers[i].locations.isActive = false;
-			hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
-			hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
-
-			hand_trackers[i].is_initialised = true;
-		}
+		// we'll do this later
+		hand_trackers[i].is_initialised = false;
+		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
 	}
 
 	printf("Hand tracking is supported\n");
 
 	hand_tracking_supported = true;
 	return true;
+}
+
+void OpenXRApi::cleanupHandTracking() {
+	for (int i = 0; i < 2; i++) {
+		if (hand_trackers[i].hand_tracker != XR_NULL_HANDLE) {
+			xrDestroyHandTrackerEXT(hand_trackers[i].hand_tracker);
+
+			hand_trackers[i].is_initialised = false;
+			hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
+		}
+	}
 }
 
 bool OpenXRApi::loadActionSets() {
@@ -1428,6 +1411,13 @@ void OpenXRApi::unbindActionSets() {
 	// reset our default actions
 	for (uint64_t i = 0; i < ACTION_MAX; i++) {
 		default_actions[i].action = NULL;
+	}
+
+	// reset our spaces
+	for (uint64_t i = 0; i < action_sets.size(); i++) {
+		ActionSet *action_set = action_sets[i];
+
+		action_set->reset_spaces();
 	}
 }
 
@@ -1512,6 +1502,7 @@ void OpenXRApi::uninitialize() {
 	}
 
 	cleanupActionSets();
+	cleanupHandTracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1602,6 +1593,7 @@ bool OpenXRApi::on_state_stopping() {
 	// need to cleanup various things which would otherwise be re-allocated if we have a state change back to ready
 	// note that cleaning up our action sets will invalidate many of the OpenXR nodes so we need to improve that as well.
 	unbindActionSets();
+	cleanupHandTracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -2121,10 +2113,8 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 
 	XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL, views[eye].fov, p_z_near, p_z_far);
 
-	// printf("Projection Matrix: ");
 	for (int i = 0; i < 16; i++) {
 		p_projection[i] = matrix.m[i];
-		// printf("%f ", p_projection[i]);
 	}
 }
 
@@ -2287,7 +2277,7 @@ void OpenXRApi::update_actions() {
 }
 
 void OpenXRApi::update_handtracking() {
-	if (!initialised) {
+	if (!initialised || !running) {
 		return;
 	}
 
@@ -2299,34 +2289,65 @@ void OpenXRApi::update_handtracking() {
 	XrResult result;
 
 	for (int i = 0; i < 2; i++) {
-		XrHandJointsLocateInfoEXT locateInfo = {
-			.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
-			.next = nullptr,
-			.baseSpace = play_space,
-			.time = time,
-		};
-		XrHandJointsMotionRangeInfoEXT motionRangeInfo;
+		if (hand_trackers[i].hand_tracker == XR_NULL_HANDLE) {
+			XrHandTrackerCreateInfoEXT createInfo = {
+				.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
+				.next = nullptr,
+				.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
+				.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
+			};
 
-		if (hand_motion_range_ext) {
-			motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
-			motionRangeInfo.next = nullptr;
-			motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
+			result = xrCreateHandTrackerEXT(session, &createInfo, &hand_trackers[i].hand_tracker);
+			if (!xr_result(result, "Failed to obtain hand tracking information")) {
+				// not successful? then we do nothing.
+				hand_trackers[i].is_initialised = false;
+			} else {
+				hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
+				hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
+				hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
 
-			locateInfo.next = &motionRangeInfo;
+				hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
+				hand_trackers[i].locations.next = &hand_trackers[i].velocities;
+				hand_trackers[i].locations.isActive = false;
+				hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
+				hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
+
+				hand_trackers[i].is_initialised = true;
+			}
 		}
 
-		result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
-		if (xr_result(result, "failed to get tracking for hand {0}!", i)) {
-			// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
-			const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
-			if (
-					!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
-				hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
-				// printf("Hand %i inactive\n", i);
-			} else {
-				// we have our hand tracking info....
+		if (hand_trackers[i].is_initialised) {
+			XrHandJointsLocateInfoEXT locateInfo = {
+				.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
+				.next = nullptr,
+				.baseSpace = play_space,
+				.time = time,
+			};
+			XrHandJointsMotionRangeInfoEXT motionRangeInfo;
 
-				// printf("Hand %i: (%.2f, %.2f, %.2f)\n", i, palm.position.x, palm.position.y, palm.position.z);
+			if (hand_motion_range_ext) {
+				motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
+				motionRangeInfo.next = nullptr;
+				motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
+
+				locateInfo.next = &motionRangeInfo;
+			}
+
+			Godot::print("Obtaining hand joint info for {0}", i);
+
+			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
+			if (xr_result(result, "failed to get tracking for hand {0}!", i)) {
+				// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
+				const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
+				if (
+						!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
+					hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
+					// printf("Hand %i inactive\n", i);
+				} else {
+					// we have our hand tracking info....
+
+					Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
+				}
 			}
 		}
 	}

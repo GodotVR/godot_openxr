@@ -118,3 +118,9 @@ bool ActionSet::attach() {
 	is_attached = true;
 	return true;
 }
+
+void ActionSet::reset_spaces() {
+	for (uint64_t i = 0; i < actions.size(); i++) {
+		actions[i]->reset_spaces();
+	}
+}

@@ -790,7 +790,11 @@ bool OpenXRApi::initialiseInstance() {
 			XR_VERSION_PATCH(instanceProps.runtimeVersion));
 
 	if (strcmp(instanceProps.runtimeName, "SteamVR/OpenXR") == 0) {
-#ifdef __linux__
+#ifdef WIN32
+		// not applicable
+#elif ANDROID
+		// not applicable
+#elif __linux__
 		Godot::print("Running on Linux, using SteamVR workaround for issue https://github.com/ValveSoftware/SteamVR-for-Linux/issues/421");
 #endif
 		is_steamvr = true;
@@ -2069,7 +2073,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		}
 	}
 
-#ifdef __linux__
+#ifdef WIN32
+	// not applicable
+#elif ANDROID
+	// not applicable
+#elif __linux__
 	// TODO: should not be necessary, but is for SteamVR since 1.16.x
 	if (is_steamvr) {
 		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
@@ -2471,7 +2479,11 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 		return 0;
 	}
 
-#ifdef __linux__
+#ifdef WIN32
+	// not applicable
+#elif ANDROID
+	// not applicable
+#elif __linux__
 	// TODO: should not be necessary, but is for SteamVR since 1.16.x
 	if (is_steamvr) {
 		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);
@@ -2708,7 +2720,11 @@ void OpenXRApi::process_openxr() {
 		// See render_openxr() for the corresponding early exit.
 	}
 
-#ifdef __linux__
+#ifdef WIN32
+	// not applicable
+#elif ANDROID
+	// not applicable
+#elif __linux__
 	// TODO: should not be necessary, but is for SteamVR since 1.16.x
 	if (is_steamvr) {
 		glXMakeCurrent(graphics_binding_gl.xDisplay, graphics_binding_gl.glxDrawable, graphics_binding_gl.glxContext);

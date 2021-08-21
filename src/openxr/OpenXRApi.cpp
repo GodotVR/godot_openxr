@@ -2585,7 +2585,12 @@ void OpenXRApi::process_openxr() {
 
 Transform OpenXRApi::transform_from_pose(const XrPosef &p_pose, float p_world_scale) {
 	Quat q(p_pose.orientation.x, p_pose.orientation.y, p_pose.orientation.z, p_pose.orientation.w);
-	Basis basis(q);
+	Basis basis;
+	if (q.is_normalized()) {
+		basis = Basis(q);
+	} else {
+		basis = Basis(Quat(Vector3(1, 0, 0), 0));
+	}
 	Vector3 origin(p_pose.position.x * p_world_scale, p_pose.position.y * p_world_scale, p_pose.position.z * p_world_scale);
 
 	return Transform(basis, origin);

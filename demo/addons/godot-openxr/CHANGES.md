@@ -1,6 +1,10 @@
 Changes to the Godot OpenXR asset
 =================================
 
+1.0.4
+-------------------
+- Fix occurrence of invalid transform from pose.
+
 1.0.3
 -------------------
 - Copy loader dll in place when compiling

@@ -2742,3 +2742,26 @@ Transform OpenXRApi::transform_from_pose(const XrPosef &p_pose, float p_world_sc
 
 	return Transform(basis, origin);
 }
+
+template <typename T>
+Transform _transform_from_space_location(OpenXRApi &api, const T &p_location, float p_world_scale) {
+	Basis basis;
+	Vector3 origin;
+	const auto &pose = p_location.pose;
+	if (p_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) {
+		Quat q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
+		basis = Basis(q);
+	}
+	if (p_location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) {
+		origin = Vector3(pose.position.x, pose.position.y, pose.position.z) * p_world_scale;
+	}
+	return Transform(basis, origin);
+}
+
+Transform OpenXRApi::transform_from_space_location(const XrSpaceLocation &p_location, float p_world_scale) {
+	return _transform_from_space_location(*this, p_location, p_world_scale);
+}
+
+Transform OpenXRApi::transform_from_space_location(const XrHandJointLocationEXT &p_location, float p_world_scale) {
+	return _transform_from_space_location(*this, p_location, p_world_scale);
+}

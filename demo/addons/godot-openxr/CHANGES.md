@@ -4,6 +4,7 @@ Changes to the Godot OpenXR asset
 1.1.0
 -------------------
 - Implemented Android build (currently using Oculus loader, Quest support only)
+- Fix invalid transforms generated from invalid space locations when using OpenXRSkeleton or OpenXRPose.
 
 1.0.3
 -------------------

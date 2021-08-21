@@ -105,8 +105,7 @@ void OpenXRSkeleton::_physics_process(float delta) {
 	if (hand_tracker->is_initialised && hand_tracker->locations.isActive) {
 		// get our transforms
 		for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-			const XrPosef &pose = hand_tracker->joint_locations[i].pose;
-			transforms[i] = openxr_api->transform_from_pose(pose, ws);
+			transforms[i] = openxr_api->transform_from_space_location(hand_tracker->joint_locations[i], ws);
 			inv_transforms[i] = transforms[i].inverse();
 		}
 

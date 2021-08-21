@@ -129,15 +129,7 @@ void OpenXRHand::_physics_process(float delta) {
 
 	if (hand_tracker->is_initialised && hand_tracker->locations.isActive) {
 		for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-			const XrPosef &pose = hand_tracker->joint_locations[i].pose;
-			XrSpaceLocationFlags flags = hand_tracker->joint_locations[i].locationFlags;
-			Transform t;
-
-			if ((flags & (XR_SPACE_LOCATION_ORIENTATION_VALID_BIT + XR_SPACE_LOCATION_POSITION_VALID_BIT)) == (XR_SPACE_LOCATION_ORIENTATION_VALID_BIT + XR_SPACE_LOCATION_POSITION_VALID_BIT)) {
-				// only use if valid
-				t = openxr_api->transform_from_pose(pose, ws);
-			}
-
+			Transform t = openxr_api->transform_from_space_location(hand_tracker->joint_locations[i], ws);
 			// store the inverse to make live easier later on
 			inv_transforms[i] = t.inverse();
 

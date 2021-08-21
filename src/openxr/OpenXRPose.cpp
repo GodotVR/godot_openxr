@@ -132,12 +132,10 @@ void OpenXRPose::_physics_process(float delta) {
 	if (action == "SkeletonBase") {
 		if (path == "/user/hand/left") {
 			const HandTracker *hand_tracker = openxr_api->get_hand_tracker(0);
-			const XrPosef &pose = hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
-			set_transform(reference_frame * openxr_api->transform_from_pose(pose, ws));
+			set_transform(reference_frame * openxr_api->transform_from_space_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws));
 		} else if (path == "/user/hand/right") {
 			const HandTracker *hand_tracker = openxr_api->get_hand_tracker(1);
-			const XrPosef &pose = hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
-			set_transform(reference_frame * openxr_api->transform_from_pose(pose, ws));
+			set_transform(reference_frame * openxr_api->transform_from_space_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws));
 		}
 	} else if (check_action_and_path()) {
 		set_transform(reference_frame * _action->get_as_pose(_path, ws));

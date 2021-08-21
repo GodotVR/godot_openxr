@@ -350,6 +350,10 @@ public:
 
 	// helper method to get a transform from an openxr pose
 	godot::Transform transform_from_pose(const XrPosef &p_pose, float p_world_scale);
+
+	// helper method to get a valid transform from an openxr space location
+	godot::Transform transform_from_space_location(const XrSpaceLocation &p_location, float p_world_scale);
+	godot::Transform transform_from_space_location(const XrHandJointLocationEXT &p_location, float p_world_scale);
 };
 
 #endif /* !OPENXR_API_H */

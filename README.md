@@ -4,6 +4,8 @@
 
 Requires Godot 3.3, does not (yet) work with Godot 4.
 
+See [Branches, Tags and versions](https://github.com/GodotVR/godot_openxr/issues/81) for more info on stable and development branches in this repository.
+
 ## Status
 
 * This plugin supports Linux/X11 and Windows.

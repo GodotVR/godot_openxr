@@ -1,6 +1,9 @@
 Changes to the Godot OpenXR asset
 =================================
 
+1.1.0
+-------------------
+
 1.0.3
 -------------------
 - Copy loader dll in place when compiling

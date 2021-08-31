@@ -54,7 +54,7 @@ project(godot_openxr VERSION 2.0.0)
 ## in the project README.
 
 # Sets the path to the OpenXR mobile library containing directory. Update this variable if the api is in another location.
-set(OPENXR_MOBILE_ROOT_DIR "${CMAKE_SOURCE_DIR}/../openxr_loader/oculus_mobile_sdk/1.0.17/OpenXR")
+set(OPENXR_MOBILE_ROOT_DIR "${CMAKE_SOURCE_DIR}/../openxr_loader/oculus_mobile_sdk/1.0.18/OpenXR")
 
 # Location to the Godot-cpp directory.
 set(GODOT_CPP_DIR "${CMAKE_SOURCE_DIR}/../godot-cpp")

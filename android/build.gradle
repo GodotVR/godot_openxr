@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 100003
-        versionName '1.0.3'
+        versionCode 10004
+        versionName '1.0.4'
         setProperty("archivesBaseName", "godotopenxr.${versionName}")
 
         externalNativeBuild {
@@ -52,4 +52,13 @@ android {
     }
 }
 
-dependencies {}
+dependencies {
+    if (rootProject.findProject(":godot:lib") != null) {
+        // Used for development and debugging
+        compileOnly(project(":godot:lib"))
+    } else {
+        compileOnly(fileTree(dir: "libs", include: ["godot-lib*.aar"]))
+    }
+
+    implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlinVersion}"
+}

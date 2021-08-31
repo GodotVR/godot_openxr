@@ -17,6 +17,10 @@
             tools:node="replace" />
 
         <meta-data
+            android:name="org.godotengine.plugin.v1.OpenXR"
+            android:value="org.godotengine.plugin.vr.openxr.OpenXRPlugin" />
+
+        <meta-data
                 android:name="com.oculus.supportedDevices"
                 android:value="quest|delmar"
                 tools:node="replace" />

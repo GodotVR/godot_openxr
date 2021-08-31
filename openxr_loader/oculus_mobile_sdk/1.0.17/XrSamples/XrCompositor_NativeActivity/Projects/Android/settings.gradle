@@ -1,5 +1,0 @@
-rootProject.projectDir = new File(settingsDir, '../../../..')
-rootProject.name = "XrCompositor_NativeActivity"
-
-include ':', \
-    ':XrSamples:XrCompositor_NativeActivity:Projects:Android'

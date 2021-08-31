@@ -1,7 +1,0 @@
-
-rootProject.projectDir = new File(settingsDir, '.')
-rootProject.name = "OculusRoot"
-
-include ':'
-
-// Top level settings

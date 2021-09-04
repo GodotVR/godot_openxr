@@ -249,6 +249,7 @@ private:
 	void unbindActionSets();
 	void cleanupActionSets();
 
+	bool poll_events();
 	bool on_state_idle();
 	bool on_state_ready();
 	bool on_state_synchronized();
@@ -256,7 +257,7 @@ private:
 	bool on_state_focused();
 	bool on_state_stopping();
 	bool on_state_loss_pending();
-	bool on_state_existing();
+	bool on_state_exiting();
 
 	bool check_graphics_requirements_gl(XrSystemId system_id);
 	XrResult acquire_image(int eye);
@@ -278,6 +279,9 @@ public:
 	bool initialize();
 	void uninitialize();
 	bool is_running();
+
+	void on_resume();
+	void on_pause();
 
 	XrInstance get_instance() { return instance; };
 	XrSession get_session() { return session; };

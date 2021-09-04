@@ -4,11 +4,11 @@
 #include <ARVRServer.hpp>
 
 #include "OpenXRApi.h"
-#include <math.h>
 #include <CameraMatrix.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
 #include <ProjectSettings.hpp>
+#include <cmath>
 
 using namespace godot;
 
@@ -26,7 +26,7 @@ XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
 	}
 
 	return (*xrCreateHandTrackerEXT_ptr)(session, createInfo, handTracker);
-};
+}
 
 PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_ptr = nullptr;
 
@@ -37,7 +37,7 @@ XRAPI_ATTR XrResult XRAPI_CALL xrDestroyHandTrackerEXT(
 	}
 
 	return (*xrDestroyHandTrackerEXT_ptr)(handTracker);
-};
+}
 
 PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_ptr = nullptr;
 
@@ -50,7 +50,7 @@ XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
 	}
 
 	return (*xrLocateHandJointsEXT_ptr)(handTracker, locateInfo, locations);
-};
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Default action set configuration
@@ -464,12 +464,26 @@ const char *OpenXRApi::default_interaction_profiles_json = "[\n"
 														   "]\n";
 
 ////////////////////////////////////////////////////////////////////////////////
+// Session states
+const char *session_states[] = {
+	"XR_SESSION_STATE_UNKNOWN",
+	"XR_SESSION_STATE_IDLE",
+	"XR_SESSION_STATE_READY",
+	"XR_SESSION_STATE_SYNCHRONIZED",
+	"XR_SESSION_STATE_VISIBLE",
+	"XR_SESSION_STATE_FOCUSED",
+	"XR_SESSION_STATE_STOPPING",
+	"XR_SESSION_STATE_LOSS_PENDING",
+	"XR_SESSION_STATE_EXITING",
+};
+
+////////////////////////////////////////////////////////////////////////////////
 // Singleton management
 
-OpenXRApi *OpenXRApi::singleton = NULL;
+OpenXRApi *OpenXRApi::singleton = nullptr;
 
 void OpenXRApi::openxr_release_api() {
-	if (singleton == NULL) {
+	if (singleton == nullptr) {
 		// nothing to release
 #ifdef DEBUG
 		Godot::print("OpenXR: tried to release non-existent OpenXR context\n");
@@ -488,12 +502,12 @@ void OpenXRApi::openxr_release_api() {
 #endif
 
 		delete singleton;
-		singleton = NULL;
+		singleton = nullptr;
 	};
 };
 
 OpenXRApi *OpenXRApi::openxr_get_api() {
-	if (singleton != NULL) {
+	if (singleton != nullptr) {
 		// increase use count
 		singleton->use_count++;
 
@@ -502,7 +516,7 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 #endif
 	} else {
 		singleton = new OpenXRApi();
-		if (singleton == NULL) {
+		if (singleton == nullptr) {
 			Godot::print_error("OpenXR interface creation failed", __FUNCTION__, __FILE__, __LINE__);
 #ifdef DEBUG
 		} else {
@@ -530,7 +544,7 @@ bool OpenXRApi::isViewConfigSupported(XrViewConfigurationType type, XrSystemId s
 	XrResult result;
 	uint32_t viewConfigurationCount;
 
-	result = xrEnumerateViewConfigurations(instance, systemId, 0, &viewConfigurationCount, NULL);
+	result = xrEnumerateViewConfigurations(instance, systemId, 0, &viewConfigurationCount, nullptr);
 	if (!xr_result(result, "Failed to get view configuration count")) {
 		return false;
 	}
@@ -538,8 +552,8 @@ bool OpenXRApi::isViewConfigSupported(XrViewConfigurationType type, XrSystemId s
 	// Damn you microsoft for not supporting this!!
 	// XrViewConfigurationType viewConfigurations[viewConfigurationCount];
 	XrViewConfigurationType *viewConfigurations = (XrViewConfigurationType *)malloc(sizeof(XrViewConfigurationType) * viewConfigurationCount);
-	if (viewConfigurations == NULL) {
-		Godot::print_error("Couldn''t allocate memory for view configurations", __FUNCTION__, __FILE__, __LINE__);
+	if (viewConfigurations == nullptr) {
+		Godot::print_error("Couldn't allocate memory for view configurations", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
@@ -564,17 +578,19 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 	XrResult result;
 	uint32_t referenceSpacesCount;
 
-	result = xrEnumerateReferenceSpaces(session, 0, &referenceSpacesCount, NULL);
+	result = xrEnumerateReferenceSpaces(session, 0, &referenceSpacesCount, nullptr);
 	if (!xr_result(result, "Getting number of reference spaces failed!")) {
-		return 1;
+		return false;
 	}
 
 	// Damn you microsoft for not supporting this!!
 	// XrReferenceSpaceType referenceSpaces[referenceSpacesCount];
 	XrReferenceSpaceType *referenceSpaces = (XrReferenceSpaceType *)malloc(sizeof(XrReferenceSpaceType) * referenceSpacesCount);
-	if (referenceSpaces == NULL) {
+	if (referenceSpaces == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for reference spaces", __FUNCTION__, __FILE__, __LINE__);
+		return false;
 	}
+
 	result = xrEnumerateReferenceSpaces(session, referenceSpacesCount, &referenceSpacesCount, referenceSpaces);
 	if (!xr_result(result, "Enumerating reference spaces failed!")) {
 		free(referenceSpaces);
@@ -601,8 +617,8 @@ bool OpenXRApi::initialiseInstance() {
 
 #ifdef ANDROID
 	// Initialize the loader
-	PFN_xrInitializeLoaderKHR initialize_loader_khr = nullptr;
-	result = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)(&initialize_loader_khr));
+	PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR;
+	result = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrInitializeLoaderKHR", (PFN_xrVoidFunction *)(&xrInitializeLoaderKHR));
 	if (!xr_result(result, "Failed to retrieve pointer to xrInitializeLoaderKHR")) {
 		return false;
 	}
@@ -614,14 +630,53 @@ bool OpenXRApi::initialiseInstance() {
 
 	XrLoaderInitInfoAndroidKHR loader_init_info_android = {
 		.type = XR_TYPE_LOADER_INIT_INFO_ANDROID_KHR,
-		.next = XR_NULL_HANDLE,
+		.next = nullptr,
 		.applicationVM = vm,
 		.applicationContext = activity_object
 	};
-	initialize_loader_khr((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
+	xrInitializeLoaderKHR((const XrLoaderInitInfoBaseHeaderKHR *)&loader_init_info_android);
 #endif
+
+	// Log available layers.
+	PFN_xrEnumerateApiLayerProperties xrEnumerateApiLayerProperties;
+	result = xrGetInstanceProcAddr(XR_NULL_HANDLE, "xrEnumerateApiLayerProperties", (PFN_xrVoidFunction *)&xrEnumerateApiLayerProperties);
+	if (!xr_result(result, "Failed to retrieve pointer to xrEnumerateApiLayerProperties")) {
+		return false;
+	}
+
+	uint32_t num_input_layers = 0;
+	uint32_t num_output_layers = 0;
+	result = xrEnumerateApiLayerProperties(num_input_layers, &num_output_layers, nullptr);
+	if (!xr_result(result, "Failed to enumerate number of api layer properties")) {
+		return false;
+	}
+
+	num_input_layers = num_output_layers;
+	XrApiLayerProperties *layer_properties = (XrApiLayerProperties *)malloc(sizeof(XrApiLayerProperties) * num_output_layers);
+	if (layer_properties == nullptr) {
+		Godot::print_error("Couldn't allocate memory for api layer properties", __FUNCTION__, __FILE__, __LINE__);
+		return false;
+	}
+
+	for (uint32_t i = 0; i < num_output_layers; i++) {
+		layer_properties[i].type = XR_TYPE_API_LAYER_PROPERTIES;
+		layer_properties[i].next = nullptr;
+	}
+
+	result = xrEnumerateApiLayerProperties(num_input_layers, &num_output_layers, layer_properties);
+	if (!xr_result(result, "Failed to enumerate api layer properties")) {
+		free(layer_properties);
+		return false;
+	}
+
+	for (uint32_t i = 0; i < num_output_layers; i++) {
+		Godot::print("Found layer {0}", layer_properties[i].layerName);
+	}
+
+	free(layer_properties);
+
 	uint32_t extensionCount = 0;
-	result = xrEnumerateInstanceExtensionProperties(NULL, 0, &extensionCount, NULL);
+	result = xrEnumerateInstanceExtensionProperties(nullptr, 0, &extensionCount, nullptr);
 
 	/* TODO: instance null will not be able to convert XrResult to string */
 	if (!xr_result(result, "Failed to enumerate number of extension properties")) {
@@ -631,34 +686,47 @@ bool OpenXRApi::initialiseInstance() {
 	// Damn you microsoft for not supporting this!!
 	// XrExtensionProperties extensionProperties[extensionCount];
 	XrExtensionProperties *extensionProperties = (XrExtensionProperties *)malloc(sizeof(XrExtensionProperties) * extensionCount);
-	if (extensionProperties == NULL) {
+	if (extensionProperties == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for extension properties", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
-	for (uint16_t i = 0; i < extensionCount; i++) {
+	for (uint32_t i = 0; i < extensionCount; i++) {
 		extensionProperties[i].type = XR_TYPE_EXTENSION_PROPERTIES;
-		extensionProperties[i].next = NULL;
+		extensionProperties[i].next = nullptr;
 	}
 
-	result = xrEnumerateInstanceExtensionProperties(NULL, extensionCount, &extensionCount, extensionProperties);
+	result = xrEnumerateInstanceExtensionProperties(nullptr, extensionCount, &extensionCount, extensionProperties);
 	if (!xr_result(result, "Failed to enumerate extension properties")) {
 		free(extensionProperties);
 		return false;
 	}
 
 #ifdef ANDROID
-	if (!isExtensionSupported(XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
-		Godot::print_error("OpenXR Runtime does not support OpenGLES extension!", __FUNCTION__, __FILE__, __LINE__);
-		free(extensionProperties);
-		return false;
-	}
+	// Check that the extensions required are present.
+	// TODO: Replace with mechanism for collecting and validating required extensions, as well as a
+	// a similar one for optional extensions.
+	const char *const android_required_extension_names[] = {
+		XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME,
+		XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME,
+		XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME,
+		XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME,
+		XR_FB_COLOR_SPACE_EXTENSION_NAME,
+		XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME,
+		XR_FB_SWAPCHAIN_UPDATE_STATE_OPENGL_ES_EXTENSION_NAME,
+		XR_FB_FOVEATION_EXTENSION_NAME,
+		XR_FB_FOVEATION_CONFIGURATION_EXTENSION_NAME
+	};
+	const uint32_t numRequiredExtensions =
+			sizeof(android_required_extension_names) / sizeof(android_required_extension_names[0]);
 
-	if (!isExtensionSupported(XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME, extensionProperties, extensionCount)) {
-		Godot::print_error("OpenXR Runtime does not support android instance extension!", __FUNCTION__, __FILE__, __LINE__);
-		free(extensionProperties);
-		return false;
+	for (auto required_extension_name : android_required_extension_names) {
+		bool found = false;
+		if (!isExtensionSupported(required_extension_name, extensionProperties, extensionCount)) {
+			Godot::print_error("OpenXR Runtime does not support extension " + String(required_extension_name), __FUNCTION__, __FILE__, __LINE__);
+			free(extensionProperties);
+			return false;
+		}
 	}
-
 #else
 	if (!isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
 		Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
@@ -687,15 +755,16 @@ bool OpenXRApi::initialiseInstance() {
 	// Damn you microsoft for not supporting this!!
 	// const char *enabledExtensions[extensionCount];
 	const char **enabledExtensions = (const char **)malloc(sizeof(const char *) * extensionCount);
-	if (enabledExtensions == NULL) {
+	if (enabledExtensions == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory to record enabled extensions", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
 	uint32_t enabledExtensionCount = 0;
 #ifdef ANDROID
-	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME;
-	enabledExtensions[enabledExtensionCount++] = XR_KHR_ANDROID_CREATE_INSTANCE_EXTENSION_NAME;
+	for (auto extension_name : android_required_extension_names) {
+		enabledExtensions[enabledExtensionCount++] = extension_name;
+	}
 #else
 	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
 #endif
@@ -719,7 +788,7 @@ bool OpenXRApi::initialiseInstance() {
 	// Microsoft wants fields in definition to be in order or it will have a hissy fit!
 	XrInstanceCreateInfo instanceCreateInfo = {
 		.type = XR_TYPE_INSTANCE_CREATE_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.createFlags = 0,
 		.applicationInfo = {
 #ifdef __GCC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
@@ -737,7 +806,7 @@ bool OpenXRApi::initialiseInstance() {
 				.apiVersion = XR_CURRENT_API_VERSION,
 		},
 		.enabledApiLayerCount = 0,
-		.enabledApiLayerNames = NULL,
+		.enabledApiLayerNames = nullptr,
 		.enabledExtensionCount = enabledExtensionCount,
 		.enabledExtensionNames = enabledExtensions,
 	};
@@ -755,18 +824,6 @@ bool OpenXRApi::initialiseInstance() {
 		}
 	}
 
-#ifdef ANDROID
-	XrInstanceCreateInfoAndroidKHR androidCreateInfo = {
-		.type = XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR,
-		.next = NULL,
-	};
-
-	androidCreateInfo.applicationVM = vm;
-	androidCreateInfo.applicationActivity = activity_object;
-
-	instanceCreateInfo.next = &androidCreateInfo;
-#endif
-
 	result = xrCreateInstance(&instanceCreateInfo, &instance);
 	if (!xr_result(result, "Failed to create XR instance.")) {
 		free(enabledExtensions);
@@ -775,7 +832,8 @@ bool OpenXRApi::initialiseInstance() {
 	free(enabledExtensions);
 
 	XrInstanceProperties instanceProps = {
-		.type = XR_TYPE_INSTANCE_PROPERTIES
+		.type = XR_TYPE_INSTANCE_PROPERTIES,
+		.next = nullptr
 	};
 	result = xrGetInstanceProperties(instance, &instanceProps);
 	if (!xr_result(result, "Failed to get XR instance properties.")) {
@@ -843,7 +901,7 @@ bool OpenXRApi::initialiseSession() {
 	// TODO: Support AR?
 	XrSystemGetInfo systemGetInfo = {
 		.type = XR_TYPE_SYSTEM_GET_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.formFactor = form_factor,
 	};
 
@@ -852,9 +910,20 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
+#ifdef ANDROID
+	// TODO: Instead of switching on Android, use the new validation mechanism to determine when this should be configured.
+	XrSystemColorSpacePropertiesFB color_space_properties_fb = {
+		.type = XR_TYPE_SYSTEM_COLOR_SPACE_PROPERTIES_FB,
+	};
+#endif
+
 	XrSystemProperties systemProperties = {
 		.type = XR_TYPE_SYSTEM_PROPERTIES,
-		.next = NULL,
+#ifdef ANDROID
+		.next = &color_space_properties_fb,
+#else
+		.next = nullptr,
+#endif
 		.graphicsProperties = { 0 },
 		.trackingProperties = { 0 },
 	};
@@ -870,7 +939,7 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
-	result = xrEnumerateViewConfigurationViews(instance, systemId, view_config_type, 0, &view_count, NULL);
+	result = xrEnumerateViewConfigurationViews(instance, systemId, view_config_type, 0, &view_count, nullptr);
 	if (!xr_result(result, "Failed to get view configuration view count!")) {
 		return false;
 	}
@@ -878,7 +947,7 @@ bool OpenXRApi::initialiseSession() {
 	configuration_views = (XrViewConfigurationView *)malloc(sizeof(XrViewConfigurationView) * view_count);
 	for (uint32_t i = 0; i < view_count; i++) {
 		configuration_views[i].type = XR_TYPE_VIEW_CONFIGURATION_VIEW;
-		configuration_views[i].next = NULL;
+		configuration_views[i].next = nullptr;
 	}
 
 	result = xrEnumerateViewConfigurationViews(instance, systemId, view_config_type, view_count, &view_count, configuration_views);
@@ -963,6 +1032,7 @@ bool OpenXRApi::initialiseSession() {
 	XrSessionCreateInfo session_create_info = {
 		.type = XR_TYPE_SESSION_CREATE_INFO,
 		.next = &graphics_binding_gl,
+		.createFlags = 0,
 		.systemId = systemId
 	};
 
@@ -995,7 +1065,7 @@ bool OpenXRApi::initialiseSpaces() {
 
 		XrReferenceSpaceCreateInfo localSpaceCreateInfo = {
 			.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-			.next = NULL,
+			.next = nullptr,
 			.referenceSpaceType = play_space_type,
 			.poseInReferenceSpace = identityPose
 		};
@@ -1015,7 +1085,7 @@ bool OpenXRApi::initialiseSpaces() {
 
 		XrReferenceSpaceCreateInfo view_space_create_info = {
 			.type = XR_TYPE_REFERENCE_SPACE_CREATE_INFO,
-			.next = NULL,
+			.next = nullptr,
 			.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_VIEW,
 			.poseInReferenceSpace = identityPose
 		};
@@ -1049,7 +1119,7 @@ bool OpenXRApi::initialiseSwapChains() {
 #endif
 
 	uint32_t swapchainFormatCount;
-	result = xrEnumerateSwapchainFormats(session, 0, &swapchainFormatCount, NULL);
+	result = xrEnumerateSwapchainFormats(session, 0, &swapchainFormatCount, nullptr);
 	if (!xr_result(result, "Failed to get number of supported swapchain formats")) {
 		return false;
 	}
@@ -1057,7 +1127,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	// Damn you microsoft for not supporting this!!
 	// int64_t swapchainFormats[swapchainFormatCount];
 	int64_t *swapchainFormats = (int64_t *)malloc(sizeof(int64_t) * swapchainFormatCount);
-	if (swapchainFormats == NULL) {
+	if (swapchainFormats == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain formats", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
@@ -1132,7 +1202,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	free(swapchainFormats);
 
 	swapchains = (XrSwapchain *)malloc(sizeof(XrSwapchain) * view_count);
-	if (swapchains == NULL) {
+	if (swapchains == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chains", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
@@ -1140,7 +1210,7 @@ bool OpenXRApi::initialiseSwapChains() {
 	// Damn you microsoft for not supporting this!!
 	// uint32_t swapchainLength[view_count];
 	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
-	if (swapchainLength == NULL) {
+	if (swapchainLength == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain lengths", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
@@ -1149,7 +1219,7 @@ bool OpenXRApi::initialiseSwapChains() {
 		// again Microsoft wants these in order!
 		XrSwapchainCreateInfo swapchainCreateInfo = {
 			.type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
-			.next = NULL,
+			.next = nullptr,
 			.createFlags = 0,
 			.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
 			.format = swapchainFormatToUse,
@@ -1161,13 +1231,22 @@ bool OpenXRApi::initialiseSwapChains() {
 			.mipCount = 1,
 		};
 
+#ifdef ANDROID
+		// Enable foveation on this swapchain
+		// TODO: Instead of switching on Android, use the new validation mechanism to determine when this should be configured.
+		XrSwapchainCreateInfoFoveationFB swapchain_create_info_foveation_fb = {
+			.type = XR_TYPE_SWAPCHAIN_CREATE_INFO_FOVEATION_FB
+		};
+		swapchainCreateInfo.next = &swapchain_create_info_foveation_fb;
+#endif
+
 		result = xrCreateSwapchain(session, &swapchainCreateInfo, &swapchains[i]);
 		if (!xr_result(result, "Failed to create swapchain {0}!", i)) {
 			free(swapchainLength);
 			return false;
 		}
 
-		result = xrEnumerateSwapchainImages(swapchains[i], 0, &swapchainLength[i], NULL);
+		result = xrEnumerateSwapchainImages(swapchains[i], 0, &swapchainLength[i], nullptr);
 		if (!xr_result(result, "Failed to enumerate swapchains")) {
 			free(swapchainLength);
 			return false;
@@ -1179,14 +1258,14 @@ bool OpenXRApi::initialiseSwapChains() {
 #else
 	images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
 #endif
-	if (images == NULL) {
+	if (images == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain images", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
 	// reset so if we fail we don't try to free memory we never allocated
 	for (uint32_t i = 0; i < view_count; i++) {
-		images[i] = NULL;
+		images[i] = nullptr;
 	}
 
 	for (uint32_t i = 0; i < view_count; i++) {
@@ -1195,7 +1274,7 @@ bool OpenXRApi::initialiseSwapChains() {
 #else
 		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchainLength[i]);
 #endif
-		if (images[i] == NULL) {
+		if (images[i] == nullptr) {
 			Godot::print_error("OpenXR Couldn't allocate memory for swap chain image", __FUNCTION__, __FILE__, __LINE__);
 			return false;
 		}
@@ -1206,7 +1285,7 @@ bool OpenXRApi::initialiseSwapChains() {
 #else
 			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR;
 #endif
-			images[i][j].next = NULL;
+			images[i][j].next = nullptr;
 		}
 	}
 
@@ -1239,8 +1318,6 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	frameState.type = XR_TYPE_FRAME_STATE;
 	frameState.next = NULL;
-
-	running = true;
 
 	views = (XrView *)malloc(sizeof(XrView) * view_count);
 	if (views == NULL) {
@@ -1536,6 +1613,7 @@ void OpenXRApi::uninitialize() {
 	hand_motion_range_ext = false;
 	monado_stick_on_ball_ext = false;
 	hand_tracking_supported = false;
+	running = false;
 	initialised = false;
 }
 
@@ -1547,11 +1625,23 @@ bool OpenXRApi::is_running() {
 	}
 }
 
+void OpenXRApi::on_resume() {
+}
+
+void OpenXRApi::on_pause() {
+	// On Android, process_openxr stops being called before the events queue is
+	// exhausted, so we invoke here one last time to empty it out.
+	// Doing so allows to end in the proper state, and thus successfully resume.
+	poll_events();
+}
+
 bool OpenXRApi::on_state_idle() {
+	Godot::print("On state idle");
 	return true;
 }
 
 bool OpenXRApi::on_state_ready() {
+	Godot::print("On state ready");
 	XrSessionBeginInfo sessionBeginInfo = {
 		.type = XR_TYPE_SESSION_BEGIN_INFO,
 		.next = NULL,
@@ -1577,20 +1667,25 @@ bool OpenXRApi::on_state_ready() {
 }
 
 bool OpenXRApi::on_state_synchronized() {
+	Godot::print("On state synchronized");
 	return true;
 }
 
 bool OpenXRApi::on_state_visible() {
+	Godot::print("On state visible");
 	return true;
 }
 
 bool OpenXRApi::on_state_focused() {
+	Godot::print("On state focused");
 	return true;
 }
 
 bool OpenXRApi::on_state_stopping() {
+	Godot::print("On state stopping");
 	if (running) {
-		xrEndSession(session);
+		XrResult result = xrEndSession(session);
+		xr_result(result, "Failed to end session!");
 		running = false;
 	}
 
@@ -1605,11 +1700,15 @@ bool OpenXRApi::on_state_stopping() {
 }
 
 bool OpenXRApi::on_state_loss_pending() {
+	Godot::print("On state loss pending");
+	uninitialize();
 	return true;
 }
 
-bool OpenXRApi::on_state_existing() {
+bool OpenXRApi::on_state_exiting() {
 	// we may want to trigger a signal back to the application to tell it, it should quit.
+	Godot::print("On state exiting");
+	uninitialize();
 	return true;
 }
 
@@ -1707,11 +1806,11 @@ Action *OpenXRApi::get_action(const char *p_name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
-	// we'll use Godots build in JSON parser, good enough for this :)
+	// we'll use Godot's built-in JSON parser, good enough for this :)
 
 	if (instance == XR_NULL_HANDLE) {
 		Godot::print("OpenXR can't parse the action sets before OpenXR is initialised.");
@@ -1902,10 +2001,10 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 #ifdef ANDROID
 	XrGraphicsRequirementsOpenGLESKHR opengl_reqs = {
 		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR,
-		.next = NULL
+		.next = nullptr
 	};
 
-	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = NULL;
+	PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = nullptr;
 	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLESGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLESGraphicsRequirementsKHR);
 
 	if (!xr_result(result, "Failed to get xrGetOpenGLESGraphicsRequirementsKHR fp!")) {
@@ -1948,7 +2047,7 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 XrResult OpenXRApi::acquire_image(int eye) {
 	XrResult result;
 	XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
-		.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = NULL
+		.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = nullptr
 	};
 	result = xrAcquireSwapchainImage(swapchains[eye], &swapchainImageAcquireInfo, &buffer_index[eye]);
 	if (!xr_result(result, "failed to acquire swapchain image!")) {
@@ -1957,8 +2056,8 @@ XrResult OpenXRApi::acquire_image(int eye) {
 
 	XrSwapchainImageWaitInfo swapchainImageWaitInfo = {
 		.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO,
-		.next = NULL,
-		.timeout = 0
+		.next = nullptr,
+		.timeout = 17000000, /* timeout in nanoseconds */
 	};
 	result = xrWaitSwapchainImage(swapchains[eye], &swapchainImageWaitInfo);
 	if (!xr_result(result, "failed to wait for swapchain image!")) {
@@ -1990,7 +2089,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		if (has_external_texture_support) {
 			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
 				.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-				.next = NULL
+				.next = nullptr
 			};
 			result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
 			if (!xr_result(result, "failed to release swapchain image!")) {
@@ -2003,11 +2102,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 			// submit 0 layers when we shouldn't render
 			XrFrameEndInfo frameEndInfo = {
 				.type = XR_TYPE_FRAME_END_INFO,
-				.next = NULL,
+				.next = nullptr,
 				.displayTime = frameState.predictedDisplayTime,
 				.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
 				.layerCount = 0,
-				.layers = NULL,
+				.layers = nullptr,
 			};
 			result = xrEndFrame(session, &frameEndInfo);
 			xr_result(result, "failed to end frame!");
@@ -2044,7 +2143,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 
 	XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
 		.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-		.next = NULL
+		.next = nullptr
 	};
 	result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
 	if (!xr_result(result, "failed to release swapchain image!")) {
@@ -2061,7 +2160,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 					projectionLayer };
 		XrFrameEndInfo frameEndInfo = {
 			.type = XR_TYPE_FRAME_END_INFO,
-			.next = NULL,
+			.next = nullptr,
 			.displayTime = frameState.predictedDisplayTime,
 			.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
 			.layerCount = 1,
@@ -2502,16 +2601,10 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 	return 0;
 }
 
-void OpenXRApi::process_openxr() {
-	if (!initialised) {
-		return;
-	}
-
-	XrResult result;
-
+bool OpenXRApi::poll_events() {
 	XrEventDataBuffer runtimeEvent = {
 		.type = XR_TYPE_EVENT_DATA_BUFFER,
-		.next = NULL
+		.next = nullptr
 	};
 
 	XrResult pollResult = xrPollEvent(instance, &runtimeEvent);
@@ -2531,26 +2624,13 @@ void OpenXRApi::process_openxr() {
 				XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtimeEvent;
 				Godot::print("OpenXR EVENT: instance loss pending at {0}!", event->lossTime);
 				// running = false;
-				return;
+				return false;
 			} break;
 			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
-				const char *session_states[] = {
-					"XR_SESSION_STATE_UNKNOWN",
-					"XR_SESSION_STATE_IDLE",
-					"XR_SESSION_STATE_READY",
-					"XR_SESSION_STATE_SYNCHRONIZED",
-					"XR_SESSION_STATE_VISIBLE",
-					"XR_SESSION_STATE_FOCUSED",
-					"XR_SESSION_STATE_STOPPING",
-					"XR_SESSION_STATE_LOSS_PENDING",
-					"XR_SESSION_STATE_EXITING",
-				};
-
 				XrEventDataSessionStateChanged *event = (XrEventDataSessionStateChanged *)&runtimeEvent;
-				// XrSessionState state = event->state;
 
 				state = event->state;
-				if (state > XR_SESSION_STATE_EXITING) {
+				if (state >= XR_SESSION_STATE_MAX_ENUM) {
 					Godot::print("OpenXR EVENT: session state changed to UNKNOWN - {0}", state);
 				} else {
 					Godot::print("OpenXR EVENT: session state changed to {0}", session_states[state]);
@@ -2578,7 +2658,7 @@ void OpenXRApi::process_openxr() {
 							on_state_loss_pending();
 							break;
 						case XR_SESSION_STATE_EXITING:
-							on_state_existing();
+							on_state_exiting();
 							break;
 						default:
 							break;
@@ -2595,9 +2675,9 @@ void OpenXRApi::process_openxr() {
 
 				XrEventDataInteractionProfileChanged *event = (XrEventDataInteractionProfileChanged *)&runtimeEvent;
 
-				XrInteractionProfileState state = {
+				XrInteractionProfileState profile_state = {
 					.type = XR_TYPE_INTERACTION_PROFILE_STATE,
-					.next = NULL
+					.next = nullptr
 				};
 
 				for (int i = 0; i < USER_INPUT_MAX; i++) {
@@ -2609,12 +2689,12 @@ void OpenXRApi::process_openxr() {
 
 					// Godot::print("Checking {0} ({1})", inputmaps[i].name, (uint64_t)input_path);
 
-					XrResult res = xrGetCurrentInteractionProfile(event->session, input_path, &state);
+					XrResult res = xrGetCurrentInteractionProfile(event->session, input_path, &profile_state);
 					if (!xr_result(res, "Failed to get interaction profile for {0}", inputmaps[i].name)) {
 						continue;
 					}
 
-					XrPath new_profile = state.interactionProfile;
+					XrPath new_profile = profile_state.interactionProfile;
 					if (inputmaps[i].active_profile != new_profile) {
 						inputmaps[i].active_profile = new_profile;
 						if (new_profile == XR_NULL_PATH) {
@@ -2636,7 +2716,7 @@ void OpenXRApi::process_openxr() {
 				// TODO: do something
 			} break;
 			default:
-				Godot::print_error(String("OpenXR Unhandled event type ") + String::num_int64(runtimeEvent.type), __FUNCTION__, __FILE__, __LINE__);
+				Godot::print_warning(String("OpenXR Unhandled event type ") + String::num_int64(runtimeEvent.type), __FUNCTION__, __FILE__, __LINE__);
 				break;
 		}
 
@@ -2645,10 +2725,23 @@ void OpenXRApi::process_openxr() {
 	}
 	if (pollResult == XR_EVENT_UNAVAILABLE) {
 		// processed all events in the queue
+		return true;
 	} else {
 		Godot::print_error("OpenXR Failed to poll events!", __FUNCTION__, __FILE__, __LINE__);
+		return false;
+	}
+}
+
+void OpenXRApi::process_openxr() {
+	if (!initialised) {
 		return;
 	}
+
+	if (!poll_events()) {
+		return;
+	}
+
+	XrResult result;
 
 	if (!running) {
 		return;
@@ -2656,7 +2749,7 @@ void OpenXRApi::process_openxr() {
 
 	XrFrameWaitInfo frameWaitInfo = {
 		.type = XR_TYPE_FRAME_WAIT_INFO,
-		.next = NULL
+		.next = nullptr
 	};
 	result = xrWaitFrame(session, &frameWaitInfo, &frameState);
 	if (!xr_result(result, "xrWaitFrame() was not successful, exiting...")) {
@@ -2671,14 +2764,14 @@ void OpenXRApi::process_openxr() {
 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
 		.displayTime = frameState.predictedDisplayTime,
 		.space = play_space
 	};
 	XrViewState viewState = {
 		.type = XR_TYPE_VIEW_STATE,
-		.next = NULL
+		.next = nullptr
 	};
 	uint32_t viewCountOutput;
 	result = xrLocateViews(session, &viewLocateInfo, &viewState, view_count, &viewCountOutput, views);
@@ -2707,7 +2800,7 @@ void OpenXRApi::process_openxr() {
 	// let's start our frame..
 	XrFrameBeginInfo frameBeginInfo = {
 		.type = XR_TYPE_FRAME_BEGIN_INFO,
-		.next = NULL
+		.next = nullptr
 	};
 
 	result = xrBeginFrame(session, &frameBeginInfo);

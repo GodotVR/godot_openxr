@@ -3,7 +3,7 @@
 
 #include <ARVRServer.hpp>
 
-#include "OpenXRHand.h"
+#include "gdclasses/OpenXRHand.h"
 
 using namespace godot;
 

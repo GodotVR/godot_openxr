@@ -4,7 +4,7 @@
 #ifndef OPENXR_POSE_H
 #define OPENXR_POSE_H
 
-#include "OpenXRApi.h"
+#include "openxr/OpenXRApi.h"
 #include <Spatial.hpp>
 
 namespace godot {

@@ -3,7 +3,7 @@
 
 #include <ARVRServer.hpp>
 
-#include "OpenXRPose.h"
+#include "gdclasses/OpenXRPose.h"
 
 using namespace godot;
 

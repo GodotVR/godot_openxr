@@ -4,7 +4,7 @@
 #ifndef OPENXR_CONFIG_H
 #define OPENXR_CONFIG_H
 
-#include "OpenXRApi.h"
+#include "openxr/OpenXRApi.h"
 #include <Node.hpp>
 
 namespace godot {

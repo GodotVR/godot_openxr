@@ -5,10 +5,10 @@
 // with loads of help from Thomas "Karroffel" Herzog
 
 #include "godot_openxr.h"
-#include "openxr/OpenXRConfig.h"
-#include "openxr/OpenXRHand.h"
-#include "openxr/OpenXRPose.h"
-#include "openxr/OpenXRSkeleton.h"
+#include "gdclasses/OpenXRConfig.h"
+#include "gdclasses/OpenXRHand.h"
+#include "gdclasses/OpenXRPose.h"
+#include "gdclasses/OpenXRSkeleton.h"
 
 void GDN_EXPORT godot_openxr_gdnative_init(godot_gdnative_init_options *o) {
 	godot::Godot::gdnative_init(o);

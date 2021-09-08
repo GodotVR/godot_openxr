@@ -4,7 +4,7 @@
 #ifndef OPENXR_HAND_H
 #define OPENXR_HAND_H
 
-#include "OpenXRApi.h"
+#include "openxr/OpenXRApi.h"
 #include <Ref.hpp>
 #include <Spatial.hpp>
 

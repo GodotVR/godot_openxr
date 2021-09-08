@@ -2,6 +2,7 @@
 // Our main ARVRInterface code for our OpenXR GDNative module
 
 #include "ARVRInterface.h"
+#include <ARVRInterface.hpp>
 #include <MainLoop.hpp>
 
 typedef struct arvr_data_struct {
@@ -22,7 +23,19 @@ godot_string godot_arvr_get_name(const void *p_data) {
 
 godot_int godot_arvr_get_capabilities(const void *p_data) {
 	godot_int ret;
-	ret = 2 + 8; // 2 = ARVR_STEREO, 8 = ARVR_EXTERNAL
+
+	// These are capabilities supported by our interface class, not necesarily by the device we're currently using.
+	// We'll need to figure out a way to query OpenXR about this.
+
+	ret = godot::ARVRInterface::ARVR_MONO; // We support mono devices (phones, etc.)
+	ret += godot::ARVRInterface::ARVR_STEREO; // We support stereo devices (HMDs)
+	// ret += godot::ARVRInterface::ARVR_QUAD; // Once we have the ability to do this, we can add it as a feature, Godot 4 most likely
+	ret += godot::ARVRInterface::ARVR_AR; // We support AR
+	// ret += godot::ARVRInterface::ARVR_VR; // We support VR, strangely missing as a flag, we'll add this in Godot 4
+#ifndef ANDROID
+	ret += godot::ARVRInterface::ARVR_EXTERNAL; // Rendering to an external device, Godot window is separate.
+#endif
+
 	return ret;
 }
 
@@ -39,11 +52,39 @@ void godot_arvr_set_anchor_detection_is_enabled(void *p_data, bool p_enable) {
 }
 
 godot_bool godot_arvr_is_stereo(const void *p_data) {
+	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 	godot_bool ret;
 
 	// TODO we should check our configuration and see if we are setup for stereo (hmd) or mono output (tablet)
-
-	ret = true;
+	if (arvr_data == nullptr || arvr_data->openxr_api == nullptr) {
+		ret = true;
+	} else {
+		XrViewConfigurationType config_type = arvr_data->openxr_api->get_view_configuration_type();
+		switch (config_type) {
+			case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_MONO: {
+				// In Godot 4 we'll return 1
+				ret = false;
+			}; break;
+			case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO: {
+				// In Godot 4 we'll return 2
+				ret = true;
+			}; break;
+			/* These are not (yet) supported, adding them in here for future reference
+			case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO: {
+				// In Godot 4 we'll return 4 once we add support for Quad rendering
+				return ???;
+			}; break;
+			case XR_VIEW_CONFIGURATION_TYPE_SECONDARY_MONO_FIRST_PERSON_OBSERVER_MSFT: {
+				// In Godot 4 we'll return 1, we'll need to support multiple viewports for this with alternative camera tracking.
+				return ???;
+			}; break;
+			*/
+			default: {
+				godot::Godot::print_error(godot::String("Unsupported view configuration type set: ") + godot::String::num_int64(config_type), __FUNCTION__, __FILE__, __LINE__);
+				ret = true; // we need to return something even though it really is undefined...
+			}; break;
+		}
+	}
 
 	return ret;
 }

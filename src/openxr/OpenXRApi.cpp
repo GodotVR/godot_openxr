@@ -2,13 +2,15 @@
 // Helper calls and singleton container for accessing openxr
 
 #include <ARVRServer.hpp>
-
-#include "OpenXRApi.h"
 #include <CameraMatrix.hpp>
 #include <JSON.hpp>
 #include <JSONParseResult.hpp>
 #include <ProjectSettings.hpp>
+
+#include "openxr/OpenXRApi.h"
+
 #include <cmath>
+#include <map>
 
 using namespace godot;
 
@@ -701,83 +703,55 @@ bool OpenXRApi::initialiseInstance() {
 		return false;
 	}
 
-#ifdef ANDROID
-	// Check that the extensions required are present.
-	// TODO: Replace with mechanism for collecting and validating required extensions, as well as a
-	// a similar one for optional extensions.
-	const char *const android_required_extension_names[] = {
-		XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME,
-		XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME,
-		XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME,
-		XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME,
-		XR_FB_COLOR_SPACE_EXTENSION_NAME,
-		XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME,
-		XR_FB_SWAPCHAIN_UPDATE_STATE_OPENGL_ES_EXTENSION_NAME,
-		XR_FB_FOVEATION_EXTENSION_NAME,
-		XR_FB_FOVEATION_CONFIGURATION_EXTENSION_NAME
-	};
-	const uint32_t numRequiredExtensions =
-			sizeof(android_required_extension_names) / sizeof(android_required_extension_names[0]);
+	// Map the extensions we need. Set bool pointer to nullptr for mandatory extensions
+	std::map<const char *, bool *> request_extensions;
 
-	for (auto required_extension_name : android_required_extension_names) {
-		bool found = false;
-		if (!isExtensionSupported(required_extension_name, extensionProperties, extensionCount)) {
-			Godot::print_error("OpenXR Runtime does not support extension " + String(required_extension_name), __FUNCTION__, __FILE__, __LINE__);
-			free(extensionProperties);
-			return false;
-		}
-	}
+#ifdef ANDROID
+	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
+	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
+	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_OPENGL_ES_EXTENSION_NAME] = &fb_swapchain_update_state_opengles_ext;
 #else
-	if (!isExtensionSupported(XR_KHR_OPENGL_ENABLE_EXTENSION_NAME, extensionProperties, extensionCount)) {
-		Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
-		free(extensionProperties);
-		return false;
-	}
+	request_extensions[XR_KHR_OPENGL_ENABLE_EXTENSION_NAME] = nullptr;
 #endif
 
-	if (isExtensionSupported(XR_EXT_HAND_TRACKING_EXTENSION_NAME, extensionProperties, extensionCount)) {
-		Godot::print("- Hand tracking extension found");
-		hand_tracking_ext = true;
+	// If we have these, we use them, if not we skip related logic..
+	request_extensions[XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME] = &performance_settings_ext;
+	request_extensions[XR_EXT_HAND_TRACKING_EXTENSION_NAME] = &hand_tracking_ext;
+	request_extensions[XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME] = &hand_motion_range_ext;
+	request_extensions[XR_MND_BALL_ON_STICK_EXTENSION_NAME] = &monado_stick_on_ball_ext;
 
-		if (isExtensionSupported(XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME, extensionProperties, extensionCount)) {
-			Godot::print("- Hand motion range extension found");
-			hand_motion_range_ext = true;
+	// These might be FB extensions but other vendors may implement them in due time as well.
+	request_extensions[XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME] = &fb_display_refresh_rate_ext;
+	request_extensions[XR_FB_COLOR_SPACE_EXTENSION_NAME] = &fb_color_space_ext;
+	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME] = &fb_swapchain_update_state_ext;
+	request_extensions[XR_FB_FOVEATION_EXTENSION_NAME] = &fb_foveation_ext;
+	request_extensions[XR_FB_FOVEATION_CONFIGURATION_EXTENSION_NAME] = &fb_foveation_configuration_ext;
+
+	for (auto &requested_extension : request_extensions) {
+		if (!isExtensionSupported(requested_extension.first, extensionProperties, extensionCount)) {
+			if (requested_extension.second == nullptr) {
+				Godot::print_error("OpenXR Runtime does not support OpenGL extension!", __FUNCTION__, __FILE__, __LINE__);
+				free(extensionProperties);
+				return false;
+			} else {
+				*requested_extension.second = false;
+			}
+		} else if (requested_extension.second != nullptr) {
+			*requested_extension.second = true;
 		}
-	}
-
-	if (isExtensionSupported(XR_MND_BALL_ON_STICK_EXTENSION_NAME, extensionProperties, extensionCount)) {
-		Godot::print("- Ball on stick extension found");
-		monado_stick_on_ball_ext = true;
 	}
 
 	free(extensionProperties);
 
-	// Damn you microsoft for not supporting this!!
-	// const char *enabledExtensions[extensionCount];
-	const char **enabledExtensions = (const char **)malloc(sizeof(const char *) * extensionCount);
-	if (enabledExtensions == nullptr) {
-		Godot::print_error("OpenXR Couldn't allocate memory to record enabled extensions", __FUNCTION__, __FILE__, __LINE__);
-		return false;
-	}
-
-	uint32_t enabledExtensionCount = 0;
-#ifdef ANDROID
-	for (auto extension_name : android_required_extension_names) {
-		enabledExtensions[enabledExtensionCount++] = extension_name;
-	}
-#else
-	enabledExtensions[enabledExtensionCount++] = XR_KHR_OPENGL_ENABLE_EXTENSION_NAME;
-#endif
-	if (hand_tracking_ext) {
-		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_TRACKING_EXTENSION_NAME;
-	}
-
-	if (hand_motion_range_ext) {
-		enabledExtensions[enabledExtensionCount++] = XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME;
-	}
-
-	if (monado_stick_on_ball_ext) {
-		enabledExtensions[enabledExtensionCount++] = XR_MND_BALL_ON_STICK_EXTENSION_NAME;
+	enabled_extensions.clear();
+	for (auto &requested_extension : request_extensions) {
+		if (requested_extension.second == nullptr) {
+			// required extension, if we got this far, include it
+			enabled_extensions.push_back(requested_extension.first);
+		} else if (*requested_extension.second) {
+			// supported optional extension, include it
+			enabled_extensions.push_back(requested_extension.first);
+		}
 	}
 
 // https://stackoverflow.com/a/55926503
@@ -807,8 +781,8 @@ bool OpenXRApi::initialiseInstance() {
 		},
 		.enabledApiLayerCount = 0,
 		.enabledApiLayerNames = nullptr,
-		.enabledExtensionCount = enabledExtensionCount,
-		.enabledExtensionNames = enabledExtensions,
+		.enabledExtensionCount = (uint32_t)enabled_extensions.size(),
+		.enabledExtensionNames = enabled_extensions.data(),
 	};
 
 	// Check if we can get a project name from our project...
@@ -826,10 +800,8 @@ bool OpenXRApi::initialiseInstance() {
 
 	result = xrCreateInstance(&instanceCreateInfo, &instance);
 	if (!xr_result(result, "Failed to create XR instance.")) {
-		free(enabledExtensions);
 		return false;
 	}
-	free(enabledExtensions);
 
 	XrInstanceProperties instanceProps = {
 		.type = XR_TYPE_INSTANCE_PROPERTIES,
@@ -910,32 +882,38 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
-#ifdef ANDROID
-	// TODO: Instead of switching on Android, use the new validation mechanism to determine when this should be configured.
+	// always define, we ignore this if it's not used.
 	XrSystemColorSpacePropertiesFB color_space_properties_fb = {
 		.type = XR_TYPE_SYSTEM_COLOR_SPACE_PROPERTIES_FB,
 	};
-#endif
 
 	XrSystemProperties systemProperties = {
 		.type = XR_TYPE_SYSTEM_PROPERTIES,
-#ifdef ANDROID
-		.next = &color_space_properties_fb,
-#else
 		.next = nullptr,
-#endif
 		.graphicsProperties = { 0 },
 		.trackingProperties = { 0 },
 	};
+
+	if (fb_color_space_ext) {
+		// if our color space extension is availale, read our color space.
+		systemProperties.next = &color_space_properties_fb;
+	}
+
 	result = xrGetSystemProperties(instance, systemId, &systemProperties);
 	if (!xr_result(result, "Failed to get System properties")) {
 		return false;
 	}
 
-	// TODO We should add a setting to our config whether we want stereo support and check that here.
+	if (fb_color_space_ext) {
+		// TODO color_space_properties_fb.colorSpace should now contain our current color space, store it somewhere...
+	}
 
 	if (!isViewConfigSupported(view_config_type, systemId)) {
-		Godot::print_error("OpenXR Stereo View Configuration not supported!", __FUNCTION__, __FILE__, __LINE__);
+		// TODO in stead of erroring out if the set configuration type is unsupported
+		// (it may simply be on its default setting)
+		// we should change this so it uses the first support type.
+		// That does mean checking if WE support it (i.e. we don't support Varjo yet for instance).
+		Godot::print_error("OpenXR View Configuration not supported!", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
@@ -1231,14 +1209,13 @@ bool OpenXRApi::initialiseSwapChains() {
 			.mipCount = 1,
 		};
 
-#ifdef ANDROID
 		// Enable foveation on this swapchain
-		// TODO: Instead of switching on Android, use the new validation mechanism to determine when this should be configured.
 		XrSwapchainCreateInfoFoveationFB swapchain_create_info_foveation_fb = {
 			.type = XR_TYPE_SWAPCHAIN_CREATE_INFO_FOVEATION_FB
 		};
-		swapchainCreateInfo.next = &swapchain_create_info_foveation_fb;
-#endif
+		if (fb_swapchain_update_state_ext) {
+			swapchainCreateInfo.next = &swapchain_create_info_foveation_fb;
+		}
 
 		result = xrCreateSwapchain(session, &swapchainCreateInfo, &swapchains[i]);
 		if (!xr_result(result, "Failed to create swapchain {0}!", i)) {
@@ -1604,6 +1581,7 @@ void OpenXRApi::uninitialize() {
 		xrDestroyInstance(instance);
 		instance = XR_NULL_HANDLE;
 	}
+	enabled_extensions.clear();
 
 	// reset a bunch of things
 	state = XR_SESSION_STATE_UNKNOWN;
@@ -1741,11 +1719,19 @@ void OpenXRApi::set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_m
 }
 
 // config
+XrViewConfigurationType OpenXRApi::get_view_configuration_type() const {
+	return view_config_type;
+}
+
+void OpenXRApi::set_view_configuration_type(const XrViewConfigurationType p_view_configuration_type) {
+	view_config_type = p_view_configuration_type;
+}
+
 XrFormFactor OpenXRApi::get_form_factor() const {
 	return form_factor;
 }
 
-void OpenXRApi::set_form_factor(XrFormFactor p_form_factor) {
+void OpenXRApi::set_form_factor(const XrFormFactor p_form_factor) {
 	if (is_initialised()) {
 		Godot::print("OpenXR can't change form factor once OpenXR is initialised.");
 		return;
@@ -1756,6 +1742,16 @@ void OpenXRApi::set_form_factor(XrFormFactor p_form_factor) {
 		Godot::print("OpenXR form factor out of bounds");
 		return;
 	}
+}
+
+godot::Array OpenXRApi::get_enabled_extensions() const {
+	godot::Array arr;
+
+	for (int i = 0; i < enabled_extensions.size(); i++) {
+		arr.push_back(String(enabled_extensions[i]));
+	}
+
+	return arr;
 }
 
 godot::String OpenXRApi::get_action_sets_json() const {
@@ -2440,7 +2436,7 @@ void OpenXRApi::update_handtracking() {
 				locateInfo.next = &motionRangeInfo;
 			}
 
-			Godot::print("Obtaining hand joint info for {0}", i);
+			// Godot::print("Obtaining hand joint info for {0}", i);
 
 			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
 			if (xr_result(result, "failed to get tracking for hand {0}!", i)) {
@@ -2453,7 +2449,7 @@ void OpenXRApi::update_handtracking() {
 				} else {
 					// we have our hand tracking info....
 
-					Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
+					// Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
 				}
 			}
 		}

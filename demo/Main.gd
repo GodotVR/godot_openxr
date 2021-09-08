@@ -4,6 +4,9 @@ func _ready():
 	# Start our OpenXR session
 	$FPSController.initialise()
 
+	# Just for testing, output the enabled extensions
+	print("Enabled extensions: " + str($FPSController/Configuration.get_enabled_extensions()))
+
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame
 	if (Input.is_key_pressed(KEY_ESCAPE)):

@@ -167,9 +167,22 @@ private:
 	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
 
 	// extensions
+	// TODO consider basing this on an enumeration.
+	bool performance_settings_ext = false;
 	bool hand_tracking_ext = false;
 	bool hand_motion_range_ext = false;
 	bool monado_stick_on_ball_ext = false;
+
+	bool fb_display_refresh_rate_ext = false;
+	bool fb_color_space_ext = false;
+	bool fb_swapchain_update_state_ext = false;
+	bool fb_swapchain_update_state_opengles_ext = false;
+	bool fb_foveation_ext = false;
+	bool fb_foveation_configuration_ext = false;
+
+	std::vector<const char *> enabled_extensions;
+
+	// feature flags
 	bool hand_tracking_supported = false;
 
 	XrViewConfigurationType view_config_type = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -310,8 +323,13 @@ public:
 	void set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_motion_range);
 
 	// config
+	XrViewConfigurationType get_view_configuration_type() const;
+	void set_view_configuration_type(const XrViewConfigurationType p_view_configuration_type);
+
 	XrFormFactor get_form_factor() const;
-	void set_form_factor(XrFormFactor p_form_factor);
+	void set_form_factor(const XrFormFactor p_form_factor);
+
+	godot::Array get_enabled_extensions() const;
 
 	static const char *default_action_sets_json;
 	godot::String get_action_sets_json() const;

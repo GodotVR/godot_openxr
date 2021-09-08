@@ -3,7 +3,7 @@
 
 #include <ARVRServer.hpp>
 
-#include "OpenXRSkeleton.h"
+#include "gdclasses/OpenXRSkeleton.h"
 
 using namespace godot;
 

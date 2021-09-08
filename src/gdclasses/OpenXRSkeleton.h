@@ -4,7 +4,7 @@
 #ifndef OPENXR_SKELETON_H
 #define OPENXR_SKELETON_H
 
-#include "OpenXRApi.h"
+#include "openxr/OpenXRApi.h"
 #include <Ref.hpp>
 #include <Skeleton.hpp>
 

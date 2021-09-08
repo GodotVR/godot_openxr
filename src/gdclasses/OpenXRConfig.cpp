@@ -1,7 +1,7 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Our OpenXR config GDNative object
 
-#include "OpenXRConfig.h"
+#include "gdclasses/OpenXRConfig.h"
 #include <Dictionary.hpp>
 #include <GlobalConstants.hpp>
 

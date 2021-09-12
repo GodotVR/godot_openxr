@@ -30,6 +30,10 @@ public:
 	int get_form_factor() const;
 	void set_form_factor(const int p_form_factor);
 
+	double get_refresh_rate() const;
+	void set_refresh_rate(const double p_refresh_rate);
+	godot::Array get_available_refresh_rates() const;
+
 	godot::Array get_enabled_extensions() const;
 
 	String get_action_sets() const;

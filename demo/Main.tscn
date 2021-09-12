@@ -43,6 +43,9 @@ directional_shadow_max_distance = 20.0
 
 [node name="FPSController" parent="." instance=ExtResource( 4 )]
 
+[node name="Configuration" parent="FPSController" index="0"]
+refresh_rate = 0.0
+
 [node name="ShadowHead" type="MeshInstance" parent="FPSController/ARVRCamera" index="0"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, -0.0187781, 0.103895 )
 layers = 524288

@@ -5,6 +5,7 @@
 #define OPENXR_POSE_H
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
 #include <Spatial.hpp>
 
 namespace godot {
@@ -13,6 +14,7 @@ class OpenXRPose : public Spatial {
 
 private:
 	OpenXRApi *openxr_api;
+	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 	bool invisible_if_inactive = true;
 	String action;
 	String path;

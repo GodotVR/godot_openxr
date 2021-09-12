@@ -5,6 +5,7 @@
 #define OPENXR_CONFIG_H
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include <Node.hpp>
 
 namespace godot {
@@ -13,6 +14,7 @@ class OpenXRConfig : public Node {
 
 private:
 	OpenXRApi *openxr_api;
+	XRFbDisplayRefreshRateExtensionWrapper *display_refresh_rate_wrapper = nullptr;
 
 public:
 	static void _register_methods();

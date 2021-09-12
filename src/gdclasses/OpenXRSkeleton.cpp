@@ -24,6 +24,7 @@ OpenXRSkeleton::OpenXRSkeleton() {
 	hand = 0;
 	motion_range = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
+	hand_tracking_wrapper = XRExtHandTrackingExtensionWrapper::get_singleton();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
 		bones[i] = -1;
@@ -34,6 +35,8 @@ OpenXRSkeleton::~OpenXRSkeleton() {
 	if (openxr_api != NULL) {
 		OpenXRApi::openxr_release_api();
 	}
+
+	hand_tracking_wrapper = nullptr;
 }
 
 void OpenXRSkeleton::_init() {
@@ -89,7 +92,7 @@ void OpenXRSkeleton::_ready() {
 }
 
 void OpenXRSkeleton::_physics_process(float delta) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return;
 	} else if (!openxr_api->is_initialised()) {
 		return;
@@ -99,7 +102,7 @@ void OpenXRSkeleton::_physics_process(float delta) {
 	Transform transforms[XR_HAND_JOINT_COUNT_EXT];
 	Transform inv_transforms[XR_HAND_JOINT_COUNT_EXT];
 
-	const HandTracker *hand_tracker = openxr_api->get_hand_tracker(hand);
+	const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(hand);
 	const float ws = ARVRServer::get_singleton()->get_world_scale();
 
 	if (hand_tracker->is_initialised && hand_tracker->locations.isActive) {
@@ -166,7 +169,7 @@ void OpenXRSkeleton::set_motion_range(int p_motion_range) {
 }
 
 void OpenXRSkeleton::_set_motion_range() {
-	if (openxr_api == NULL) {
+	if (hand_tracking_wrapper == nullptr) {
 		return;
 	}
 
@@ -183,5 +186,5 @@ void OpenXRSkeleton::_set_motion_range() {
 			break;
 	}
 
-	openxr_api->set_motion_range(hand, xr_motion_range);
+	hand_tracking_wrapper->set_motion_range(hand, xr_motion_range);
 }

@@ -38,12 +38,14 @@ void OpenXRConfig::_register_methods() {
 
 OpenXRConfig::OpenXRConfig() {
 	openxr_api = OpenXRApi::openxr_get_api();
+	display_refresh_rate_wrapper = XRFbDisplayRefreshRateExtensionWrapper::get_singleton();
 }
 
 OpenXRConfig::~OpenXRConfig() {
 	if (openxr_api != NULL) {
 		OpenXRApi::openxr_release_api();
 	}
+	display_refresh_rate_wrapper = nullptr;
 }
 
 void OpenXRConfig::_init() {
@@ -124,25 +126,25 @@ void OpenXRConfig::set_form_factor(const int p_form_factor) {
 }
 
 double OpenXRConfig::get_refresh_rate() const {
-	if (openxr_api == NULL) {
+	if (display_refresh_rate_wrapper == nullptr) {
 		return 0;
 	} else {
-		return (int)openxr_api->get_refresh_rate();
+		return (int)display_refresh_rate_wrapper->get_refresh_rate();
 	}
 }
 
 void OpenXRConfig::set_refresh_rate(const double p_refresh_rate) {
-	if (openxr_api != NULL) {
-		openxr_api->set_refresh_rate(p_refresh_rate);
+	if (display_refresh_rate_wrapper != nullptr) {
+		display_refresh_rate_wrapper->set_refresh_rate(p_refresh_rate);
 	}
 }
 
 godot::Array OpenXRConfig::get_available_refresh_rates() const {
-	if (openxr_api == NULL) {
+	if (display_refresh_rate_wrapper == nullptr) {
 		godot::Array arr;
 		return arr;
 	} else {
-		return openxr_api->get_available_refresh_rates();
+		return display_refresh_rate_wrapper->get_available_refresh_rates();
 	}
 }
 

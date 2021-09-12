@@ -21,6 +21,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <set>
 #include <vector>
 
 #include "xrmath.h"
@@ -43,9 +44,8 @@
 #include <X11/Xlib.h>
 #endif
 
-#include "openxr/extensions/xr_ext_hand_tracking_extension.h"
-#include "openxr/extensions/xr_fb_display_refresh_rate_extension.h"
-#include "openxr/openxr_inc.h"
+#include "openxr/extensions/xr_extension_wrapper.h"
+#include "openxr/include/openxr_inc.h"
 #include <openxr/openxr_platform.h>
 
 // forward declare this
@@ -54,23 +54,9 @@ class OpenXRApi;
 #include "openxr/actions/action.h"
 #include "openxr/actions/actionset.h"
 
-// TODO move hand tracker logic into it's own source files, I'll do a separate PR for that in due time.
-#define MAX_TRACKED_HANDS 2
-
-class HandTracker {
-public:
-	bool is_initialised = false;
-	XrHandJointsMotionRangeEXT motion_range = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
-
-	XrHandTrackerEXT hand_tracker;
-	XrHandJointLocationEXT joint_locations[XR_HAND_JOINT_COUNT_EXT];
-	XrHandJointVelocityEXT joint_velocities[XR_HAND_JOINT_COUNT_EXT];
-
-	XrHandJointVelocitiesEXT velocities;
-	XrHandJointLocationsEXT locations;
-};
-
 #define USER_INPUT_MAX 2
+
+using namespace godot;
 
 class OpenXRApi {
 	friend class Action;
@@ -156,11 +142,8 @@ private:
 	// extensions
 	// TODO consider basing this on an enumeration.
 	bool performance_settings_ext = false;
-	bool hand_tracking_ext = false;
-	bool hand_motion_range_ext = false;
 	bool monado_stick_on_ball_ext = false;
 
-	bool fb_display_refresh_rate_ext = false;
 	bool fb_color_space_ext = false;
 	bool fb_swapchain_update_state_ext = false;
 	bool fb_swapchain_update_state_opengles_ext = false;
@@ -168,10 +151,9 @@ private:
 	bool fb_foveation_configuration_ext = false;
 
 	std::vector<const char *> enabled_extensions;
+	std::set<XRExtensionWrapper *> registered_extension_wrappers;
 
 	// feature flags
-	bool hand_tracking_supported = false;
-
 	XrViewConfigurationType view_config_type = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
 	XrInstance instance = XR_NULL_HANDLE;
 	XrSystemId systemId;
@@ -207,8 +189,6 @@ private:
 	bool view_pose_valid = false;
 	bool head_pose_valid = false;
 
-	HandTracker hand_trackers[MAX_TRACKED_HANDS]; // Fixed for left and right hand
-
 	// config
 	/*
 	 * XR_REFERENCE_SPACE_TYPE_LOCAL: head pose on startup/recenter is coordinate system origin.
@@ -234,15 +214,11 @@ private:
 	bool isReferenceSpaceSupported(XrReferenceSpaceType type);
 
 	bool initialiseInstance();
-	bool initialise_extensions();
 	bool initialiseSession();
 	bool initialiseSpaces();
 	void cleanupSpaces();
 	bool initialiseSwapChains();
 	void cleanupSwapChains();
-
-	bool initialise_hand_tracking();
-	void cleanup_hand_tracking();
 
 	bool loadActionSets();
 	bool bindActionSets();
@@ -262,7 +238,6 @@ private:
 	bool check_graphics_requirements_gl(XrSystemId system_id);
 	XrResult acquire_image(int eye);
 	void update_actions();
-	void update_handtracking();
 	void transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *matrix, float p_world_scale);
 
 	bool parse_action_sets(const godot::String &p_json);
@@ -275,6 +250,15 @@ public:
 	OpenXRApi();
 	~OpenXRApi();
 
+	template <class T>
+	void register_extension_wrapper() {
+		if (initialised) {
+			Godot::print_error("Extension wrappers must be registered prior to initialization.", __FUNCTION__, __FILE__, __LINE__);
+			return;
+		}
+		registered_extension_wrappers.insert(T::get_singleton());
+	}
+
 	bool is_initialised();
 	bool initialize();
 	void uninitialize();
@@ -285,6 +269,10 @@ public:
 
 	XrInstance get_instance() { return instance; };
 	XrSession get_session() { return session; };
+	XrSystemId get_system_id() { return systemId; }
+	XrSpace get_play_space() { return play_space; }
+	XrFrameState get_frame_state() { return frameState; }
+
 	bool get_keep_3d_linear() { return keep_3d_linear; };
 
 	template <class... Args>
@@ -304,21 +292,12 @@ public:
 		return false;
 	};
 
-	// hand tracking
-	const HandTracker *get_hand_tracker(uint32_t p_hand) const;
-	XrHandJointsMotionRangeEXT get_motion_range(uint32_t p_hand) const;
-	void set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_motion_range);
-
 	// config
 	XrViewConfigurationType get_view_configuration_type() const;
 	void set_view_configuration_type(const XrViewConfigurationType p_view_configuration_type);
 
 	XrFormFactor get_form_factor() const;
 	void set_form_factor(const XrFormFactor p_form_factor);
-
-	double get_refresh_rate() const;
-	void set_refresh_rate(const double p_refresh_rate);
-	godot::Array get_available_refresh_rates() const;
 
 	godot::Array get_enabled_extensions() const;
 

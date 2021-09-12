@@ -12,8 +12,6 @@
 #include <cmath>
 #include <map>
 
-using namespace godot;
-
 ////////////////////////////////////////////////////////////////////////////////
 // Default action set configuration
 
@@ -666,6 +664,12 @@ bool OpenXRApi::initialiseInstance() {
 	// Map the extensions we need. Set bool pointer to nullptr for mandatory extensions
 	std::map<const char *, bool *> request_extensions;
 
+	// Append the extensions requested by the registered extension wrappers.
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		std::map<const char *, bool *> wrapper_request_extensions = wrapper->get_request_extensions();
+		request_extensions.insert(wrapper_request_extensions.begin(), wrapper_request_extensions.end());
+	}
+
 #ifdef ANDROID
 	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
 	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
@@ -676,12 +680,9 @@ bool OpenXRApi::initialiseInstance() {
 
 	// If we have these, we use them, if not we skip related logic..
 	request_extensions[XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME] = &performance_settings_ext;
-	request_extensions[XR_EXT_HAND_TRACKING_EXTENSION_NAME] = &hand_tracking_ext;
-	request_extensions[XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME] = &hand_motion_range_ext;
 	request_extensions[XR_MND_BALL_ON_STICK_EXTENSION_NAME] = &monado_stick_on_ball_ext;
 
 	// These might be FB extensions but other vendors may implement them in due time as well.
-	request_extensions[XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_NAME] = &fb_display_refresh_rate_ext;
 	request_extensions[XR_FB_COLOR_SPACE_EXTENSION_NAME] = &fb_color_space_ext;
 	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME] = &fb_swapchain_update_state_ext;
 	request_extensions[XR_FB_FOVEATION_EXTENSION_NAME] = &fb_foveation_ext;
@@ -793,34 +794,6 @@ bool OpenXRApi::initialiseInstance() {
 	return true;
 }
 
-bool OpenXRApi::initialise_extensions() {
-	XrResult result;
-
-	// Maybe we should remove the error checking here, if the extension is not supported, we won't be doing anything with this.
-
-#ifdef DEBUG
-	Godot::print("OpenXR initialise extensions");
-#endif
-
-	if (hand_tracking_ext) {
-		result = initialise_ext_hand_tracking_extension(instance);
-		if (!xr_result(result, "Failed to initialise hand tracking extension")) {
-			hand_tracking_ext = false; // I guess we don't support it...
-			return false;
-		}
-	}
-
-	if (fb_display_refresh_rate_ext) {
-		result = initialise_fb_display_refresh_rate_extension(instance);
-		if (!xr_result(result, "Failed to initialise display refresh rate extension")) {
-			fb_display_refresh_rate_ext = false; // I guess we don't support it...
-			return false;
-		}
-	}
-
-	return true;
-}
-
 bool OpenXRApi::initialiseSession() {
 	XrResult result;
 
@@ -851,6 +824,18 @@ bool OpenXRApi::initialiseSession() {
 		.graphicsProperties = { 0 },
 		.trackingProperties = { 0 },
 	};
+
+	void **current_next_pointer = &systemProperties.next;
+	void **next_pointer = nullptr;
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		// TODO: Validate this is done properly.
+		void *properties = wrapper->get_system_properties(next_pointer);
+		if (properties && next_pointer && !*next_pointer) {
+			*current_next_pointer = properties;
+			current_next_pointer = next_pointer;
+			next_pointer = nullptr;
+		}
+	}
 
 	if (fb_color_space_ext) {
 		// if our color space extension is availale, read our color space.
@@ -1309,60 +1294,6 @@ void OpenXRApi::cleanupSwapChains() {
 	}
 }
 
-bool OpenXRApi::initialise_hand_tracking() {
-	XrResult result;
-
-	if (!hand_tracking_ext) {
-		return false;
-	}
-
-#ifdef DEBUG
-	Godot::print("OpenXR initialise hand tracking");
-#endif
-
-	XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {
-		.type = XR_TYPE_SYSTEM_HAND_TRACKING_PROPERTIES_EXT,
-	};
-
-	XrSystemProperties systemProperties = {
-		.type = XR_TYPE_SYSTEM_PROPERTIES,
-		.next = &handTrackingSystemProperties,
-	};
-
-	result = xrGetSystemProperties(instance, systemId, &systemProperties);
-	if (!xr_result(result, "Failed to obtain hand tracking information")) {
-		return false;
-	}
-
-	if (!handTrackingSystemProperties.supportsHandTracking) {
-		// The system does not support hand tracking
-		printf("Hand tracking is not supported\n");
-		return false;
-	}
-
-	for (int i = 0; i < 2; i++) {
-		// we'll do this later
-		hand_trackers[i].is_initialised = false;
-		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
-	}
-
-	printf("Hand tracking is supported\n");
-
-	hand_tracking_supported = true;
-	return true;
-}
-
-void OpenXRApi::cleanup_hand_tracking() {
-	for (int i = 0; i < 2; i++) {
-		if (hand_trackers[i].hand_tracker != XR_NULL_HANDLE) {
-			xrDestroyHandTrackerEXT(hand_trackers[i].hand_tracker);
-
-			hand_trackers[i].is_initialised = false;
-			hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
-		}
-	}
-}
-
 bool OpenXRApi::loadActionSets() {
 #ifdef DEBUG
 	Godot::print("OpenXR loadActionSets");
@@ -1484,16 +1415,20 @@ bool OpenXRApi::initialize() {
 		return false;
 	}
 
-	if (!initialise_extensions()) {
-		// cleanup and exit
-		uninitialize();
-		return false;
+	// Propagate the callback to the registered extension wrappers.
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_instance_initialized(instance);
 	}
 
 	if (!initialiseSession()) {
 		// cleanup and exit
 		uninitialize();
 		return false;
+	}
+
+	// Propagate the callback to the registered extension wrappers.
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_session_initialized(session);
 	}
 
 	if (!loadActionSets()) {
@@ -1518,7 +1453,6 @@ void OpenXRApi::uninitialize() {
 	}
 
 	cleanupActionSets();
-	cleanup_hand_tracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1532,10 +1466,18 @@ void OpenXRApi::uninitialize() {
 		buffer_index = NULL;
 	}
 	if (session != XR_NULL_HANDLE) {
+		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+			wrapper->on_session_destroyed();
+		}
+
 		xrDestroySession(session);
 		session = XR_NULL_HANDLE;
 	}
 	if (instance != XR_NULL_HANDLE) {
+		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+			wrapper->on_instance_destroyed();
+		}
+
 		xrDestroyInstance(instance);
 		instance = XR_NULL_HANDLE;
 	}
@@ -1545,10 +1487,7 @@ void OpenXRApi::uninitialize() {
 	state = XR_SESSION_STATE_UNKNOWN;
 	view_pose_valid = false;
 	head_pose_valid = false;
-	hand_tracking_ext = false;
-	hand_motion_range_ext = false;
 	monado_stick_on_ball_ext = false;
-	hand_tracking_supported = false;
 	running = false;
 	initialised = false;
 }
@@ -1573,6 +1512,9 @@ void OpenXRApi::on_pause() {
 
 bool OpenXRApi::on_state_idle() {
 	Godot::print("On state idle");
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_idle();
+	}
 	return true;
 }
 
@@ -1593,32 +1535,49 @@ bool OpenXRApi::on_state_ready() {
 	// also need to find out if some of these should be moved further on..
 	initialiseSpaces();
 	initialiseSwapChains();
-	initialise_hand_tracking();
 
 	bindActionSets();
 
 	running = true;
+
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_ready();
+	}
 
 	return true;
 }
 
 bool OpenXRApi::on_state_synchronized() {
 	Godot::print("On state synchronized");
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_synchronized();
+	}
 	return true;
 }
 
 bool OpenXRApi::on_state_visible() {
 	Godot::print("On state visible");
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_visible();
+	}
 	return true;
 }
 
 bool OpenXRApi::on_state_focused() {
 	Godot::print("On state focused");
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_focused();
+	}
 	return true;
 }
 
 bool OpenXRApi::on_state_stopping() {
 	Godot::print("On state stopping");
+
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_stopping();
+	}
+
 	if (running) {
 		XrResult result = xrEndSession(session);
 		xr_result(result, "Failed to end session!");
@@ -1628,7 +1587,6 @@ bool OpenXRApi::on_state_stopping() {
 	// need to cleanup various things which would otherwise be re-allocated if we have a state change back to ready
 	// note that cleaning up our action sets will invalidate many of the OpenXR nodes so we need to improve that as well.
 	unbindActionSets();
-	cleanup_hand_tracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1637,6 +1595,9 @@ bool OpenXRApi::on_state_stopping() {
 
 bool OpenXRApi::on_state_loss_pending() {
 	Godot::print("On state loss pending");
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_loss_pending();
+	}
 	uninitialize();
 	return true;
 }
@@ -1644,36 +1605,15 @@ bool OpenXRApi::on_state_loss_pending() {
 bool OpenXRApi::on_state_exiting() {
 	// we may want to trigger a signal back to the application to tell it, it should quit.
 	Godot::print("On state exiting");
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_state_exiting();
+	}
 	uninitialize();
 	return true;
 }
 
 bool OpenXRApi::is_initialised() {
 	return initialised;
-}
-
-// hand tracking
-const HandTracker *OpenXRApi::get_hand_tracker(uint32_t p_hand) const {
-	if (p_hand < MAX_TRACKED_HANDS) {
-		return &hand_trackers[p_hand];
-	} else {
-		return nullptr;
-	}
-}
-
-XrHandJointsMotionRangeEXT OpenXRApi::get_motion_range(uint32_t p_hand) const {
-	if (p_hand < MAX_TRACKED_HANDS) {
-		return hand_trackers[p_hand].motion_range;
-	} else {
-		// just return this as the default
-		return XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
-	}
-}
-
-void OpenXRApi::set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_motion_range) {
-	if (p_hand < MAX_TRACKED_HANDS) {
-		hand_trackers[p_hand].motion_range = p_motion_range;
-	}
 }
 
 // config
@@ -1700,69 +1640,6 @@ void OpenXRApi::set_form_factor(const XrFormFactor p_form_factor) {
 		Godot::print("OpenXR form factor out of bounds");
 		return;
 	}
-}
-
-double OpenXRApi::get_refresh_rate() const {
-	double refresh_rate = 0.0;
-
-	// Currently only supported through FB's display refresh rate extension
-	if (fb_display_refresh_rate_ext) {
-		float rate;
-		XrResult result = xrGetDisplayRefreshRateFB(session, &rate);
-		if (!xr_result(result, "Failed to obtain refresh rate")) {
-			return 0.0;
-		}
-		refresh_rate = rate;
-	}
-	return refresh_rate;
-}
-
-void OpenXRApi::set_refresh_rate(const double p_refresh_rate) {
-	// Currently only supported through FB's display refresh rate extension
-	if (fb_display_refresh_rate_ext) {
-		XrResult result = xrRequestDisplayRefreshRateFB(session, p_refresh_rate);
-		if (!xr_result(result, "Failed to set refresh rate")) {
-			return;
-		}
-	}
-}
-
-godot::Array OpenXRApi::get_available_refresh_rates() const {
-	godot::Array arr;
-	XrResult result;
-
-	// Currently only supported through FB's display refresh rate extension
-	if (fb_display_refresh_rate_ext) {
-		uint32_t display_refresh_rate_count;
-
-		// figure out how many entries we have...
-		result = xrEnumerateDisplayRefreshRatesFB(session, 0, &display_refresh_rate_count, nullptr);
-		if (!xr_result(result, "Failed to obtain refresh rate count")) {
-			return arr;
-		}
-
-		if (display_refresh_rate_count > 0) {
-			float *display_refresh_rates = (float *)malloc(sizeof(float) * display_refresh_rate_count);
-			if (display_refresh_rates == nullptr) {
-				return arr;
-			}
-
-			result = xrEnumerateDisplayRefreshRatesFB(session, display_refresh_rate_count, &display_refresh_rate_count, display_refresh_rates);
-			if (!xr_result(result, "Failed to obtain refresh rate count")) {
-				free(display_refresh_rates);
-				return arr;
-			}
-			for (int i = 0; i < display_refresh_rate_count; i++) {
-				// and add to our rate array as a double
-				double refresh_rate = display_refresh_rates[i];
-				arr.push_back(Variant(refresh_rate));
-			}
-
-			free(display_refresh_rates);
-		}
-	}
-
-	return arr;
 }
 
 godot::Array OpenXRApi::get_enabled_extensions() const {
@@ -2400,83 +2277,6 @@ void OpenXRApi::update_actions() {
 	}
 }
 
-void OpenXRApi::update_handtracking() {
-	if (!initialised || !running) {
-		return;
-	}
-
-	if (!hand_tracking_supported) {
-		return;
-	}
-
-	const XrTime time = frameState.predictedDisplayTime;
-	XrResult result;
-
-	for (int i = 0; i < 2; i++) {
-		if (hand_trackers[i].hand_tracker == XR_NULL_HANDLE) {
-			XrHandTrackerCreateInfoEXT createInfo = {
-				.type = XR_TYPE_HAND_TRACKER_CREATE_INFO_EXT,
-				.next = nullptr,
-				.hand = i == 0 ? XR_HAND_LEFT_EXT : XR_HAND_RIGHT_EXT,
-				.handJointSet = XR_HAND_JOINT_SET_DEFAULT_EXT,
-			};
-
-			result = xrCreateHandTrackerEXT(session, &createInfo, &hand_trackers[i].hand_tracker);
-			if (!xr_result(result, "Failed to obtain hand tracking information")) {
-				// not successful? then we do nothing.
-				hand_trackers[i].is_initialised = false;
-			} else {
-				hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
-				hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
-				hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
-
-				hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
-				hand_trackers[i].locations.next = &hand_trackers[i].velocities;
-				hand_trackers[i].locations.isActive = false;
-				hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
-				hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
-
-				hand_trackers[i].is_initialised = true;
-			}
-		}
-
-		if (hand_trackers[i].is_initialised) {
-			XrHandJointsLocateInfoEXT locateInfo = {
-				.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
-				.next = nullptr,
-				.baseSpace = play_space,
-				.time = time,
-			};
-			XrHandJointsMotionRangeInfoEXT motionRangeInfo;
-
-			if (hand_motion_range_ext) {
-				motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
-				motionRangeInfo.next = nullptr;
-				motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
-
-				locateInfo.next = &motionRangeInfo;
-			}
-
-			// Godot::print("Obtaining hand joint info for {0}", i);
-
-			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
-			if (xr_result(result, "failed to get tracking for hand {0}!", i)) {
-				// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
-				const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
-				if (
-						!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
-					hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
-					// printf("Hand %i inactive\n", i);
-				} else {
-					// we have our hand tracking info....
-
-					// Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
-				}
-			}
-		}
-	}
-}
-
 void OpenXRApi::recommended_rendertarget_size(uint32_t *width, uint32_t *height) {
 	if (!initialised) {
 		*width = 0;
@@ -2774,10 +2574,9 @@ void OpenXRApi::process_openxr() {
 	}
 
 	update_actions();
-	// TODO: Tends to crash randomly on Quest, needs to investigate.
-#ifndef ANDROID
-	update_handtracking();
-#endif
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->on_process_openxr();
+	}
 
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,

@@ -57,12 +57,15 @@ OpenXRPose::OpenXRPose() {
 	path = String("/user/hand/left");
 	_path = XR_NULL_PATH;
 	openxr_api = OpenXRApi::openxr_get_api();
+	hand_tracking_wrapper = XRExtHandTrackingExtensionWrapper::get_singleton();
 }
 
 OpenXRPose::~OpenXRPose() {
 	if (openxr_api != NULL) {
 		OpenXRApi::openxr_release_api();
 	}
+
+	hand_tracking_wrapper = nullptr;
 }
 
 void OpenXRPose::_init() {
@@ -115,7 +118,7 @@ bool OpenXRPose::check_action_and_path() {
 }
 
 void OpenXRPose::_physics_process(float delta) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return;
 	} else if (!openxr_api->is_initialised()) {
 		return;
@@ -131,10 +134,10 @@ void OpenXRPose::_physics_process(float delta) {
 
 	if (action == "SkeletonBase") {
 		if (path == "/user/hand/left") {
-			const HandTracker *hand_tracker = openxr_api->get_hand_tracker(0);
+			const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(0);
 			set_transform(reference_frame * openxr_api->transform_from_space_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws));
 		} else if (path == "/user/hand/right") {
-			const HandTracker *hand_tracker = openxr_api->get_hand_tracker(1);
+			const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(1);
 			set_transform(reference_frame * openxr_api->transform_from_space_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws));
 		}
 	} else if (check_action_and_path()) {
@@ -143,7 +146,7 @@ void OpenXRPose::_physics_process(float delta) {
 }
 
 bool OpenXRPose::is_active() {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return false;
 	} else if (!openxr_api->is_initialised()) {
 		return false;
@@ -151,11 +154,11 @@ bool OpenXRPose::is_active() {
 
 	if (action == "SkeletonBase") {
 		if (path == "/user/hand/left") {
-			const HandTracker *hand_tracker = openxr_api->get_hand_tracker(0);
+			const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(0);
 
 			return (hand_tracker->is_initialised && hand_tracker->locations.isActive);
 		} else if (path == "/user/hand/right") {
-			const HandTracker *hand_tracker = openxr_api->get_hand_tracker(1);
+			const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(1);
 
 			return (hand_tracker->is_initialised && hand_tracker->locations.isActive);
 		}

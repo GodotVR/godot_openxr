@@ -26,6 +26,7 @@ OpenXRHand::OpenXRHand() {
 	hand = 0;
 	motion_range = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
+	hand_tracking_wrapper = XRExtHandTrackingExtensionWrapper::get_singleton();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
 		joints[i] = NULL;
@@ -36,6 +37,8 @@ OpenXRHand::~OpenXRHand() {
 	if (openxr_api != NULL) {
 		OpenXRApi::openxr_release_api();
 	}
+
+	hand_tracking_wrapper = nullptr;
 }
 
 void OpenXRHand::_init() {
@@ -84,7 +87,7 @@ void OpenXRHand::_ready() {
 }
 
 void OpenXRHand::_physics_process(float delta) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return;
 	} else if (!openxr_api->is_initialised()) {
 		return;
@@ -122,7 +125,7 @@ void OpenXRHand::_physics_process(float delta) {
 	// we cache the inverse of our transforms so we can quickly calculate local transforms
 	Transform inv_transforms[XR_HAND_JOINT_COUNT_EXT];
 
-	const HandTracker *hand_tracker = openxr_api->get_hand_tracker(hand);
+	const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(hand);
 	ARVRServer *server = ARVRServer::get_singleton();
 	const float ws = server->get_world_scale();
 	Transform reference_frame = server->get_reference_frame();
@@ -157,13 +160,13 @@ void OpenXRHand::_physics_process(float delta) {
 }
 
 bool OpenXRHand::is_active() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return false;
 	} else if (!openxr_api->is_initialised()) {
 		return false;
 	}
 
-	const HandTracker *hand_tracker = openxr_api->get_hand_tracker(hand);
+	const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(hand);
 
 	return (hand_tracker->is_initialised && hand_tracker->locations.isActive);
 }
@@ -186,7 +189,7 @@ void OpenXRHand::set_motion_range(int p_motion_range) {
 }
 
 void OpenXRHand::_set_motion_range() {
-	if (openxr_api == NULL) {
+	if (hand_tracking_wrapper == nullptr) {
 		return;
 	}
 
@@ -203,5 +206,5 @@ void OpenXRHand::_set_motion_range() {
 			break;
 	}
 
-	openxr_api->set_motion_range(hand, xr_motion_range);
+	hand_tracking_wrapper->set_motion_range(hand, xr_motion_range);
 }

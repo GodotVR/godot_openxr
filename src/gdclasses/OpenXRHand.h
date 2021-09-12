@@ -5,6 +5,7 @@
 #define OPENXR_HAND_H
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
 #include <Ref.hpp>
 #include <Spatial.hpp>
 
@@ -14,6 +15,7 @@ class OpenXRHand : public Spatial {
 
 private:
 	OpenXRApi *openxr_api;
+	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 	int hand;
 	int motion_range;
 

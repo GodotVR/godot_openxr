@@ -24,20 +24,6 @@
 #include <vector>
 
 #include "xrmath.h"
-#include <openxr/openxr.h>
-
-#define XR_MND_BALL_ON_STICK_EXTENSION_NAME "XR_MNDX_ball_on_a_stick_controller"
-
-#ifdef WIN32
-#define XR_USE_PLATFORM_WIN32
-#define XR_USE_GRAPHICS_API_OPENGL
-#elif ANDROID
-#define XR_USE_PLATFORM_ANDROID
-#define XR_USE_GRAPHICS_API_OPENGL_ES
-#else
-#define XR_USE_PLATFORM_XLIB
-#define XR_USE_GRAPHICS_API_OPENGL
-#endif
 
 #ifdef WIN32
 #include <glad/glad.h>
@@ -57,8 +43,9 @@
 #include <X11/Xlib.h>
 #endif
 
-// #include <gdnative/gdnative.h>
-#include <openxr/openxr.h>
+#include "openxr/extensions/xr_ext_hand_tracking_extension.h"
+#include "openxr/extensions/xr_fb_display_refresh_rate_extension.h"
+#include "openxr/openxr_inc.h"
 #include <openxr/openxr_platform.h>
 
 // forward declare this
@@ -247,15 +234,15 @@ private:
 	bool isReferenceSpaceSupported(XrReferenceSpaceType type);
 
 	bool initialiseInstance();
-	bool initialiseExtensions();
+	bool initialise_extensions();
 	bool initialiseSession();
 	bool initialiseSpaces();
 	void cleanupSpaces();
 	bool initialiseSwapChains();
 	void cleanupSwapChains();
 
-	bool initialiseHandTracking();
-	void cleanupHandTracking();
+	bool initialise_hand_tracking();
+	void cleanup_hand_tracking();
 
 	bool loadActionSets();
 	bool bindActionSets();
@@ -301,7 +288,7 @@ public:
 	bool get_keep_3d_linear() { return keep_3d_linear; };
 
 	template <class... Args>
-	bool xr_result(XrResult result, const char *format, Args... values) {
+	bool xr_result(XrResult result, const char *format, Args... values) const {
 		if (XR_SUCCEEDED(result))
 			return true;
 
@@ -328,6 +315,10 @@ public:
 
 	XrFormFactor get_form_factor() const;
 	void set_form_factor(const XrFormFactor p_form_factor);
+
+	double get_refresh_rate() const;
+	void set_refresh_rate(const double p_refresh_rate);
+	godot::Array get_available_refresh_rates() const;
 
 	godot::Array get_enabled_extensions() const;
 

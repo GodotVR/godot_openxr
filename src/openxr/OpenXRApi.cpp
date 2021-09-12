@@ -15,46 +15,6 @@
 using namespace godot;
 
 ////////////////////////////////////////////////////////////////////////////////
-// Extension functions
-
-PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
-		XrSession session,
-		const XrHandTrackerCreateInfoEXT *createInfo,
-		XrHandTrackerEXT *handTracker) {
-	if (xrCreateHandTrackerEXT_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrCreateHandTrackerEXT_ptr)(session, createInfo, handTracker);
-}
-
-PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL xrDestroyHandTrackerEXT(
-		XrHandTrackerEXT handTracker) {
-	if (xrDestroyHandTrackerEXT_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrDestroyHandTrackerEXT_ptr)(handTracker);
-}
-
-PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
-		XrHandTrackerEXT handTracker,
-		const XrHandJointsLocateInfoEXT *locateInfo,
-		XrHandJointLocationsEXT *locations) {
-	if (xrLocateHandJointsEXT_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrLocateHandJointsEXT_ptr)(handTracker, locateInfo, locations);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 // Default action set configuration
 
 // TODO: it makes sense to include this in source because we'll store any user defined version in Godot scenes
@@ -833,29 +793,27 @@ bool OpenXRApi::initialiseInstance() {
 	return true;
 }
 
-bool OpenXRApi::initialiseExtensions() {
+bool OpenXRApi::initialise_extensions() {
 	XrResult result;
 
 	// Maybe we should remove the error checking here, if the extension is not supported, we won't be doing anything with this.
 
 #ifdef DEBUG
-	Godot::print("OpenXR initialiseExtensions");
+	Godot::print("OpenXR initialise extensions");
 #endif
 
 	if (hand_tracking_ext) {
-		// TODO move this into hand tracker source
-		result = xrGetInstanceProcAddr(instance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT_ptr);
-		if (!xr_result(result, "Failed to obtain xrCreateHandTrackerEXT function pointer")) {
+		result = initialise_ext_hand_tracking_extension(instance);
+		if (!xr_result(result, "Failed to initialise hand tracking extension")) {
+			hand_tracking_ext = false; // I guess we don't support it...
 			return false;
 		}
+	}
 
-		result = xrGetInstanceProcAddr(instance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT_ptr);
-		if (!xr_result(result, "Failed to obtain xrDestroyHandTrackerEXT function pointer")) {
-			return false;
-		}
-
-		result = xrGetInstanceProcAddr(instance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT_ptr);
-		if (!xr_result(result, "Failed to obtain xrLocateHandJointsEXT function pointer")) {
+	if (fb_display_refresh_rate_ext) {
+		result = initialise_fb_display_refresh_rate_extension(instance);
+		if (!xr_result(result, "Failed to initialise display refresh rate extension")) {
+			fb_display_refresh_rate_ext = false; // I guess we don't support it...
 			return false;
 		}
 	}
@@ -1351,7 +1309,7 @@ void OpenXRApi::cleanupSwapChains() {
 	}
 }
 
-bool OpenXRApi::initialiseHandTracking() {
+bool OpenXRApi::initialise_hand_tracking() {
 	XrResult result;
 
 	if (!hand_tracking_ext) {
@@ -1359,7 +1317,7 @@ bool OpenXRApi::initialiseHandTracking() {
 	}
 
 #ifdef DEBUG
-	Godot::print("OpenXR initialiseHandTracking");
+	Godot::print("OpenXR initialise hand tracking");
 #endif
 
 	XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {
@@ -1394,7 +1352,7 @@ bool OpenXRApi::initialiseHandTracking() {
 	return true;
 }
 
-void OpenXRApi::cleanupHandTracking() {
+void OpenXRApi::cleanup_hand_tracking() {
 	for (int i = 0; i < 2; i++) {
 		if (hand_trackers[i].hand_tracker != XR_NULL_HANDLE) {
 			xrDestroyHandTrackerEXT(hand_trackers[i].hand_tracker);
@@ -1526,7 +1484,7 @@ bool OpenXRApi::initialize() {
 		return false;
 	}
 
-	if (!initialiseExtensions()) {
+	if (!initialise_extensions()) {
 		// cleanup and exit
 		uninitialize();
 		return false;
@@ -1560,7 +1518,7 @@ void OpenXRApi::uninitialize() {
 	}
 
 	cleanupActionSets();
-	cleanupHandTracking();
+	cleanup_hand_tracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1635,7 +1593,7 @@ bool OpenXRApi::on_state_ready() {
 	// also need to find out if some of these should be moved further on..
 	initialiseSpaces();
 	initialiseSwapChains();
-	initialiseHandTracking();
+	initialise_hand_tracking();
 
 	bindActionSets();
 
@@ -1670,7 +1628,7 @@ bool OpenXRApi::on_state_stopping() {
 	// need to cleanup various things which would otherwise be re-allocated if we have a state change back to ready
 	// note that cleaning up our action sets will invalidate many of the OpenXR nodes so we need to improve that as well.
 	unbindActionSets();
-	cleanupHandTracking();
+	cleanup_hand_tracking();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -1742,6 +1700,69 @@ void OpenXRApi::set_form_factor(const XrFormFactor p_form_factor) {
 		Godot::print("OpenXR form factor out of bounds");
 		return;
 	}
+}
+
+double OpenXRApi::get_refresh_rate() const {
+	double refresh_rate = 0.0;
+
+	// Currently only supported through FB's display refresh rate extension
+	if (fb_display_refresh_rate_ext) {
+		float rate;
+		XrResult result = xrGetDisplayRefreshRateFB(session, &rate);
+		if (!xr_result(result, "Failed to obtain refresh rate")) {
+			return 0.0;
+		}
+		refresh_rate = rate;
+	}
+	return refresh_rate;
+}
+
+void OpenXRApi::set_refresh_rate(const double p_refresh_rate) {
+	// Currently only supported through FB's display refresh rate extension
+	if (fb_display_refresh_rate_ext) {
+		XrResult result = xrRequestDisplayRefreshRateFB(session, p_refresh_rate);
+		if (!xr_result(result, "Failed to set refresh rate")) {
+			return;
+		}
+	}
+}
+
+godot::Array OpenXRApi::get_available_refresh_rates() const {
+	godot::Array arr;
+	XrResult result;
+
+	// Currently only supported through FB's display refresh rate extension
+	if (fb_display_refresh_rate_ext) {
+		uint32_t display_refresh_rate_count;
+
+		// figure out how many entries we have...
+		result = xrEnumerateDisplayRefreshRatesFB(session, 0, &display_refresh_rate_count, nullptr);
+		if (!xr_result(result, "Failed to obtain refresh rate count")) {
+			return arr;
+		}
+
+		if (display_refresh_rate_count > 0) {
+			float *display_refresh_rates = (float *)malloc(sizeof(float) * display_refresh_rate_count);
+			if (display_refresh_rates == nullptr) {
+				return arr;
+			}
+
+			result = xrEnumerateDisplayRefreshRatesFB(session, display_refresh_rate_count, &display_refresh_rate_count, display_refresh_rates);
+			if (!xr_result(result, "Failed to obtain refresh rate count")) {
+				free(display_refresh_rates);
+				return arr;
+			}
+			for (int i = 0; i < display_refresh_rate_count; i++) {
+				// and add to our rate array as a double
+				double refresh_rate = display_refresh_rates[i];
+				arr.push_back(Variant(refresh_rate));
+			}
+
+			free(display_refresh_rates);
+		}
+	}
+
+	return arr;
 }
 
 godot::Array OpenXRApi::get_enabled_extensions() const {

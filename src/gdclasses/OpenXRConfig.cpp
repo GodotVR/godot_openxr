@@ -8,6 +8,8 @@
 using namespace godot;
 
 void OpenXRConfig::_register_methods() {
+	// In Godot 4 we'll move these into XRInterfaceOpenXR and add groups to our properties
+
 	register_method("keep_3d_linear", &OpenXRConfig::keep_3d_linear);
 
 	register_method("get_view_config_type", &OpenXRConfig::get_view_config_type);
@@ -17,6 +19,11 @@ void OpenXRConfig::_register_methods() {
 	register_method("get_form_factor", &OpenXRConfig::get_form_factor);
 	register_method("set_form_factor", &OpenXRConfig::set_form_factor);
 	register_property<OpenXRConfig, int>("form_factor", &OpenXRConfig::set_form_factor, &OpenXRConfig::get_form_factor, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Not set,HMD,Hand Held");
+
+	register_method("get_refresh_rate", &OpenXRConfig::get_refresh_rate);
+	register_method("set_refresh_rate", &OpenXRConfig::set_refresh_rate);
+	register_property<OpenXRConfig, double>("refresh_rate", &OpenXRConfig::set_refresh_rate, &OpenXRConfig::get_refresh_rate, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
+	register_method("get_available_refresh_rates", &OpenXRConfig::get_available_refresh_rates);
 
 	register_method("get_enabled_extensions", &OpenXRConfig::get_enabled_extensions);
 
@@ -113,6 +120,29 @@ void OpenXRConfig::set_form_factor(const int p_form_factor) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		openxr_api->set_form_factor((XrFormFactor)p_form_factor);
+	}
+}
+
+double OpenXRConfig::get_refresh_rate() const {
+	if (openxr_api == NULL) {
+		return 0;
+	} else {
+		return (int)openxr_api->get_refresh_rate();
+	}
+}
+
+void OpenXRConfig::set_refresh_rate(const double p_refresh_rate) {
+	if (openxr_api != NULL) {
+		openxr_api->set_refresh_rate(p_refresh_rate);
+	}
+}
+
+godot::Array OpenXRConfig::get_available_refresh_rates() const {
+	if (openxr_api == NULL) {
+		godot::Array arr;
+		return arr;
+	} else {
+		return openxr_api->get_available_refresh_rates();
 	}
 }
 

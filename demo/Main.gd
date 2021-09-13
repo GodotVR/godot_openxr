@@ -7,6 +7,8 @@ func _ready():
 	# Just for testing, output the enabled extensions
 	print("Enabled extensions: " + str($FPSController/Configuration.get_enabled_extensions()))
 	print("Supported refresh rates: " + str($FPSController/Configuration.get_available_refresh_rates()))
+	print("Supported color spaces: " + str($FPSController/Configuration.get_available_color_spaces()))
+	print("Current color space: " + str($FPSController/Configuration.get_color_space()))
 
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame

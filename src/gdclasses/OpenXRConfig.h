@@ -5,6 +5,7 @@
 #define OPENXR_CONFIG_H
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include <Node.hpp>
 
@@ -14,6 +15,7 @@ class OpenXRConfig : public Node {
 
 private:
 	OpenXRApi *openxr_api;
+	XRFbColorSpaceExtensionWrapper *color_space_wrapper = nullptr;
 	XRFbDisplayRefreshRateExtensionWrapper *display_refresh_rate_wrapper = nullptr;
 
 public:
@@ -31,6 +33,10 @@ public:
 
 	int get_form_factor() const;
 	void set_form_factor(const int p_form_factor);
+
+	int get_color_space() const;
+	void set_color_space(const int p_color_space);
+	godot::Dictionary get_available_color_spaces();
 
 	double get_refresh_rate() const;
 	void set_refresh_rate(const double p_refresh_rate);

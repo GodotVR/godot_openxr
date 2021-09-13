@@ -683,7 +683,6 @@ bool OpenXRApi::initialiseInstance() {
 	request_extensions[XR_MND_BALL_ON_STICK_EXTENSION_NAME] = &monado_stick_on_ball_ext;
 
 	// These might be FB extensions but other vendors may implement them in due time as well.
-	request_extensions[XR_FB_COLOR_SPACE_EXTENSION_NAME] = &fb_color_space_ext;
 	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME] = &fb_swapchain_update_state_ext;
 	request_extensions[XR_FB_FOVEATION_EXTENSION_NAME] = &fb_foveation_ext;
 	request_extensions[XR_FB_FOVEATION_CONFIGURATION_EXTENSION_NAME] = &fb_foveation_configuration_ext;
@@ -813,11 +812,6 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
-	// always define, we ignore this if it's not used.
-	XrSystemColorSpacePropertiesFB color_space_properties_fb = {
-		.type = XR_TYPE_SYSTEM_COLOR_SPACE_PROPERTIES_FB,
-	};
-
 	XrSystemProperties systemProperties = {
 		.type = XR_TYPE_SYSTEM_PROPERTIES,
 		.next = nullptr,
@@ -825,21 +819,16 @@ bool OpenXRApi::initialiseSession() {
 		.trackingProperties = { 0 },
 	};
 
-	void **current_next_pointer = &systemProperties.next;
-	void **next_pointer = nullptr;
+	void **property_pointer = &systemProperties.next;
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
-		// TODO: Validate this is done properly.
-		void *properties = wrapper->get_system_properties(next_pointer);
-		if (properties && next_pointer && !*next_pointer) {
-			*current_next_pointer = properties;
-			current_next_pointer = next_pointer;
-			next_pointer = nullptr;
+		void **property_next_pointer = wrapper->set_system_properties_and_get_next_pointer(property_pointer);
+		if (*property_pointer && property_next_pointer && !*property_next_pointer) {
+			property_pointer = property_next_pointer;
+		} else {
+			// Invalid return values.
+			// Reset the value stored by the property_pointer so it can be reused in the next loop.
+			*property_pointer = nullptr;
 		}
-	}
-
-	if (fb_color_space_ext) {
-		// if our color space extension is availale, read our color space.
-		systemProperties.next = &color_space_properties_fb;
 	}
 
 	result = xrGetSystemProperties(instance, systemId, &systemProperties);
@@ -847,9 +836,7 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
-	if (fb_color_space_ext) {
-		// TODO color_space_properties_fb.colorSpace should now contain our current color space, store it somewhere...
-	}
+	// TODO consider calling back into our extension wrappers if they need to react on data we just loaded....
 
 	if (!isViewConfigSupported(view_config_type, systemId)) {
 		// TODO in stead of erroring out if the set configuration type is unsupported

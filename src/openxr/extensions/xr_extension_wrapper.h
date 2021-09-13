@@ -17,7 +17,7 @@ public:
 
 	virtual void on_instance_initialized(const XrInstance instance) {}
 
-	virtual void *get_system_properties(void **property_next) { return nullptr; }
+	virtual void **set_system_properties_and_get_next_pointer(void **property) { return nullptr; }
 
 	virtual void on_session_initialized(const XrSession session) {}
 

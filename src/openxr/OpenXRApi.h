@@ -144,7 +144,6 @@ private:
 	bool performance_settings_ext = false;
 	bool monado_stick_on_ball_ext = false;
 
-	bool fb_color_space_ext = false;
 	bool fb_swapchain_update_state_ext = false;
 	bool fb_swapchain_update_state_opengles_ext = false;
 	bool fb_foveation_ext = false;

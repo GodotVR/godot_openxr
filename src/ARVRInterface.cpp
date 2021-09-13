@@ -3,6 +3,7 @@
 
 #include "ARVRInterface.h"
 #include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
+#include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include <ARVRInterface.hpp>
 #include <MainLoop.hpp>
@@ -116,6 +117,7 @@ godot_bool godot_arvr_initialize(void *p_data) {
 	// We (already) have our API instance? cool!
 	if (arvr_data->openxr_api != nullptr) {
 		// Register our extensions
+		arvr_data->openxr_api->register_extension_wrapper<XRFbColorSpaceExtensionWrapper>();
 		arvr_data->openxr_api->register_extension_wrapper<XRFbDisplayRefreshRateExtensionWrapper>();
 		arvr_data->openxr_api->register_extension_wrapper<XRExtHandTrackingExtensionWrapper>();
 

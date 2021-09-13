@@ -20,6 +20,11 @@ void OpenXRConfig::_register_methods() {
 	register_method("set_form_factor", &OpenXRConfig::set_form_factor);
 	register_property<OpenXRConfig, int>("form_factor", &OpenXRConfig::set_form_factor, &OpenXRConfig::get_form_factor, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Not set,HMD,Hand Held");
 
+	register_method("get_color_space", &OpenXRConfig::get_color_space);
+	register_method("set_color_space", &OpenXRConfig::set_color_space);
+	register_property<OpenXRConfig, int>("color_space", &OpenXRConfig::set_color_space, &OpenXRConfig::get_color_space, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
+	register_method("get_available_color_spaces", &OpenXRConfig::get_available_color_spaces);
+
 	register_method("get_refresh_rate", &OpenXRConfig::get_refresh_rate);
 	register_method("set_refresh_rate", &OpenXRConfig::set_refresh_rate);
 	register_property<OpenXRConfig, double>("refresh_rate", &OpenXRConfig::set_refresh_rate, &OpenXRConfig::get_refresh_rate, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
@@ -38,6 +43,7 @@ void OpenXRConfig::_register_methods() {
 
 OpenXRConfig::OpenXRConfig() {
 	openxr_api = OpenXRApi::openxr_get_api();
+	color_space_wrapper = XRFbColorSpaceExtensionWrapper::get_singleton();
 	display_refresh_rate_wrapper = XRFbDisplayRefreshRateExtensionWrapper::get_singleton();
 }
 
@@ -122,6 +128,28 @@ void OpenXRConfig::set_form_factor(const int p_form_factor) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		openxr_api->set_form_factor((XrFormFactor)p_form_factor);
+	}
+}
+
+int OpenXRConfig::get_color_space() const {
+	if (color_space_wrapper == nullptr) {
+		return 0;
+	} else {
+		return (int)color_space_wrapper->get_color_space();
+	}
+}
+
+void OpenXRConfig::set_color_space(const int p_color_space) {
+	if (color_space_wrapper != nullptr) {
+		color_space_wrapper->set_color_space((uint32_t)p_color_space);
+	}
+}
+
+godot::Dictionary OpenXRConfig::get_available_color_spaces() {
+	if (color_space_wrapper != nullptr) {
+		return color_space_wrapper->get_available_color_spaces();
+	} else {
+		return godot::Dictionary();
 	}
 }
 

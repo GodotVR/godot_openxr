@@ -1,7 +1,7 @@
 ext.versions = [
     gradlePluginVersion: '4.2.1',
     compileSdk         : 30,
-    minSdk             : 18,
+    minSdk             : 19,
     targetSdk          : 30,
     buildTools         : '30.0.3',
     kotlinVersion      : '1.5.20',

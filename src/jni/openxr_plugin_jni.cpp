@@ -1,7 +1,3 @@
-/**
-* Created by Fredia Huya-Kouadio. 
-*/
-
 #include <jni.h>
 
 #undef JNI_PACKAGE_NAME
@@ -11,5 +7,4 @@
 #define JNI_CLASS_NAME OpenXRPlugin
 
 extern "C" {
-
 }

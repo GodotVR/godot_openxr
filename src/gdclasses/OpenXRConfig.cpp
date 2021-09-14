@@ -51,6 +51,7 @@ OpenXRConfig::~OpenXRConfig() {
 	if (openxr_api != NULL) {
 		OpenXRApi::openxr_release_api();
 	}
+	color_space_wrapper = nullptr;
 	display_refresh_rate_wrapper = nullptr;
 }
 
@@ -157,7 +158,7 @@ double OpenXRConfig::get_refresh_rate() const {
 	if (display_refresh_rate_wrapper == nullptr) {
 		return 0;
 	} else {
-		return (int)display_refresh_rate_wrapper->get_refresh_rate();
+		return display_refresh_rate_wrapper->get_refresh_rate();
 	}
 }
 

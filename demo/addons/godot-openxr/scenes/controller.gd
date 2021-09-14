@@ -1,4 +1,4 @@
-extends ARVRController
+extends XRController3D
 
 signal activated
 signal deactivated
@@ -8,9 +8,9 @@ func _process(delta):
 	if get_is_active():
 		if !visible:
 			visible = true
-			print("Activated " + name)
+			print("Activated " + str(name))
 			emit_signal("activated")
 	elif visible:
 		visible = false
-		print("Deactivated " + name)
+		print("Deactivated " + str(name))
 		emit_signal("deactivated")

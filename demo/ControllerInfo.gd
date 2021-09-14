@@ -1,6 +1,6 @@
 extends Node2D
 
-var controller : ARVRController = null;
+var controller : XRController3D = null;
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
@@ -9,27 +9,25 @@ func _ready():
 
 func _process(_delta : float):
 	if controller:
-		var trigger = controller.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
+		var trigger = controller.get_value("analog_trigger")
 		$Container/TriggerInput.value = int(trigger * 100.0)
 
-		var grip = controller.get_joystick_axis(JOY_VR_ANALOG_GRIP)
+		var grip = controller.get_value("analog_grip")
 		$Container/GripInput.value = int(grip * 100.0)
 
-		var joy_x = controller.get_joystick_axis(JOY_AXIS_0)
-		var joy_y = controller.get_joystick_axis(JOY_AXIS_1)
-		$Container/Joysticks/Primary/Background.color = Color(1.0, 1.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_12) else Color(0.7, 0.7, 0.7, 1.0)
-		$Container/Joysticks/Primary/Background/Puck.rect_position = Vector2(23 + joy_x * 23, 23 - joy_y * 23)
-		$Container/Joysticks/Primary/Background/Puck.color = Color(0.0, 0.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_14) else Color(0.0, 0.0, 0.0, 1.0)
+		var joy = controller.get_axis("primary")
+		$Container/Joysticks/Primary/Background.color = Color(1.0, 1.0, 1.0, 1.0) if controller.is_button_pressed("primary_touch") else Color(0.7, 0.7, 0.7, 1.0)
+		$Container/Joysticks/Primary/Background/Puck.rect_position = Vector2(23 + joy.x * 23, 23 - joy.y * 23)
+		$Container/Joysticks/Primary/Background/Puck.color = Color(0.0, 0.0, 1.0, 1.0) if controller.is_button_pressed("primary_click") else Color(0.0, 0.0, 0.0, 1.0)
 
-		joy_x = controller.get_joystick_axis(JOY_AXIS_6)
-		joy_y = controller.get_joystick_axis(JOY_AXIS_7)
-		$Container/Joysticks/Secondary/Background.color = Color(1.0, 1.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_11) else Color(0.7, 0.7, 0.7, 1.0)
-		$Container/Joysticks/Secondary/Background/Puck.rect_position = Vector2(23 + joy_x * 23, 23 - joy_y * 23)
-		$Container/Joysticks/Secondary/Background/Puck.color = Color(0.0, 0.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_13) else Color(0.0, 0.0, 0.0, 1.0)
+		joy = controller.get_axis("secondary")
+		$Container/Joysticks/Secondary/Background.color = Color(1.0, 1.0, 1.0, 1.0) if controller.is_button_pressed("secondary_touch") else Color(0.7, 0.7, 0.7, 1.0)
+		$Container/Joysticks/Secondary/Background/Puck.rect_position = Vector2(23 + joy.x * 23, 23 - joy.y * 23)
+		$Container/Joysticks/Secondary/Background/Puck.color = Color(0.0, 0.0, 1.0, 1.0) if controller.is_button_pressed("secondary_click") else Color(0.0, 0.0, 0.0, 1.0)
 
-		$Container/AXButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_7)
-		$Container/BYButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_1)
-		$Container/MenuButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_3)
-		$Container/SelectButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_4)
-		$Container/TriggerButton/Value.pressed = controller.is_button_pressed(JOY_VR_TRIGGER)
-		$Container/SideButton/Value.pressed = controller.is_button_pressed(JOY_VR_GRIP)
+		$Container/AXButton/Value.pressed = controller.is_button_pressed("button_ax")
+		$Container/BYButton/Value.pressed = controller.is_button_pressed("button_by")
+		$Container/MenuButton/Value.pressed = controller.is_button_pressed("button_menu")
+		$Container/SelectButton/Value.pressed = controller.is_button_pressed("button_select")
+		$Container/TriggerButton/Value.pressed = controller.is_button_pressed("trigger")
+		$Container/SideButton/Value.pressed = controller.is_button_pressed("grip")

@@ -1,6 +1,6 @@
 #include "xr_fb_passthrough_extension_wrapper.h"
 
-#include <gen/Viewport.hpp>
+#include <godot_cpp/classes/viewport.hpp>
 
 using namespace godot;
 
@@ -32,7 +32,7 @@ void XRFbPassthroughExtensionWrapper::cleanup() {
 
 void XRFbPassthroughExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (fb_passthrough_ext) {
-		Godot::print("Initializing passthrough extension...");
+		UtilityFunctions::print("Initializing passthrough extension...");
 		XrResult result = initialize_fb_passthrough_extension(instance);
 		if (!openxr_api->xr_result(result, "Failed to initialize fb_passthrough extension")) {
 			fb_passthrough_ext = false;
@@ -47,7 +47,7 @@ void XRFbPassthroughExtensionWrapper::on_instance_initialized(const XrInstance i
 	}
 
 	if (fb_passthrough_ext) {
-		Godot::print("Registering as composition layer provider...");
+		UtilityFunctions::print("Registering as composition layer provider...");
 		openxr_api->register_composition_layer_provider(this);
 	}
 }
@@ -66,7 +66,7 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 	}
 
 	// Start the passthrough feature
-	Godot::print("Starting passthrough feature...");
+	UtilityFunctions::print("Starting passthrough feature...");
 	XrResult result = xrPassthroughStartFB(passthrough_handle);
 	if (!openxr_api->xr_result(result, "Failed to start passthrough")) {
 		stop_passthrough();
@@ -74,7 +74,7 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 	}
 
 	// Resume the passthrough layer
-	Godot::print("Starting passthrough layer...");
+	UtilityFunctions::print("Starting passthrough layer...");
 	result = xrPassthroughLayerResumeFB(passthrough_layer);
 	if (!openxr_api->xr_result(result, "Failed to start the passthrough layer")) {
 		stop_passthrough();
@@ -86,7 +86,7 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 	if (viewport) {
 		viewport->set_transparent_background(true);
 	} else {
-		Godot::print_warning("Unable to retrieve the viewport", __FUNCTION__, __FILE__, __LINE__);
+		UtilityFunctions::print("Unable to retrieve the viewport");
 		stop_passthrough();
 		return false;
 	}
@@ -99,14 +99,14 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 void XRFbPassthroughExtensionWrapper::on_session_initialized(const XrSession session) {
 	if (fb_passthrough_ext) {
 		// Create the passthrough feature and start it.
-		Godot::print("Creating passthrough feature...");
+		UtilityFunctions::print("Creating passthrough feature...");
 		XrResult result = xrCreatePassthroughFB(openxr_api->get_session(), &passthrough_create_info, &passthrough_handle);
 		if (!openxr_api->xr_result(result, "Failed to create passthrough")) {
 			return;
 		}
 
 		// Create the passthrough layer
-		Godot::print("Creating passthrough layer...");
+		UtilityFunctions::print("Creating passthrough layer...");
 		result = xrCreatePassthroughLayerFB(openxr_api->get_session(), &passthrough_layer_config, &passthrough_layer);
 		if (!openxr_api->xr_result(result, "Failed to create the passthrough layer")) {
 			return;
@@ -134,19 +134,19 @@ void XRFbPassthroughExtensionWrapper::stop_passthrough() {
 	if (viewport) {
 		viewport->set_transparent_background(false);
 	} else {
-		Godot::print_warning("Unable to retrieve the viewport", __FUNCTION__, __FILE__, __LINE__);
+		UtilityFunctions::print("Unable to retrieve the viewport");
 	}
 
 	XrResult result;
 	if (passthrough_layer != XR_NULL_HANDLE) {
 		// Stop the layer
-		Godot::print("Stopping passthrough layer...");
+		UtilityFunctions::print("Stopping passthrough layer...");
 		result = xrPassthroughLayerPauseFB(passthrough_layer);
 		openxr_api->xr_result(result, "Unable to stop passthrough layer");
 	}
 
 	if (passthrough_handle != XR_NULL_HANDLE) {
-		Godot::print("Stopping passthrough feature...");
+		UtilityFunctions::print("Stopping passthrough feature...");
 		result = xrPassthroughPauseFB(passthrough_handle);
 		openxr_api->xr_result(result, "Unable to stop passthrough feature");
 	}
@@ -159,7 +159,7 @@ void XRFbPassthroughExtensionWrapper::on_session_destroyed() {
 		XrResult result;
 		if (passthrough_layer != XR_NULL_HANDLE) {
 			// Destroy the layer
-			Godot::print("Destroying passthrough layer...");
+			UtilityFunctions::print("Destroying passthrough layer...");
 			result = xrDestroyPassthroughLayerFB(passthrough_layer);
 			if (openxr_api->xr_result(result, "Unable to destroy passthrough layer")) {
 				passthrough_layer = XR_NULL_HANDLE;
@@ -167,7 +167,7 @@ void XRFbPassthroughExtensionWrapper::on_session_destroyed() {
 		}
 
 		if (passthrough_handle != XR_NULL_HANDLE) {
-			Godot::print("Destroying passthrough feature...");
+			UtilityFunctions::print("Destroying passthrough feature...");
 			result = xrDestroyPassthroughFB(passthrough_handle);
 			if (openxr_api->xr_result(result, "Unable to destroy passthrough feature")) {
 				passthrough_handle = XR_NULL_HANDLE;

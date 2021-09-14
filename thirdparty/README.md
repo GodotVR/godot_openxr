@@ -33,3 +33,19 @@ This is a copy of the Khronos OpenXR loader library for Windows. We use the incl
 - Upstream: https://github.com/KhronosGroup/OpenXR-SDK/releases
 - Version 1.0.20
 - License: Apache 2.0 or MIT
+
+## Volk
+
+Alternative Vulkan extension loader used by Godot, not 100% sure we need it here
+
+- Upstream: https://github.com/zeux/volk
+- Version: 1.2.190
+- License: MIT
+
+## Vulkan
+
+Vulkan headers
+
+- Upstream: https://github.com/KhronosGroup/Vulkan-Headers
+- Version: 1.2.190
+- License: Apache 2.0

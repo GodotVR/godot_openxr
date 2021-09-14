@@ -1,5 +1,6 @@
-tool
 extends OptionButton
+
+# @tool
 
 var available_runtimes : Array = Array()
 onready var platform = OS.get_name()

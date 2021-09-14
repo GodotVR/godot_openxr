@@ -1,5 +1,6 @@
 # ignore our import cache folder
 .import
+.godot
 
 # export can have local file names and such
 export_presets.cfg

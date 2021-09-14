@@ -1,4 +1,4 @@
-extends Spatial
+extends Node3D
 
 ####################################################################################
 # and some process logic to make our hands work
@@ -13,11 +13,11 @@ func update_lengths():
 			var joint = finger.get_child(0)
 			var bone = finger.get_child(1)
 			while joint and bone:
-				var bone_len = joint.translation.length()
+				var bone_len = joint.position.length()
 
-				# use scale and translation to place our bone
+				# use scale and position to place our bone
 				bone.scale = Vector3(1.0, bone_len, 1.0)
-				bone.translation = Vector3(0.0, 0.0, -bone_len / 2.0)
+				bone.position = Vector3(0.0, 0.0, -bone_len / 2.0)
 
 				if joint.get_child_count() >= 2:
 					bone = joint.get_child(1)

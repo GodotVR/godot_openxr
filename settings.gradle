@@ -2,3 +2,6 @@ rootProject.name = "Godot OpenXR Plugin"
 
 include ":GodotOpenXR"
 project(":GodotOpenXR").projectDir = file("android")
+
+// Android mirror of the project demo to facilitate development within Android Studio
+include ":android_samples:demo"

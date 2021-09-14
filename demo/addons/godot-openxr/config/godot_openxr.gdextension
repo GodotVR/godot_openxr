@@ -1,0 +1,18 @@
+[configuration]
+
+entry_symbol = "openxr_library_init"
+
+[libraries]
+
+android.arm64-v8a.debug="res://addons/godot-openxr/bin/android/libgodot_openxr_debug.so"
+android.arm64-v8a.release="res://addons/godot-openxr/bin/android/libgodot_openxr_release.so"
+windows.64.debug="res://addons/godot-openxr/bin/win64/libgodot_openxr_debug.dll"
+windows.64.release="res://addons/godot-openxr/bin/win64/libgodot_openxr_release.dll"
+x11.64.debug="res://addons/godot-openxr/bin/linux/libgodot_openxr_debug.so"
+x11.64.release="res://addons/godot-openxr/bin/linux/libgodot_openxr_release.so"
+
+[dependencies]
+
+android.arm64-v8a=[ "res://addons/godot-openxr/bin/android/libopenxr_loader.so" ]
+windows.64=[ "res://addons/godot-openxr/bin/win64/openxr_loader.dll" ]
+x11.64=[  ]

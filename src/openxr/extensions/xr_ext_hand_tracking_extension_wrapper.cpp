@@ -4,6 +4,12 @@ XRExtHandTrackingExtensionWrapper::XRExtHandTrackingExtensionWrapper() {
 	openxr_api = OpenXRApi::openxr_get_api();
 	request_extensions[XR_EXT_HAND_TRACKING_EXTENSION_NAME] = &hand_tracking_ext;
 	request_extensions[XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME] = &hand_motion_range_ext;
+
+	// do this right away so we don't crash if we call cleanup_hand_tracking before initialize_hand_tracking is called
+	for (int i = 0; i < 2; i++) {
+		hand_trackers[i].is_initialised = false;
+		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
+	}
 }
 
 XRExtHandTrackingExtensionWrapper::~XRExtHandTrackingExtensionWrapper() {
@@ -120,7 +126,7 @@ bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
 	}
 
 #ifdef DEBUG
-	Godot::print("OpenXR initialise hand tracking");
+	UtilityFunctions::print("OpenXR initialise hand tracking");
 #endif
 
 	XrSystemHandTrackingPropertiesEXT handTrackingSystemProperties = {
@@ -139,17 +145,11 @@ bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
 
 	if (!handTrackingSystemProperties.supportsHandTracking) {
 		// The system does not support hand tracking
-		Godot::print("Hand tracking is not supported\n");
+		UtilityFunctions::print("Hand tracking is not supported\n");
 		return false;
 	}
 
-	for (int i = 0; i < 2; i++) {
-		// we'll do this later
-		hand_trackers[i].is_initialised = false;
-		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
-	}
-
-	Godot::print("Hand tracking is supported\n");
+	UtilityFunctions::print("Hand tracking is supported\n");
 
 	hand_tracking_supported = true;
 	return true;
@@ -247,7 +247,7 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				locateInfo.next = &motionRangeInfo;
 			}
 
-			// Godot::print("Obtaining hand joint info for {0}", i);
+			// UtilityFunctions::print("Obtaining hand joint info for {0}", i);
 
 			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
 			if (openxr_api->xr_result(result, "failed to get tracking for hand {0}!", i)) {
@@ -260,7 +260,7 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				} else {
 					// we have our hand tracking info....
 
-					// Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
+					// UtilityFunctions::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
 				}
 			}
 		}

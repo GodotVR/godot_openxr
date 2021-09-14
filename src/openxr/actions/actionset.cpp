@@ -19,7 +19,7 @@ ActionSet::ActionSet(OpenXRApi *p_api, const godot::String &p_name, const godot:
 	strcpy(actionSetInfo.localizedActionSetName, p_localised_name.utf8().get_data());
 
 #ifdef DEBUG
-	Godot::print("Creating action set {0} - {1} {2}", actionSetInfo.actionSetName, actionSetInfo.localizedActionSetName, actionSetInfo.priority);
+	UtilityFunctions::print("Creating action set {0} - {1} {2}", actionSetInfo.actionSetName, actionSetInfo.localizedActionSetName, actionSetInfo.priority);
 #endif
 
 	XrResult result = xrCreateActionSet(xr_api->instance, &actionSetInfo, &handle);
@@ -92,14 +92,8 @@ bool ActionSet::attach() {
 		// already attached to our session
 		return true;
 	}
-	if (handle == XR_NULL_HANDLE) {
-		Godot::print_error("Can't attach action set if it has not been created.", __FUNCTION__, __FILE__, __LINE__);
-		return false;
-	}
-	if (xr_api->session == NULL) {
-		Godot::print_error("Can't attach action set if there is no session.", __FUNCTION__, __FILE__, __LINE__);
-		return false;
-	}
+	ERR_FAIL_NULL_V_MSG(handle, false, "Can't attach action set if it has not been created.");
+	ERR_FAIL_NULL_V_MSG(xr_api->session, false, "Can't attach action set if there is no session.");
 
 	// So according to the docs, once we attach our action set to our session it becomes read only..
 	// https://www.khronos.org/registry/OpenXR/specs/1.0/man/html/xrAttachSessionActionSets.html

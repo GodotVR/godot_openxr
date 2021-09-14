@@ -1,16 +1,22 @@
-tool
-extends Spatial
+# @tool
+extends Node3D
 
 enum MOTION_RANGE {
 	UNUBSTRUCTED = 0,
 	CONFORM_TO_CONTROLLER = 1
 }
 
-export (MOTION_RANGE) var motion_range setget set_motion_range
-export (Texture) var albedo_texture setget set_albedo_texture
-export (Texture) var normal_texture setget set_normal_texture
+@export var motion_range : MOTION_RANGE:
+	set(new_value):
+		set_motion_range(new_value)
+@export var albedo_texture : Texture:
+	set(new_value):
+		set_albedo_texture(new_value)
+@export var normal_texture : Texture:
+	set(new_value):
+		set_normal_texture(new_value)
 
-var material : SpatialMaterial
+var material : StandardMaterial3D
 
 func set_motion_range(value):
 	motion_range = value

@@ -6,12 +6,12 @@
 
 #include "openxr/OpenXRApi.h"
 #include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
-#include <Ref.hpp>
-#include <Skeleton.hpp>
+#include <godot_cpp/classes/ref.hpp>
+#include <godot_cpp/classes/skeleton3d.hpp>
 
 namespace godot {
-class OpenXRSkeleton : public Skeleton {
-	GODOT_CLASS(OpenXRSkeleton, Skeleton)
+class OpenXRSkeleton : public Skeleton3D {
+	GDCLASS(OpenXRSkeleton, Skeleton3D)
 
 private:
 	OpenXRApi *openxr_api;
@@ -22,12 +22,12 @@ private:
 	int64_t bones[XR_HAND_JOINT_COUNT_EXT];
 	void _set_motion_range();
 
-public:
-	static void _register_methods();
+protected:
+	static void _bind_methods();
 
-	void _init();
-	void _ready();
-	void _physics_process(float delta);
+public:
+	virtual void _ready() override;
+	virtual void _physics_process(double delta) override;
 
 	OpenXRSkeleton();
 	~OpenXRSkeleton();

@@ -1,53 +1,35 @@
-[gd_scene load_steps=3 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://chdaham4exams"]
 
-[ext_resource path="res://assets/fonts/pt_sans_24pt.tres" type="DynamicFont" id=1]
-[ext_resource path="res://Screen.gd" type="Script" id=2]
+[ext_resource type="Script" path="res://Screen.gd" id="2"]
 
 [node name="Screen" type="Node2D"]
-script = ExtResource( 2 )
+script = ExtResource( "2" )
 
 [node name="ColorRect" type="ColorRect" parent="."]
-margin_right = 40.0
-margin_bottom = 40.0
-rect_min_size = Vector2( 600, 400 )
-color = Color( 0.0588235, 0.235294, 0.305882, 0.184314 )
+rect_min_size = Vector2(600, 400)
+color = Color(0.0588235, 0.235294, 0.305882, 0.184314)
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Intro" type="Label" parent="."]
-margin_left = 25.0
-margin_top = 25.0
-margin_right = 550.0
-margin_bottom = 350.0
-custom_fonts/font = ExtResource( 1 )
+theme_override_font_sizes/font_size = 16
 text = "Welcome to this little demo.
 
 You can use the trigger on your left controller to teleport.
 
 You can use the joystick on your right controller to move."
-autowrap = true
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Button" type="Button" parent="."]
-margin_left = 150.0
-margin_top = 300.0
-margin_right = 267.0
-margin_bottom = 338.0
-custom_fonts/font = ExtResource( 1 )
 text = "Press me!!"
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
 [node name="Count" type="Label" parent="."]
-margin_left = 290.0
-margin_top = 300.0
-margin_right = 459.0
-margin_bottom = 332.0
-custom_fonts/font = ExtResource( 1 )
 text = "Pressed 0 times"
 __meta__ = {
 "_edit_use_anchors_": false

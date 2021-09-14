@@ -30,7 +30,7 @@ Action::Action(OpenXRApi *p_api, XrActionSet p_action_set, XrActionType p_type, 
 	strcpy(actionInfo.localizedActionName, p_localised_name.utf8().get_data());
 
 #ifdef DEBUG
-	Godot::print("Created action {0} {1} {2}", actionInfo.actionName, actionInfo.localizedActionName, actionInfo.countSubactionPaths);
+	UtilityFunctions::print("Created action {0} {1} {2}", actionInfo.actionName, actionInfo.localizedActionName, actionInfo.countSubactionPaths);
 #endif
 
 	XrResult result = xrCreateAction(p_action_set, &actionInfo, &handle);
@@ -171,11 +171,11 @@ bool Action::is_pose_active(XrPath p_path) {
 		return false;
 	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised
-		Godot::print("Pose not initialised");
+		UtilityFunctions::print("Pose not initialised");
 		return false;
 	} else if (type != XR_ACTION_TYPE_POSE_INPUT) {
 		// wrong type
-		Godot::print("Not a pose type");
+		UtilityFunctions::print("Not a pose type");
 		return false;
 	} else {
 		XrActionStateGetInfo getInfo = {
@@ -197,16 +197,16 @@ bool Action::is_pose_active(XrPath p_path) {
 	}
 }
 
-Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
+Transform3D Action::get_as_pose(XrPath p_path, float p_world_scale) {
 	if (!xr_api->is_running()) {
 		// not running
-		return Transform();
+		return Transform3D();
 	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised or setup fully
-		return Transform();
+		return Transform3D();
 	} else if (type != XR_ACTION_TYPE_POSE_INPUT) {
 		// wrong type
-		return Transform();
+		return Transform3D();
 	} else {
 		// find out the index for our path, note, thanks to register_path we can use our pointers here
 		uint64_t index = 0xFFFFFFFF;
@@ -218,7 +218,7 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 
 		if (index == 0xFFFFFFFF) {
 			// couldn't find it?
-			return Transform();
+			return Transform3D();
 		}
 
 		if (toplevel_paths[index].space == XR_NULL_HANDLE) {
@@ -237,11 +237,11 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 
 			XrResult result = xrCreateActionSpace(xr_api->session, &actionSpaceInfo, &toplevel_paths[index].space);
 			if (!xr_api->xr_result(result, "failed to create pose space")) {
-				return Transform();
+				return Transform3D();
 			}
 
 #ifdef DEBUG
-			Godot::print("Created space for {0}/{1}", name, index);
+			UtilityFunctions::print("Created space for {0}/{1}", name, index);
 #endif
 		}
 
@@ -252,7 +252,7 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 
 		XrResult result = xrLocateSpace(toplevel_paths[index].space, xr_api->play_space, xr_api->frameState.predictedDisplayTime, &location);
 		if (!xr_api->xr_result(result, "failed to locate space!")) {
-			return Transform();
+			return Transform3D();
 		}
 
 		bool spaceLocationValid =
@@ -264,17 +264,17 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 			toplevel_paths[index].wasLocationvalid = spaceLocationValid;
 
 			if (!spaceLocationValid) {
-				Godot::print_warning(String("OpenXR Space location not valid for hand ") + String::num_int64(index), __FUNCTION__, __FILE__, __LINE__);
-				return Transform();
+				UtilityFunctions::print(String("OpenXR Space location not valid for hand ") + String::num(index));
+				return Transform3D();
 			} else {
-				Godot::print("OpenXR regained tracking for hand {0}", index);
+				UtilityFunctions::print("OpenXR regained tracking for hand {0}", index);
 			}
 		}
 
 		if (spaceLocationValid) {
 			return xr_api->transform_from_pose(location.pose, p_world_scale);
 		} else {
-			return Transform();
+			return Transform3D();
 		}
 	}
 }

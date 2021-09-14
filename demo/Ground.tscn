@@ -14,10 +14,10 @@ extents = Vector3( 100, 1, 100 )
 [node name="Ground" type="StaticBody"]
 
 [node name="Mesh" type="MeshInstance" parent="."]
-transform = Transform( 100, 0, 0, 0, 100, 0, 0, 0, 100, 0, 0, 0 )
+transform = Transform3D( 100, 0, 0, 0, 100, 0, 0, 0, 100, 0, 0, 0 )
 mesh = SubResource( 1 )
 material/0 = null
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, -1, 0 )
 shape = SubResource( 2 )

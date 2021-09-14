@@ -7,7 +7,6 @@
 *.lib
 *.obj
 logs
-.vscode
 *.pdb
 *.ilk
 compile_commands.json
@@ -27,7 +26,9 @@ android/build
 # Local configuration file (sdk path, etc)
 local.properties
 
-# Ignore build folder, need to fix gradlew config because this should be android/build
+# Ignore build folder (moved to android/build so can probably be removed)
 build
 
-# Godot metadata files
+# Ignore local parts of vscode
+.vscode/settings.json
+.vscode/launch.json

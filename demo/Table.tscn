@@ -18,30 +18,30 @@ size = Vector3( 2.2, 0.1, 1.2 )
 [node name="Table" type="StaticBody"]
 
 [node name="CollisionShape" type="CollisionShape" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0 )
 shape = SubResource( 1 )
 
 [node name="Leg1" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, 0.5 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, 0.5 )
 mesh = SubResource( 2 )
 material/0 = null
 
 [node name="Leg2" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, 0.5 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, 0.5 )
 mesh = SubResource( 2 )
 material/0 = null
 
 [node name="Leg3" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, -0.5 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, -1, 0.5, -0.5 )
 mesh = SubResource( 2 )
 material/0 = null
 
 [node name="Leg4" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, -0.5 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 1, 0.5, -0.5 )
 mesh = SubResource( 2 )
 material/0 = null
 
 [node name="Surface" type="MeshInstance" parent="."]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0 )
+transform = Transform3D( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.05, 0 )
 mesh = SubResource( 3 )
 material/0 = null

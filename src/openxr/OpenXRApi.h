@@ -6,13 +6,25 @@
 #ifndef OPENXR_API_H
 #define OPENXR_API_H
 
-#include <Godot.hpp>
-#include <OS.hpp>
-#include <Transform.hpp>
-#include <Vector2.hpp>
+// #define OPENXR_INCLUDE_OPENGL
+
+#include <godot/gdnative_interface.h>
+
+#include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/core/defs.hpp>
+#include <godot_cpp/godot.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
+#include <godot_cpp/classes/xr_server.hpp>
+#include <godot_cpp/classes/os.hpp>
+#include <godot_cpp/variant/transform3d.hpp>
+#include <godot_cpp/variant/vector2.hpp>
 
 #ifdef WIN32
 #include <windows.h>
+#elif ANDROID
+// nothing here yet
+#else
+#include <X11/Xlib.h>
 #endif
 
 #include <inttypes.h>
@@ -26,6 +38,9 @@
 
 #include "xrmath.h"
 
+#include <volk.h>
+
+#ifdef OPENXR_INCLUDE_OPENGL
 #ifdef WIN32
 #include <glad/glad.h>
 #elif ANDROID
@@ -41,8 +56,8 @@
 #include <GL/glext.h>
 
 #include <GL/glx.h>
-#include <X11/Xlib.h>
 #endif
+#endif // OPENXR_INCLUDE_OPENGL
 
 #include "openxr/extensions/xr_composition_layer_provider.h"
 #include "openxr/extensions/xr_extension_wrapper.h"
@@ -70,7 +85,7 @@ public:
 	struct InputMap {
 		const char *name;
 		XrPath toplevel_path;
-		godot_int godot_controller;
+		int64_t godot_controller; // needs to become Ref<XRPositionalTracker>
 		XrPath active_profile; // note, this can be a profile added in the OpenXR runtime unknown to our default mappings
 	};
 
@@ -156,7 +171,7 @@ private:
 	bool initialised = false;
 	bool running = false;
 	int use_count = 1;
-	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
+	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_VULKAN;
 
 	// extensions
 	bool monado_stick_on_ball_ext = false;
@@ -177,31 +192,40 @@ private:
 	bool is_steamvr = false;
 
 	bool keep_3d_linear = true;
+
+	XrGraphicsBindingVulkanKHR graphics_binding_vulkan;
+	XrSwapchainImageVulkanKHR *images_vulkan = nullptr;
+
+#ifdef OPENXR_INCLUDE_OPENGL
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchainImageOpenGLKHR *images_gl = nullptr;
 #elif ANDROID
 	XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLESKHR **images = NULL;
+	XrSwapchainImageOpenGLESKHR *images_gl = nullptr;
 #else
 	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchainImageOpenGLKHR *images_gl = nullptr;
 #endif
+#endif // OPENXR_INCLUDE_OPENGL
+	RID *images_rids = nullptr;
+
 	float render_target_size_multiplier = 1.0f;
 	uint32_t render_target_width = 1024;
 	uint32_t render_target_height = 1024;
 	uint32_t swapchain_sample_count = 1;
 
-	XrSwapchain *swapchains = NULL;
+	XrSwapchain swapchain;
+	uint32_t swapchainLength;
 	uint32_t view_count;
 
-	XrCompositionLayerProjection *projectionLayer = NULL;
+	XrCompositionLayerProjection *projectionLayer = nullptr;
 	XrFrameState frameState = {};
 
-	uint32_t *buffer_index = NULL;
+	uint32_t buffer_index;
 
-	XrView *views = NULL;
-	XrCompositionLayerProjectionView *projection_views = NULL;
+	XrView *views = nullptr;
+	XrCompositionLayerProjectionView *projection_views = nullptr;
 	XrSpace play_space = XR_NULL_HANDLE;
 	XrSpace view_space = XR_NULL_HANDLE;
 	bool view_pose_valid = false;
@@ -253,10 +277,13 @@ private:
 	bool on_state_loss_pending();
 	bool on_state_exiting();
 
+#ifdef OPENXR_INCLUDE_OPENGL
 	bool check_graphics_requirements_gl(XrSystemId system_id);
-	XrResult acquire_image(int eye);
+#endif
+	bool check_graphics_requirements_vulkan(XrSystemId system_id);
+	XrResult acquire_image();
 	void update_actions();
-	void transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *matrix, float p_world_scale);
+	void transform_from_matrix(Transform3D &p_dest, XrMatrix4x4f *matrix, float p_world_scale);
 
 	bool parse_action_sets(const godot::String &p_json);
 	bool parse_interaction_profiles(const godot::String &p_json);
@@ -275,7 +302,7 @@ public:
 
 	void register_extension_wrapper(XRExtensionWrapper *wrapper) {
 		if (initialised) {
-			Godot::print_error("Extension wrappers must be registered prior to initialization.", __FUNCTION__, __FILE__, __LINE__);
+			UtilityFunctions::printerr("Extension wrappers must be registered prior to initialization.");
 			return;
 		}
 		registered_extension_wrappers.insert(wrapper);
@@ -309,7 +336,7 @@ public:
 	bool set_render_target_size_multiplier(float multiplier);
 
 	uint32_t get_view_count() const { return view_count; }
-	const XrSwapchain &get_swapchain(uint32_t eye) { return swapchains[eye]; }
+	const XrSwapchain &get_swapchain() { return swapchain; }
 
 	bool get_keep_3d_linear() { return keep_3d_linear; };
 
@@ -321,11 +348,7 @@ public:
 		char resultString[XR_MAX_RESULT_STRING_SIZE];
 		xrResultToString(instance, result, resultString);
 
-		godot::Godot::print_error(
-				godot::String("OpenXR ") + godot::String(format).format(godot::Array::make(values...)) + godot::String(" [") + godot::String(resultString) + godot::String("]"),
-				__FUNCTION__,
-				__FILE__,
-				__LINE__);
+		godot::UtilityFunctions::printerr(godot::String("OpenXR ") + godot::String(format).format(godot::Array::make(values...)) + godot::String(" [") + godot::String(resultString) + godot::String("]"));
 
 		return false;
 	};
@@ -356,34 +379,33 @@ public:
 	 * If has_external_texture_support it assumes godot has finished rendering into
 	 * the external texture and ignores texid. If false, it copies content from
 	 * texid to the OpenXR swapchain. Then the image is released.
-	 * If eye == 1, ends the frame.
 	 */
-	void render_openxr(int eye, uint32_t texid, bool has_external_texture_support);
+	void render_openxr(const RID &p_render_target);
 
 	// fill_projection_matrix() should be called after process_openxr()
-	void fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection);
+	void fill_projection_matrix(int eye, double p_z_near, double p_z_far, double *p_projection);
 
 	// recommended_rendertarget_size() returns required size of our image buffers
 	void recommended_rendertarget_size(uint32_t *width, uint32_t *height);
 
 	// get_view_transform() should be called after fill_projection_matrix()
-	bool get_view_transform(int eye, float world_scale, godot_transform *transform_for_eye);
+	bool get_view_transform(int eye, float world_scale, Transform3D &transform_for_eye);
 
 	// get_head_center() can be called at any time after init
-	bool get_head_center(float world_scale, godot_transform *transform);
+	bool get_head_center(float world_scale, Transform3D &transform);
 
-	// get_external_texture_for_eye() acquires images and sets has_support to true
-	int get_external_texture_for_eye(int eye, bool *has_support);
+	// get_external_color_texture() acquires image and returns it as a Godot texture object
+	RID get_external_color_texture();
 
 	// process_openxr() should be called FIRST in the frame loop
 	void process_openxr();
 
 	// helper method to get a transform from an openxr pose
-	godot::Transform transform_from_pose(const XrPosef &p_pose, float p_world_scale);
+	Transform3D transform_from_pose(const XrPosef &p_pose, float p_world_scale);
 
 	// helper method to get a valid transform from an openxr space location
-	godot::Transform transform_from_space_location(const XrSpaceLocation &p_location, float p_world_scale);
-	godot::Transform transform_from_space_location(const XrHandJointLocationEXT &p_location, float p_world_scale);
+	Transform3D transform_from_space_location(const XrSpaceLocation &p_location, float p_world_scale);
+	Transform3D transform_from_space_location(const XrHandJointLocationEXT &p_location, float p_world_scale);
 };
 
 #endif /* !OPENXR_API_H */

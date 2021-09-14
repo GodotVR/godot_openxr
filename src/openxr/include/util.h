@@ -1,11 +1,15 @@
 #ifndef UTIL_H
 #define UTIL_H
 
-#include <gen/Engine.hpp>
-#include <gen/MainLoop.hpp>
-#include <gen/Object.hpp>
-#include <gen/SceneTree.hpp>
-#include <gen/Viewport.hpp>
+#include <godot/gdnative_interface.h>
+
+#include <godot_cpp/core/class_db.hpp>
+#include <godot_cpp/classes/engine.hpp>
+#include <godot_cpp/classes/main_loop.hpp>
+#include <godot_cpp/classes/object.hpp>
+#include <godot_cpp/classes/scene_tree.hpp>
+#include <godot_cpp/classes/viewport.hpp>
+#include <godot_cpp/variant/utility_functions.hpp>
 
 using namespace godot;
 
@@ -56,17 +60,19 @@ static XrResult initialize_function_pointer_map(XrInstance instance, std::map<co
 static Viewport *get_main_viewport() {
 	MainLoop *main_loop = Engine::get_singleton()->get_main_loop();
 	if (!main_loop) {
-		Godot::print_error("Unable to retrieve main loop", __FUNCTION__, __FILE__, __LINE__);
+		UtilityFunctions::print("Unable to retrieve main loop");
 		return nullptr;
 	}
 
 	auto *scene_tree = Object::cast_to<SceneTree>(main_loop);
 	if (!scene_tree) {
-		Godot::print_error("Unable to retrieve scene tree", __FUNCTION__, __FILE__, __LINE__);
+		UtilityFunctions::print("Unable to retrieve scene tree");
 		return nullptr;
 	}
 
-	Viewport *viewport = scene_tree->get_root();
+	Window *window = scene_tree->get_root();
+	Viewport *viewport = Object::cast_to<Viewport>((Object *)window);
+
 	return viewport;
 }
 

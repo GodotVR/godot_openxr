@@ -32,7 +32,9 @@ if cdb_supported:
 opts.Update(env)
 
 # Other needed paths
-godot_glad_path = "thirdparty/glad/"
+glad_path = "thirdparty/glad/"
+volk_path = "thirdparty/volk/"
+vulkan_path = "thirdparty/vulkan/"
 godot_headers_path = "thirdparty/godot-cpp/godot-headers/"
 godot_cpp_path = "thirdparty/godot-cpp/"
 godot_cpp_library = "libgodot-cpp"
@@ -69,30 +71,37 @@ if env['platform'] == "windows":
         env['CXX'] = 'clang++'
         env['CC'] = 'clang'
 
+        env.Append(CPPDEFINES=["WIN32", "_WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS"])
+        env.Append(CCFLAGS=["-W3", "-GR"])
+        env.Append(CXXFLAGS=["-std:c++20"])
+
         if env['target'] in ('debug', 'd'):
             env.Append(CCFLAGS = ['-fPIC', '-g3','-Og'])
-            env.Append(CXXFLAGS = ['-fPIC', '-g3','-Og', '-std=c++17'])
         else:
-            env.Append(CCFLAGS = ['-fPIC','-O3'])
-            env.Append(CXXFLAGS = ['-fPIC','-O3', '-std=c++17'])
+            env.Append(CCFLAGS = ['-fPIC', '-g','-O3'])
     else:
         # This makes sure to keep the session environment variables on windows,
         # that way you can run scons in a vs 2017 prompt and it will find all the required tools
         env.Append(ENV = os.environ)
 
-        env.Append(CCFLAGS = ['-DWIN32', '-D_WIN32', '-D_WINDOWS', '-W3', '-GR', '-D_CRT_SECURE_NO_WARNINGS','-std:c++latest'])
+        env.Append(CPPDEFINES=["WIN32", "_WIN32", "_WINDOWS", "_CRT_SECURE_NO_WARNINGS", "TYPED_METHOD_BIND"])
+        env.Append(CCFLAGS=["-W3", "-GR"])
+        env.Append(CXXFLAGS=["-std:c++20"])
+
         if env['target'] in ('debug', 'd'):
-            env.Append(CCFLAGS = ['-Od', '-EHsc', '-D_DEBUG', '/MDd', '/Zi', '/FS'])
-            env.Append(LINKFLAGS = ['/DEBUG'])
+            env.Append(CPPDEFINES=["_DEBUG"])
+            env.Append(CCFLAGS = ['-Od', '-EHsc', '/MDd', '/Zi', '/FS'])
+            env.Append(LINKFLAGS = ['-DEBUG'])
         else:
-            env.Append(CCFLAGS = ['-O2', '-EHsc', '-DNDEBUG', '/MD'])
+            env.Append(CPPDEFINES=["NDEBUG"])
+            env.Append(CCFLAGS = ['-O2', '-EHsc', '/MD'])
 
     # Do we need these?
     env.Append(LIBS = ["opengl32", "setupapi", "advapi32.lib"])
 
     # For now just include Glad on Windows, but maybe also use with Linux?
-    env.Append(CPPPATH = [godot_glad_path])
-    sources += Glob(godot_glad_path + '*.c')
+    env.Append(CPPPATH = [glad_path])
+    sources += Glob(glad_path + '*.c')
 
 elif env['platform'] == "linux":
     target_path += "linux/"
@@ -130,20 +139,29 @@ elif env['platform'] == "linux":
 # Complete godot-cpp library path
 if env['target'] in ('debug', 'd'):
     godot_cpp_library += '.debug.64'
-    env.Append(CCFLAGS = [ '-DDEBUG' ])
+    env.Append(CPPDEFINES=["DEBUG", "DEBUG_ENABLED", "DEBUG_METHODS_ENABLED"])
 else:
     godot_cpp_library += '.release.64'
 
+# Add volk
+env.Append(CPPPATH = [volk_path, vulkan_path + "include/"])
+sources += Glob(volk_path + '*.c')
+
 ####################################################################################################################################
 # and add our main project
+
+target_name = env['target_name']
+if env['target'] in ('debug', 'd'):
+    target_name += "_debug"
+else:
+    target_name += "_release"
 
 env.Append(CPPPATH=[
     '.',
     'src/',
     godot_headers_path,
     godot_cpp_path + 'include/',
-    godot_cpp_path + 'include/core/',
-    godot_cpp_path + 'include/gen/'
+    godot_cpp_path + 'gen/include'
 ])
 
 # Add our godot-cpp library
@@ -163,7 +181,7 @@ sources += Glob('src/*.cpp')
 sources += Glob('src/*/*.cpp')
 sources += Glob('src/*/*/*.cpp')
 
-library = env.SharedLibrary(target=target_path + env['target_name'], source=sources)
+library = env.SharedLibrary(target=target_path + target_name, source=sources)
 Default(library)
 
 if openxr_loader_dll_target != '':

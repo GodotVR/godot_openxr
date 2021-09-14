@@ -1,25 +1,26 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Our OpenXR hand GDNative object implemented through meshes
 
-#include <ARVRServer.hpp>
+#include <godot_cpp/classes/xr_server.hpp>
 
 #include "gdclasses/OpenXRHand.h"
 
 using namespace godot;
 
-void OpenXRHand::_register_methods() {
-	register_method("_ready", &OpenXRHand::_ready);
-	register_method("_physics_process", &OpenXRHand::_physics_process);
+void OpenXRHand::_bind_methods() {
+	// these are already defined through our base class
+	// ClassDB::bind_method(D_METHOD("_ready"), &OpenXRHand::_ready);
+	// ClassDB::bind_method(D_METHOD("_physics_process", "delta"), &OpenXRHand::_physics_process);
 
-	register_method("get_hand", &OpenXRHand::get_hand);
-	register_method("set_hand", &OpenXRHand::set_hand);
-	register_property<OpenXRHand, int>("hand", &OpenXRHand::set_hand, &OpenXRHand::get_hand, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Left,Right");
+	ClassDB::bind_method(D_METHOD("get_hand"), &OpenXRHand::get_hand);
+	ClassDB::bind_method(D_METHOD("set_hand", "hand"), &OpenXRHand::set_hand);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "hand", PROPERTY_HINT_ENUM, "Left,Right"), "set_hand", "get_hand");
 
-	register_method("get_motion_range", &OpenXRHand::get_motion_range);
-	register_method("set_motion_range", &OpenXRHand::set_motion_range);
-	register_property<OpenXRHand, int>("motion_range", &OpenXRHand::set_motion_range, &OpenXRHand::get_motion_range, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Unobstructed,Conform to controller");
+	ClassDB::bind_method(D_METHOD("get_motion_range"), &OpenXRHand::get_motion_range);
+	ClassDB::bind_method(D_METHOD("set_motion_range", "motion_range"), &OpenXRHand::set_motion_range);
+	ADD_PROPERTY(PropertyInfo(Variant::INT, "motion_range", PROPERTY_HINT_ENUM, "Unobstructed,Conform to controller"), "set_motion_range", "get_motion_range");
 
-	register_method("is_active", &OpenXRHand::is_active);
+	ClassDB::bind_method(D_METHOD("is_active"), &OpenXRHand::is_active);
 }
 
 OpenXRHand::OpenXRHand() {
@@ -39,10 +40,6 @@ OpenXRHand::~OpenXRHand() {
 	}
 
 	hand_tracking_wrapper = nullptr;
-}
-
-void OpenXRHand::_init() {
-	// nothing to do here
 }
 
 void OpenXRHand::_ready() {
@@ -75,9 +72,9 @@ void OpenXRHand::_ready() {
 		"Wrist/LittleMetacarpal/LittleProximal/LittleIntermediate/LittleDistal/LittleTip",
 	};
 
-	// We cast to spatials which should allow us to use any subclass of that.
+	// We cast to Node3D which should allow us to use any subclass of that.
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-		joints[i] = Object::cast_to<Spatial>(get_node(node_names[i]));
+		joints[i] = get_node<Node3D>(NodePath(node_names[i]));
 		if (joints[i] == NULL) {
 			printf("Couldn't obtain joint for %s\n", node_names[i]);
 		}
@@ -86,7 +83,7 @@ void OpenXRHand::_ready() {
 	_set_motion_range();
 }
 
-void OpenXRHand::_physics_process(float delta) {
+void OpenXRHand::_physics_process(double delta) {
 	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return;
 	} else if (!openxr_api->is_initialised()) {
@@ -123,16 +120,16 @@ void OpenXRHand::_physics_process(float delta) {
 	};
 
 	// we cache the inverse of our transforms so we can quickly calculate local transforms
-	Transform inv_transforms[XR_HAND_JOINT_COUNT_EXT];
+	Transform3D inv_transforms[XR_HAND_JOINT_COUNT_EXT];
 
 	const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(hand);
-	ARVRServer *server = ARVRServer::get_singleton();
+	XRServer *server = XRServer::get_singleton();
 	const float ws = server->get_world_scale();
-	Transform reference_frame = server->get_reference_frame();
+	Transform3D reference_frame = server->get_reference_frame();
 
 	if (hand_tracker->is_initialised && hand_tracker->locations.isActive) {
 		for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-			Transform t = openxr_api->transform_from_space_location(hand_tracker->joint_locations[i], ws);
+			Transform3D t = openxr_api->transform_from_space_location(hand_tracker->joint_locations[i], ws);
 			// store the inverse to make live easier later on
 			inv_transforms[i] = t.inverse();
 

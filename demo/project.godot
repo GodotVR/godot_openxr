@@ -8,28 +8,6 @@
 
 config_version=4
 
-_global_script_classes=[ {
-"base": "Area",
-"class": "XRToolsInteractableArea",
-"language": "GDScript",
-"path": "res://addons/godot-xr-tools/objects/Interactable_area.gd"
-}, {
-"base": "PhysicsBody",
-"class": "XRToolsInteractableBody",
-"language": "GDScript",
-"path": "res://addons/godot-xr-tools/objects/Interactable_body.gd"
-}, {
-"base": "RigidBody",
-"class": "XRToolsPickable",
-"language": "GDScript",
-"path": "res://addons/godot-xr-tools/objects/Object_pickable.gd"
-} ]
-_global_script_class_icons={
-"XRToolsInteractableArea": "",
-"XRToolsInteractableBody": "",
-"XRToolsPickable": ""
-}
-
 [application]
 
 config/name="Godot OpenXR demo"
@@ -42,19 +20,19 @@ window/vsync/use_vsync=false
 
 [editor_plugins]
 
-enabled=PoolStringArray( "res://addons/godot-openxr/plugin.cfg" )
+enabled=PackedStringArray()
 
 [gdnative]
 
-singletons=[ "res://addons/godot-openxr/config/godot_openxr.gdnlib" ]
+singletons=[]
 
 [input]
 
 Fire={
 "deadzone": 0.5,
-"events": [ Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"alt":false,"shift":false,"control":false,"meta":false,"command":false,"pressed":false,"scancode":32,"physical_scancode":0,"unicode":0,"echo":false,"script":null)
+"events": [Object(InputEventKey,"resource_local_to_scene":false,"resource_name":"","device":0,"window_id":0,"store_command":true,"alt_pressed":false,"shift_pressed":false,"meta_pressed":false,"command_pressed":false,"pressed":false,"keycode":0,"physical_keycode":0,"unicode":0,"echo":false,"script":null)
 , Object(InputEventJoypadButton,"resource_local_to_scene":false,"resource_name":"","device":0,"button_index":0,"pressure":0.0,"pressed":false,"script":null)
- ]
+]
 }
 
 [layer_names]
@@ -66,6 +44,8 @@ Fire={
 
 [rendering]
 
+vulkan/rendering/back_end=1
+xr/enabled=true
 quality/driver/driver_name="GLES2"
 vram_compression/import_etc=true
 quality/filters/msaa=1

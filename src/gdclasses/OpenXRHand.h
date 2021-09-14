@@ -6,12 +6,12 @@
 
 #include "openxr/OpenXRApi.h"
 #include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
-#include <Ref.hpp>
-#include <Spatial.hpp>
+#include <godot_cpp/classes/ref.hpp>
+#include <godot_cpp/classes/node3d.hpp>
 
 namespace godot {
-class OpenXRHand : public Spatial {
-	GODOT_CLASS(OpenXRHand, Spatial)
+class OpenXRHand : public Node3D {
+	GDCLASS(OpenXRHand, Node3D)
 
 private:
 	OpenXRApi *openxr_api;
@@ -19,15 +19,15 @@ private:
 	int hand;
 	int motion_range;
 
-	Spatial *joints[XR_HAND_JOINT_COUNT_EXT];
+	Node3D *joints[XR_HAND_JOINT_COUNT_EXT];
 	void _set_motion_range();
 
-public:
-	static void _register_methods();
+protected:
+	static void _bind_methods();
 
-	void _init();
-	void _ready();
-	void _physics_process(float delta);
+public:
+	virtual void _ready() override;
+	virtual void _physics_process(double delta) override;
 
 	OpenXRHand();
 	~OpenXRHand();

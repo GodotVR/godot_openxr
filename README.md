@@ -2,7 +2,7 @@
 
 ## Versions
 
-Requires Godot 3.4, does not (yet) work with Godot 4.
+Requires Godot 4.x, you'll need to build this from master.
 
 See [Branches, Tags and versions](https://github.com/GodotVR/godot_openxr/issues/81) for more info on stable and development branches in this repository.
 
@@ -19,13 +19,15 @@ You will also need cmake if you're compiling the OpenXR SDK loader
 
 ### Godot-cpp
 
-Currently this project includes the godot-cpp repository as a submodule.
+This project includes the godot-cpp repository as a submodule.
 If you do not already have this repositories downloaded you can execute:
 ```
 git submodule update --init --recursive
 ```
 To download the required version.
 This will also include the `godot-headers` submodule.
+
+> Note that as we're using the new GD Extensions system. You may need to update the `extension_api.json` in the `godot-cpp/godot-headers` folder with a version build from your copy of Godot by running `godot --dump-extension-api`.
 
 This submodule needs to be compiled with the following
 ```
@@ -44,7 +46,11 @@ On Linux the loader and include files should be installed system wide via packag
 On Windows a precompiled version of the loaded can be found in `openxr_loader`, currently only the x86 version is used.
 You can download the latest version from: https://github.com/KhronosGroup/OpenXR-SDK/releases
 
+On Android we're currently including a copy of Oculus' loader for Quest found in `openxr_loader/oculus_mobile_sdk`.
+
 ### Compiling the plugin
+
+> IMPORTANT GD Extensions require the plugin, including `godot-cpp` to be compiled with `debug` settings when used in the editor. If you do not do so it will crash. The build system will soon be altered to maintain both release and debug versions of the plugin side by side. It is important to note that even if you intent to use the plugin on Android/Quest you must build a desktop version of the plugin so the editor can load it or you will not be able to interact with the plugin withing the IDE.
 
 If everything is in place compiling should be pretty straight forward
 
@@ -72,7 +78,7 @@ scons platform=linux use_llvm=yes
 
 ### Compiling for Android
 
-For Android (Oculus Quest) the build process is slightly different. Note that currently the build process assumes that `godot-cpp` was build for either windows or linux plugin, if not you will need to manually run the python script that creates the wrapper code.
+For Android (Oculus Quest) the build process is slightly different. Note that currently the build process assumes that `godot-cpp` was build for either windows or linux plugin, if not you will need to manually run the python script that creates the wrapper code (see `android\generate.py`).
 
 On Android we use `gradlew` instead of `scons` for building the library. The toolset should be installed automatically if you install Android Studio.
 
@@ -82,7 +88,7 @@ gradlew generateSharedLibs
 ```
 
 ## Prebuild libraries
-If you do not want to compile the OpenXR plugin yourself you will find releases with prebuild copies of the plugin.
+If you do not want to compile the OpenXR plugin yourself you will find releases with prebuild copies of the plugin [here](https://github.com/GodotVR/godot_openxr/releases).
 Simply download and unzip the contents into your Godot project.
 
 ## Running on Android/Quest
@@ -123,11 +129,10 @@ To do so:
 
 ### using VS code
 
-I've only tested debugging using VS code on Windows with the MSVC C++ compiler but VS Code has good templates to get you up and running on Linux or on MinGW as well. Make sure you have the C/C++ extensions installed and the debugger installed.
+For those who like to use vscode I've included a `tasks.json` configuration for compiling `godot-cpp` and compiling the plugin on Windows and Linux.
 
-Either manually create a .vscode folder or let vs code do this for you and setup the following two files:
-
-`launch.json`
+You can use these to configure a `launch.json` to compile and run the plugin and debug it.
+Below is a sample `launch.json` file:
 ```
 {
     "version": "0.2.0",
@@ -145,7 +150,7 @@ Either manually create a .vscode folder or let vs code do this for you and setup
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "integratedTerminal",
-            "preLaunchTask": "build"
+            "preLaunchTask": "build desktop plugin debug"
         },
         {
             "name": "Editor Launch",
@@ -161,37 +166,14 @@ Either manually create a .vscode folder or let vs code do this for you and setup
             "cwd": "${workspaceFolder}",
             "environment": [],
             "console": "externalTerminal",
-            "preLaunchTask": "build"
+            "preLaunchTask": "build desktop plugin debug"
         }
     ]
 }
 ```
 Be sure to change `path-to-godot` to the actual path that contains your godot source and adjust the name of the godot executable as it may change depending on your compiler settings.
-Note that two options are provided, launching the demo project, or opening the demo project in the Godot editor.
 
-`tasks.json`
-```
-{
-    // See https://go.microsoft.com/fwlink/?LinkId=733558
-    // for the documentation about the tasks.json format
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "build",
-            "type": "shell",
-            "command": "scons",
-            "group": "build",
-            "args": [
-                "platform=windows",
-                "target=debug",
-                "-j8"
-            ],
-            "problemMatcher": "$msCompile"
-        }
-    ]
-}
-```
-Note that our build script does *not* build godot-cpp!
+> Note that two options are provided, launching the demo project, or opening the demo project in the Godot editor. Also only the plugin is compiled as you'll only need to compile `godot-cpp` if a new version is available.
 
 ## Testing
 
@@ -207,7 +189,7 @@ Example: Converting a godot-openvr project
 
 1. Remove the `addons/godot-openvr` directory from the project.
 2. Copy the `godot-openxr/demo/addons/godot-openxr` directory to `your_project/addons/`.
-3. If your project was already set up to use OpenVR, find `ARVRServer.find_interface("OpenVR")` and replace `"OpenVR"` with `"OpenXR"`.
+3. If your project was already set up to use OpenVR, find `XRServer.find_interface("OpenVR")` and replace `"OpenVR"` with `"OpenXR"`.
 
 Since the module is laid out like godot-openvr, the basic documentation for integrating OpenVR into a project also applies to OpenXR.
 

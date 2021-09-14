@@ -1,6 +1,6 @@
 #include "xr_fb_color_space_extension_wrapper.h"
 
-#include <core/Variant.hpp>
+#include <godot_cpp/variant/variant.hpp>
 
 using namespace godot;
 
@@ -90,7 +90,8 @@ godot::Dictionary XRFbColorSpaceExtensionWrapper::get_available_color_spaces() {
 
 		for (uint32_t i = 0; i < color_space_count; i++) {
 			unsigned int value = color_spaces[i]; // cast so we get the correct variant
-			dict[Variant(value)] = get_color_space_enum_desc(color_spaces[i]);
+			// FIXME We don't have a setter on dictionaries in the new API
+			// dict[Variant(value)] = get_color_space_enum_desc(color_spaces[i]);
 		}
 
 		free(color_spaces);

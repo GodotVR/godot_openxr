@@ -56,11 +56,11 @@ bool XRExtPerformanceSettingsExtensionWrapper::on_event_polled(const XrEventData
 		case XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT: {
 			const XrEventDataPerfSettingsEXT *perf_settings_event = (XrEventDataPerfSettingsEXT *)&event;
 			// TODO: Might want to provide callback methods to properly notify interested parties.
-			Godot::print("Received XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {0} subdomain {1} : level {2} -> level {3}",
+			UtilityFunctions::print(String("Received XR_TYPE_EVENT_DATA_PERF_SETTINGS_EXT event: type {0} subdomain {1} : level {2} -> level {3}").format(Array::make(
 					perf_settings_event->type,
 					perf_settings_event->subDomain,
 					perf_settings_event->fromLevel,
-					perf_settings_event->toLevel);
+					perf_settings_event->toLevel)));
 			return true;
 		} break;
 

@@ -1,6 +1,6 @@
 #include "xr_fb_display_refresh_rate_extension_wrapper.h"
 
-#include <core/Variant.hpp>
+#include <godot_cpp/variant/variant.hpp>
 
 using namespace godot;
 

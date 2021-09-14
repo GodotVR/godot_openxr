@@ -67,37 +67,37 @@ void XRFbFoveationExtensionWrapper::set_foveation_level(XrFoveationLevelFB level
 		return;
 	}
 
-	for (uint32_t eye = 0; eye < openxr_api->get_view_count(); eye++) {
-		XrFoveationLevelProfileCreateInfoFB level_profile_create_info = {
-			.type = XR_TYPE_FOVEATION_LEVEL_PROFILE_CREATE_INFO_FB,
-			.next = nullptr,
-			.level = level,
-			.verticalOffset = 0.0f,
-			.dynamic = dynamic,
-		};
+	// TODO check if this works correctly, we now use a single swapchain with layers
 
-		XrFoveationProfileCreateInfoFB profile_create_info = {
-			.type = XR_TYPE_FOVEATION_PROFILE_CREATE_INFO_FB,
-			.next = &level_profile_create_info,
-		};
+	XrFoveationLevelProfileCreateInfoFB level_profile_create_info = {
+		.type = XR_TYPE_FOVEATION_LEVEL_PROFILE_CREATE_INFO_FB,
+		.next = nullptr,
+		.level = level,
+		.verticalOffset = 0.0f,
+		.dynamic = dynamic,
+	};
 
-		XrFoveationProfileFB foveation_profile;
-		XrResult result = xrCreateFoveationProfileFB(openxr_api->get_session(), &profile_create_info, &foveation_profile);
-		if (!openxr_api->xr_result(result, "Unable to create the foveation profile for eye {0}", eye)) {
-			return;
-		}
+	XrFoveationProfileCreateInfoFB profile_create_info = {
+		.type = XR_TYPE_FOVEATION_PROFILE_CREATE_INFO_FB,
+		.next = &level_profile_create_info,
+	};
 
-		XrSwapchainStateFoveationFB foveation_update_state = {
-			.type = XR_TYPE_SWAPCHAIN_STATE_FOVEATION_FB,
-			.profile = foveation_profile,
-		};
-
-		result = swapchain_update_state_wrapper->xrUpdateSwapchainFB(openxr_api->get_swapchain(eye), (XrSwapchainStateBaseHeaderFB *)&foveation_update_state);
-		if (!openxr_api->xr_result(result, "Unable to update the swapchain for eye {0}", eye)) {
-			return;
-		}
-
-		result = xrDestroyFoveationProfileFB(foveation_profile);
-		openxr_api->xr_result(result, "Unable to destroy the foveation profile for eye {0}", eye);
+	XrFoveationProfileFB foveation_profile;
+	XrResult result = xrCreateFoveationProfileFB(openxr_api->get_session(), &profile_create_info, &foveation_profile);
+	if (!openxr_api->xr_result(result, "Unable to create the foveation profile")) {
+		return;
 	}
+
+	XrSwapchainStateFoveationFB foveation_update_state = {
+		.type = XR_TYPE_SWAPCHAIN_STATE_FOVEATION_FB,
+		.profile = foveation_profile,
+	};
+
+	result = swapchain_update_state_wrapper->xrUpdateSwapchainFB(openxr_api->get_swapchain(), (XrSwapchainStateBaseHeaderFB *)&foveation_update_state);
+	if (!openxr_api->xr_result(result, "Unable to update the swapchain")) {
+		return;
+	}
+
+	result = xrDestroyFoveationProfileFB(foveation_profile);
+	openxr_api->xr_result(result, "Unable to destroy the foveation profile");
 }

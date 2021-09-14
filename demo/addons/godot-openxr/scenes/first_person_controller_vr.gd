@@ -1,11 +1,14 @@
-extends ARVROrigin
+extends XROrigin3D
 
-export (NodePath) var viewport = null
+@export var viewport : NodePath = null
 
-var interface : ARVRInterface
+var interface : XRInterfaceOpenXR
+
+func get_interface() -> XRInterfaceOpenXR:
+	return interface
 
 func initialise() -> bool:
-	var interface = ARVRServer.find_interface("OpenXR")
+	interface = XRServer.find_interface("OpenXR")
 	if interface and interface.initialize():
 		print("OpenXR Interface initialized")
 
@@ -23,13 +26,14 @@ func initialise() -> bool:
 			vp = get_viewport()
 
 		# Change our viewport so it is tied to our ARVR interface and renders to our HMD
-		vp.arvr = true
+		vp.use_xr = true
 
 		# Our interface will tell us whether we should keep our render buffer in linear color space
-		vp.keep_3d_linear = $Configuration.keep_3d_linear()
+		# If true our preview will be darker.
+		vp.keep_3d_linear = interface.keep_3d_linear()
 
 		# increase our physics engine update speed
-		var refresh_rate = $Configuration.get_refresh_rate()
+		var refresh_rate = interface.get_refresh_rate()
 		if refresh_rate == 0:
 			# Only Facebook Reality Labs supports this at this time
 			print("No refresh rate given by XR runtime")
@@ -48,11 +52,11 @@ func initialise() -> bool:
 		return false
 
 func _connect_plugin_signals():
-	ARVRServer.connect("openxr_session_begun", self, "_on_openxr_session_begun")
-	ARVRServer.connect("openxr_session_ending", self, "_on_openxr_session_ending")
-	ARVRServer.connect("openxr_focused_state", self, "_on_openxr_focused_state")
-	ARVRServer.connect("openxr_visible_state", self, "_on_openxr_visible_state")
-	ARVRServer.connect("openxr_pose_recentered", self, "_on_openxr_pose_recentered")
+	XRServer.connect("openxr_session_begun", _on_openxr_session_begun)
+	XRServer.connect("openxr_session_ending", _on_openxr_session_ending)
+	XRServer.connect("openxr_focused_state", _on_openxr_focused_state)
+	XRServer.connect("openxr_visible_state", _on_openxr_visible_state)
+	XRServer.connect("openxr_pose_recentered", _on_openxr_pose_recentered)
 
 func _on_openxr_session_begun():
 	print("OpenXR session begun")

@@ -110,6 +110,17 @@ If you've done all steps correctly there should be an Android icon visible in yo
 
 If you want to debug the module make sure you use a copy of the godot binary build with either `target=release_debug` or `target=debug` provided to scons and that you build the plugin using `target=debug`. This will ensure debugging symbol files are created.
 
+### using Android Studio
+
+The project contains the necessary configurations to allow building and debugging within Android Studio.
+
+To do so:
+- Open the `demo` project first within the Godot Editor. This will generate the `.import` directory which is necessary for the next steps.
+- Load the project within Android Studio by selecting the `settings.gradle` file in the root directory
+- In the `Configurations` drop-down menu, select `android_samples.demo`
+- Select `Oculus Quest` (or `Oculus Quest 2`) in the `Devices` drop-down menu
+- Click the `Run` icon (or `Debug` icon if debugging) to have the IDE build the apk and push it to the device
+
 ### using VS code
 
 I've only tested debugging using VS code on Windows with the MSVC C++ compiler but VS Code has good templates to get you up and running on Linux or on MinGW as well. Make sure you have the C/C++ extensions installed and the debugger installed.

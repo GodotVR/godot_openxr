@@ -129,14 +129,17 @@ set_property(TARGET ${GODOT-CPP} APPEND_STRING PROPERTY LINK_FLAGS ${GODOT_LINKE
 # Get Sources
 file(GLOB_RECURSE SOURCES ../src/*.c**)
 file(GLOB_RECURSE HEADERS ../src/*.h**)
+file(GLOB_RECURSE ANDROID_SOURCES src/main/cpp/*.c**)
+file(GLOB_RECURSE ANDROID_HEADERS src/main/cpp/*.h**)
 
 add_library(${PROJECT_NAME}
         SHARED
-        ${SOURCES} ${HEADERS} OPENXR_MOBILE_LOADER_SO_LIB)
+        ${SOURCES} ${HEADERS} ${ANDROID_SOURCES} ${ANDROID_HEADERS} OPENXR_MOBILE_LOADER_SO_LIB)
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
         ../src
+        src/main/cpp
         ${GODOT_CPP_DIR}/src
         ${GODOT_CPP_DIR}/src/core
         ${GODOT_CPP_DIR}/src/gen

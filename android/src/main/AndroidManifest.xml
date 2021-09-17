@@ -13,6 +13,13 @@
         android:version="1"
         tools:node="replace"/>
 
+    <!--
+    Passthrough feature flag.
+    `required` should be `true` when passthrough is required for app functionality, `false` otherwise.
+    -->
+    <uses-feature android:name="com.oculus.feature.PASSTHROUGH"
+        android:required="false" />
+
     <application>
 
         <meta-data

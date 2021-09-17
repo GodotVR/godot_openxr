@@ -9,6 +9,7 @@
 #include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_foveation_extension_wrapper.h"
+#include "openxr/extensions/xr_fb_passthrough_extension_wrapper.h"
 #include <Node.hpp>
 
 namespace godot {
@@ -21,6 +22,7 @@ private:
 	XRFbDisplayRefreshRateExtensionWrapper *display_refresh_rate_wrapper = nullptr;
 	XRFbFoveationExtensionWrapper *foveation_wrapper = nullptr;
 	XRExtPerformanceSettingsExtensionWrapper *performance_settings_wrapper = nullptr;
+	XRFbPassthroughExtensionWrapper *passthrough_wrapper = nullptr;
 
 public:
 	static void _register_methods();
@@ -66,6 +68,9 @@ public:
 	void set_render_target_size_multiplier(double multiplier);
 
 	void set_foveation_level(int level, bool is_dynamic);
+
+	bool start_passthrough();
+	void stop_passthrough();
 };
 } // namespace godot
 

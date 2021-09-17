@@ -11,15 +11,6 @@ using namespace godot;
 
 #define UNPACK(...) __VA_ARGS__
 
-#define EXT_PROTO_UINT8_T_FUNC1(func_name, arg1_type, arg1)          \
-	PFN_##func_name func_name##_ptr = nullptr;                       \
-	XRAPI_ATTR uint8_t XRAPI_CALL func_name(UNPACK arg1_type arg1) { \
-		if (!func_name##_ptr) {                                      \
-			return false;                                            \
-		}                                                            \
-		return (*func_name##_ptr)(arg1);                             \
-	}
-
 #define EXT_PROTO_XRRESULT_FUNC1(func_name, arg1_type, arg1)          \
 	PFN_##func_name func_name##_ptr = nullptr;                        \
 	XRAPI_ATTR XrResult XRAPI_CALL func_name(UNPACK arg1_type arg1) { \

@@ -55,6 +55,9 @@ void OpenXRConfig::_register_methods() {
 	register_property<OpenXRConfig, double>("render_target_size_multiplier", &OpenXRConfig::set_render_target_size_multiplier, &OpenXRConfig::get_render_target_size_multiplier, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
 
 	register_method("set_foveation_level", &OpenXRConfig::set_foveation_level);
+
+	register_method("start_passthrough", &OpenXRConfig::start_passthrough);
+	register_method("stop_passthrough", &OpenXRConfig::stop_passthrough);
 }
 
 OpenXRConfig::OpenXRConfig() {
@@ -63,6 +66,7 @@ OpenXRConfig::OpenXRConfig() {
 	display_refresh_rate_wrapper = XRFbDisplayRefreshRateExtensionWrapper::get_singleton();
 	foveation_wrapper = XRFbFoveationExtensionWrapper::get_singleton();
 	performance_settings_wrapper = XRExtPerformanceSettingsExtensionWrapper::get_singleton();
+	passthrough_wrapper = XRFbPassthroughExtensionWrapper::get_singleton();
 }
 
 OpenXRConfig::~OpenXRConfig() {
@@ -290,5 +294,15 @@ void OpenXRConfig::set_foveation_level(int level, bool is_dynamic) {
 	if (foveation_wrapper != nullptr) {
 		XrFoveationDynamicFB foveation_dynamic = is_dynamic ? XR_FOVEATION_DYNAMIC_LEVEL_ENABLED_FB : XR_FOVEATION_DYNAMIC_DISABLED_FB;
 		foveation_wrapper->set_foveation_level(static_cast<XrFoveationLevelFB>(level), foveation_dynamic);
+	}
+}
+
+bool OpenXRConfig::start_passthrough() {
+	return passthrough_wrapper != nullptr && passthrough_wrapper->start_passthrough();
+}
+
+void OpenXRConfig::stop_passthrough() {
+	if (passthrough_wrapper) {
+		passthrough_wrapper->stop_passthrough();
 	}
 }

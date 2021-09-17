@@ -9,6 +9,9 @@ func initialise() -> bool:
 	if interface and interface.initialize():
 		print("OpenXR Interface initialized")
 
+		# Comment to disable passthrough
+		$Configuration.start_passthrough()
+
 		# Connect to our plugin signals
 		_connect_plugin_signals()
 

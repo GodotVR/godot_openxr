@@ -5,6 +5,7 @@
 #include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_foveation_extension_wrapper.h"
+#include "openxr/extensions/xr_fb_passthrough_extension_wrapper.h"
 #include <core/Array.hpp>
 #include <core/Dictionary.hpp>
 
@@ -83,5 +84,13 @@ JNIEXPORT jboolean JNICALL JNI_METHOD(nativeSetRenderTargetSizeMultiplier)(JNIEn
 JNIEXPORT void JNICALL JNI_METHOD(nativeSetFoveationLevel)(JNIEnv *, jclass, jint foveation_level, jboolean is_dynamic) {
 	XrFoveationDynamicFB foveation_dynamic = is_dynamic ? XR_FOVEATION_DYNAMIC_LEVEL_ENABLED_FB : XR_FOVEATION_DYNAMIC_DISABLED_FB;
 	XRFbFoveationExtensionWrapper::get_singleton()->set_foveation_level(static_cast<XrFoveationLevelFB>(foveation_level), foveation_dynamic);
+}
+
+JNIEXPORT jboolean JNICALL JNI_METHOD(nativeStartPassthrough)(JNIEnv *, jclass) {
+	return XRFbPassthroughExtensionWrapper::get_singleton()->start_passthrough();
+}
+
+JNIEXPORT void JNICALL JNI_METHOD(nativeStopPassthrough)(JNIEnv *, jclass) {
+	XRFbPassthroughExtensionWrapper::get_singleton()->stop_passthrough();
 }
 };

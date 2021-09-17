@@ -156,3 +156,23 @@ fun OpenXRPlugin.setFoveationLevel(level: FoveationLevel, isDynamic: Boolean) {
 }
 
 private external fun nativeSetFoveationLevel(level: Int, isDynamic: Boolean)
+
+/**
+ * Start passthrough on the device.
+ */
+fun OpenXRPlugin.startPassthrough(): Boolean {
+    return invokeNativeWithDefault(false) {
+        nativeStartPassthrough()
+    }
+}
+
+private external fun nativeStartPassthrough(): Boolean
+
+/**
+ * Stop passthrough on the device.
+ */
+fun OpenXRPlugin.stopPassthrough() {
+    invokeNative { nativeStopPassthrough() }
+}
+
+private external fun nativeStopPassthrough()

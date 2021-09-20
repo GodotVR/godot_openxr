@@ -1217,11 +1217,11 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	projectionLayer = (XrCompositionLayerProjection *)malloc(sizeof(XrCompositionLayerProjection));
 	projectionLayer->type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;
-	projectionLayer->next = NULL;
-	projectionLayer->layerFlags = 0;
+	projectionLayer->next = nullptr;
+	projectionLayer->layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
 	projectionLayer->space = play_space;
 	projectionLayer->viewCount = view_count;
-	projectionLayer->views = NULL;
+	projectionLayer->views = nullptr;
 
 	frameState.type = XR_TYPE_FRAME_STATE;
 	frameState.next = NULL;
@@ -2037,15 +2037,27 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 	if (eye == 1) {
 		projectionLayer->views = projection_views;
 
-		const XrCompositionLayerBaseHeader *const projectionlayers[1] = { (const XrCompositionLayerBaseHeader *const)
-					projectionLayer };
+		std::vector<const XrCompositionLayerBaseHeader *> layers_list;
+
+		// Add composition layers from providers
+		for (XRCompositionLayerProvider *provider : composition_layer_providers) {
+			XrCompositionLayerBaseHeader *layer = provider->get_composition_layer();
+			if (layer) {
+				layers_list.push_back(layer);
+			}
+		}
+
+		layers_list.push_back((const XrCompositionLayerBaseHeader *)projectionLayer);
+
+		projectionLayer->layerFlags = layers_list.size() > 1 ? XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT : XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+
 		XrFrameEndInfo frameEndInfo = {
 			.type = XR_TYPE_FRAME_END_INFO,
 			.next = nullptr,
 			.displayTime = frameState.predictedDisplayTime,
 			.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-			.layerCount = 1,
-			.layers = projectionlayers,
+			.layerCount = static_cast<uint32_t>(layers_list.size()),
+			.layers = layers_list.data(),
 		};
 		result = xrEndFrame(session, &frameEndInfo);
 		if (!xr_result(result, "failed to end frame!")) {

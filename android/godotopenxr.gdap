@@ -1,0 +1,5 @@
+[config]
+
+name="OpenXR"
+binary_type="local"
+binary="godotopenxr.1.0.5-release.aar"

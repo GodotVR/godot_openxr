@@ -44,6 +44,7 @@
 #include <X11/Xlib.h>
 #endif
 
+#include "openxr/extensions/xr_composition_layer_provider.h"
 #include "openxr/extensions/xr_extension_wrapper.h"
 #include "openxr/include/openxr_inc.h"
 #include <openxr/openxr_platform.h>
@@ -151,6 +152,7 @@ private:
 
 	std::vector<const char *> enabled_extensions;
 	std::set<XRExtensionWrapper *> registered_extension_wrappers;
+	std::set<XRCompositionLayerProvider *> composition_layer_providers;
 
 	// feature flags
 	XrViewConfigurationType view_config_type = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO;
@@ -251,11 +253,23 @@ public:
 
 	template <class T>
 	void register_extension_wrapper() {
+		register_extension_wrapper(T::get_singleton());
+	}
+
+	void register_extension_wrapper(XRExtensionWrapper *wrapper) {
 		if (initialised) {
 			Godot::print_error("Extension wrappers must be registered prior to initialization.", __FUNCTION__, __FILE__, __LINE__);
 			return;
 		}
-		registered_extension_wrappers.insert(T::get_singleton());
+		registered_extension_wrappers.insert(wrapper);
+	}
+
+	void register_composition_layer_provider(XRCompositionLayerProvider *provider) {
+		composition_layer_providers.insert(provider);
+	}
+
+	void unregister_composition_layer_provider(XRCompositionLayerProvider *provider) {
+		composition_layer_providers.erase(provider);
 	}
 
 	bool is_initialised();

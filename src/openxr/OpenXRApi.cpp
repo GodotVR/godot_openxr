@@ -13,6 +13,10 @@
 #include <cmath>
 #include <map>
 
+#ifdef ANDROID
+#include <jni/openxr_plugin_wrapper.h>
+#endif
+
 ////////////////////////////////////////////////////////////////////////////////
 // Default action set configuration
 
@@ -1559,6 +1563,10 @@ bool OpenXRApi::on_state_ready() {
 
 	emit_plugin_signal(SIGNAL_SESSION_BEGUN);
 
+#ifdef ANDROID
+	OpenXRPluginWrapper::on_session_begun();
+#endif
+
 	return true;
 }
 
@@ -1577,6 +1585,10 @@ bool OpenXRApi::on_state_visible() {
 	}
 
 	emit_plugin_signal(SIGNAL_VISIBLE_STATE);
+
+#ifdef ANDROID
+	OpenXRPluginWrapper::on_focus_lost();
+#endif
 	return true;
 }
 
@@ -1587,6 +1599,10 @@ bool OpenXRApi::on_state_focused() {
 	}
 
 	emit_plugin_signal(SIGNAL_FOCUSED_STATE);
+
+#ifdef ANDROID
+	OpenXRPluginWrapper::on_focus_gained();
+#endif
 	return true;
 }
 
@@ -1594,6 +1610,10 @@ bool OpenXRApi::on_state_stopping() {
 	Godot::print("On state stopping");
 
 	emit_plugin_signal(SIGNAL_SESSION_ENDING);
+
+#ifdef ANDROID
+	OpenXRPluginWrapper::on_session_ending();
+#endif
 
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_stopping();

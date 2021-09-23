@@ -9,6 +9,9 @@ func initialise() -> bool:
 	if interface and interface.initialize():
 		print("OpenXR Interface initialized")
 
+		# Connect to our plugin signals
+		_connect_plugin_signals()
+
 		var vp : Viewport = null
 		if viewport:
 			vp = get_node(viewport)
@@ -41,3 +44,25 @@ func initialise() -> bool:
 		return true
 	else:
 		return false
+
+func _connect_plugin_signals():
+	ARVRServer.connect("openxr_session_begun", self, "_on_openxr_session_begun")
+	ARVRServer.connect("openxr_session_ending", self, "_on_openxr_session_ending")
+	ARVRServer.connect("openxr_focused_state", self, "_on_openxr_focused_state")
+	ARVRServer.connect("openxr_visible_state", self, "_on_openxr_visible_state")
+	ARVRServer.connect("openxr_pose_recentered", self, "_on_openxr_pose_recentered")
+
+func _on_openxr_session_begun():
+	print("OpenXR session begun")
+
+func _on_openxr_session_ending():
+	print("OpenXR session ending")
+
+func _on_openxr_focused_state():
+	print("OpenXR focused state")
+
+func _on_openxr_visible_state():
+	print("OpenXR visible state")
+
+func _on_openxr_pose_recentered():
+	print("OpenXR pose recentered")

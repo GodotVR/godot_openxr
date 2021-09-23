@@ -8,6 +8,7 @@
 #include <ProjectSettings.hpp>
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/include/signals_util.h"
 
 #include <cmath>
 #include <map>
@@ -1426,6 +1427,9 @@ bool OpenXRApi::initialize() {
 
 	// We've made it!
 	initialised = true;
+
+	register_plugin_signals();
+
 	return true;
 }
 
@@ -1531,6 +1535,8 @@ bool OpenXRApi::on_state_ready() {
 		wrapper->on_state_ready();
 	}
 
+	emit_plugin_signal(SIGNAL_SESSION_BEGUN);
+
 	return true;
 }
 
@@ -1547,6 +1553,8 @@ bool OpenXRApi::on_state_visible() {
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_visible();
 	}
+
+	emit_plugin_signal(SIGNAL_VISIBLE_STATE);
 	return true;
 }
 
@@ -1555,11 +1563,15 @@ bool OpenXRApi::on_state_focused() {
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_focused();
 	}
+
+	emit_plugin_signal(SIGNAL_FOCUSED_STATE);
 	return true;
 }
 
 bool OpenXRApi::on_state_stopping() {
 	Godot::print("On state stopping");
+
+	emit_plugin_signal(SIGNAL_SESSION_ENDING);
 
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_stopping();
@@ -2484,7 +2496,9 @@ bool OpenXRApi::poll_events() {
 			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
 				XrEventDataReferenceSpaceChangePending *event = (XrEventDataReferenceSpaceChangePending *)&runtimeEvent;
 				Godot::print("OpenXR EVENT: reference space type {0} change pending!", event->referenceSpaceType);
-				// TODO: do something
+				if (event->poseValid) {
+					emit_plugin_signal(SIGNAL_POSE_RECENTERED);
+				}
 			} break;
 			case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
 				Godot::print("OpenXR EVENT: interaction profile changed!");

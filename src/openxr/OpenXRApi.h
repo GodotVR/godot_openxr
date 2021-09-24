@@ -141,8 +141,6 @@ private:
 	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
 
 	// extensions
-	// TODO consider basing this on an enumeration.
-	bool performance_settings_ext = false;
 	bool monado_stick_on_ball_ext = false;
 
 	bool fb_swapchain_update_state_ext = false;

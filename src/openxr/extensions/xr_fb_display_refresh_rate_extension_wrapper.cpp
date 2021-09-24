@@ -24,10 +24,6 @@ XRFbDisplayRefreshRateExtensionWrapper::~XRFbDisplayRefreshRateExtensionWrapper(
 	OpenXRApi::openxr_release_api();
 }
 
-std::map<const char *, bool *> XRFbDisplayRefreshRateExtensionWrapper::get_request_extensions() {
-	return request_extensions;
-}
-
 void XRFbDisplayRefreshRateExtensionWrapper::cleanup() {
 	fb_display_refresh_rate_ext = false;
 }

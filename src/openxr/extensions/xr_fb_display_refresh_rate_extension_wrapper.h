@@ -12,8 +12,6 @@ class XRFbDisplayRefreshRateExtensionWrapper : public XRExtensionWrapper {
 public:
 	static XRFbDisplayRefreshRateExtensionWrapper *get_singleton();
 
-	std::map<const char *, bool *> get_request_extensions() override;
-
 	void on_instance_initialized(const XrInstance instance) override;
 
 	void on_instance_destroyed() override;
@@ -50,7 +48,6 @@ private:
 	static XRFbDisplayRefreshRateExtensionWrapper *singleton;
 
 	OpenXRApi *openxr_api = nullptr;
-	std::map<const char *, bool *> request_extensions;
 	bool fb_display_refresh_rate_ext = false;
 };
 

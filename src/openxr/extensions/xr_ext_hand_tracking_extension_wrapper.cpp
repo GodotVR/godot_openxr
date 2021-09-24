@@ -29,10 +29,6 @@ XRExtHandTrackingExtensionWrapper *XRExtHandTrackingExtensionWrapper::get_single
 	return singleton;
 }
 
-std::map<const char *, bool *> XRExtHandTrackingExtensionWrapper::get_request_extensions() {
-	return request_extensions;
-}
-
 void XRExtHandTrackingExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (hand_tracking_ext) {
 		XrResult result = initialise_ext_hand_tracking_extension(instance);

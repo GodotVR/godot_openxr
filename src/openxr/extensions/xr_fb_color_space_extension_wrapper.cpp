@@ -25,10 +25,6 @@ XRFbColorSpaceExtensionWrapper::~XRFbColorSpaceExtensionWrapper() {
 	OpenXRApi::openxr_release_api();
 }
 
-std::map<const char *, bool *> XRFbColorSpaceExtensionWrapper::get_request_extensions() {
-	return request_extensions;
-}
-
 void **XRFbColorSpaceExtensionWrapper::set_system_properties_and_get_next_pointer(void **property) {
 	if (fb_color_space_ext) {
 		color_space_properties.type = XR_TYPE_SYSTEM_COLOR_SPACE_PROPERTIES_FB;

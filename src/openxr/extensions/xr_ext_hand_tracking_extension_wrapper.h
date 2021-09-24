@@ -27,8 +27,6 @@ class XRExtHandTrackingExtensionWrapper : public XRExtensionWrapper {
 public:
 	static XRExtHandTrackingExtensionWrapper *get_singleton();
 
-	std::map<const char *, bool *> get_request_extensions() override;
-
 	void on_instance_initialized(const XrInstance instance) override;
 
 	void on_state_ready() override;
@@ -76,7 +74,6 @@ private:
 	static XRExtHandTrackingExtensionWrapper *singleton;
 
 	OpenXRApi *openxr_api = nullptr;
-	std::map<const char *, bool *> request_extensions;
 	bool hand_tracking_ext = false;
 	bool hand_motion_range_ext = false;
 	bool hand_tracking_supported = false;

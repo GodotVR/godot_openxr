@@ -680,7 +680,6 @@ bool OpenXRApi::initialiseInstance() {
 #endif
 
 	// If we have these, we use them, if not we skip related logic..
-	request_extensions[XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME] = &performance_settings_ext;
 	request_extensions[XR_MND_BALL_ON_STICK_EXTENSION_NAME] = &monado_stick_on_ball_ext;
 
 	// These might be FB extensions but other vendors may implement them in due time as well.
@@ -2546,7 +2545,13 @@ bool OpenXRApi::poll_events() {
 				// TODO: do something
 			} break;
 			default:
-				Godot::print_warning(String("OpenXR Unhandled event type ") + String::num_int64(runtimeEvent.type), __FUNCTION__, __FILE__, __LINE__);
+				bool handled = false;
+				for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+					handled |= wrapper->on_event_polled(runtimeEvent);
+				}
+				if (!handled) {
+					Godot::print_warning(String("OpenXR Unhandled event type ") + String::num_int64(runtimeEvent.type), __FUNCTION__, __FILE__, __LINE__);
+				}
 				break;
 		}
 

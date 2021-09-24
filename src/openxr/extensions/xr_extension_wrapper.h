@@ -13,7 +13,9 @@ protected:
 	virtual ~XRExtensionWrapper() = default;
 
 public:
-	virtual std::map<const char *, bool *> get_request_extensions() = 0;
+	virtual std::map<const char *, bool *> get_request_extensions() {
+		return request_extensions;
+	}
 
 	virtual void on_instance_initialized(const XrInstance instance) {}
 
@@ -42,6 +44,14 @@ public:
 	virtual void on_session_destroyed() {}
 
 	virtual void on_instance_destroyed() {}
+
+	// Returns true if the event was handled, false otherwise.
+	virtual bool on_event_polled(const XrEventDataBuffer &event) {
+		return false;
+	}
+
+protected:
+	std::map<const char *, bool *> request_extensions;
 };
 
 #endif // XR_EXTENSION_WRAPPER_H

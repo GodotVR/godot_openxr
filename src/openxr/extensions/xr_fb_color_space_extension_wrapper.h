@@ -12,8 +12,6 @@ class XRFbColorSpaceExtensionWrapper : public XRExtensionWrapper {
 public:
 	static XRFbColorSpaceExtensionWrapper *get_singleton();
 
-	std::map<const char *, bool *> get_request_extensions() override;
-
 	void **set_system_properties_and_get_next_pointer(void **property) override;
 
 	void on_instance_initialized(const XrInstance instance) override;
@@ -46,7 +44,6 @@ private:
 	const char *get_color_space_enum_desc(XrColorSpaceFB p_color_space);
 
 	OpenXRApi *openxr_api = nullptr;
-	std::map<const char *, bool *> request_extensions;
 	bool fb_color_space_ext = false;
 	XrSystemColorSpacePropertiesFB color_space_properties;
 };

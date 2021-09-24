@@ -2,7 +2,10 @@
 #define JNI_UTIL_H
 
 #include <jni.h>
+#include <core/Array.hpp>
 #include <core/String.hpp>
+#include <core/Variant.hpp>
+#include <vector>
 
 /** Auxiliary macros */
 #define __JNI_METHOD_BUILD(package, class_name, method) \
@@ -74,6 +77,42 @@ static jstring string_to_jstring(JNIEnv *env, const godot::String &source) {
 		return env->NewStringUTF(source.utf8().get_data());
 	}
 	return nullptr;
+}
+
+static jintArray array_to_jintArray(JNIEnv *env, const godot::Array &array) {
+	const int count = array.size();
+	std::vector<int> values;
+	for (int i = 0; i < count; i++) {
+		values.push_back(array[i]);
+	}
+
+	jintArray result = env->NewIntArray(count);
+	env->SetIntArrayRegion(result, 0, count, values.data());
+	return result;
+}
+
+static jfloatArray array_to_jfloatArray(JNIEnv *env, const godot::Array &array) {
+	const int count = array.size();
+	std::vector<float> values;
+	for (int i = 0; i < count; i++) {
+		values.push_back(array[i]);
+	}
+
+	jfloatArray result = env->NewFloatArray(count);
+	env->SetFloatArrayRegion(result, 0, count, values.data());
+	return result;
+}
+
+static jdoubleArray array_to_jdoubleArray(JNIEnv *env, const godot::Array &array) {
+	const int count = array.size();
+	std::vector<double> values;
+	for (int i = 0; i < count; i++) {
+		values.push_back(array[i]);
+	}
+
+	jdoubleArray result = env->NewDoubleArray(count);
+	env->SetDoubleArrayRegion(result, 0, count, values.data());
+	return result;
 }
 
 #endif // JNI_UTIL_H

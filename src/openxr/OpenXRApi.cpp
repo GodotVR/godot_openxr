@@ -674,18 +674,12 @@ bool OpenXRApi::initialiseInstance() {
 #ifdef ANDROID
 	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
 	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
-	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_OPENGL_ES_EXTENSION_NAME] = &fb_swapchain_update_state_opengles_ext;
 #else
 	request_extensions[XR_KHR_OPENGL_ENABLE_EXTENSION_NAME] = nullptr;
 #endif
 
 	// If we have these, we use them, if not we skip related logic..
 	request_extensions[XR_MND_BALL_ON_STICK_EXTENSION_NAME] = &monado_stick_on_ball_ext;
-
-	// These might be FB extensions but other vendors may implement them in due time as well.
-	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME] = &fb_swapchain_update_state_ext;
-	request_extensions[XR_FB_FOVEATION_EXTENSION_NAME] = &fb_foveation_ext;
-	request_extensions[XR_FB_FOVEATION_CONFIGURATION_EXTENSION_NAME] = &fb_foveation_configuration_ext;
 
 	for (auto &requested_extension : request_extensions) {
 		if (!isExtensionSupported(requested_extension.first, extensionProperties, extensionCount)) {
@@ -1139,12 +1133,16 @@ bool OpenXRApi::initialiseSwapChains() {
 			.mipCount = 1,
 		};
 
-		// Enable foveation on this swapchain
-		XrSwapchainCreateInfoFoveationFB swapchain_create_info_foveation_fb = {
-			.type = XR_TYPE_SWAPCHAIN_CREATE_INFO_FOVEATION_FB
-		};
-		if (fb_swapchain_update_state_ext) {
-			swapchainCreateInfo.next = &swapchain_create_info_foveation_fb;
+		void **swapchain_create_info_pointer = const_cast<void **>(&swapchainCreateInfo.next);
+		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+			void **swapchain_create_info_next_pointer = wrapper->set_swapchain_create_info_and_get_next_pointer(swapchain_create_info_pointer);
+			if (*swapchain_create_info_pointer && swapchain_create_info_next_pointer && !*swapchain_create_info_next_pointer) {
+				swapchain_create_info_pointer = swapchain_create_info_next_pointer;
+			} else {
+				// Invalid return values.
+				// Reset the value stored by the swapchain_create_info_pointer so it can be reused in the next loop.
+				*swapchain_create_info_pointer = nullptr;
+			}
 		}
 
 		result = xrCreateSwapchain(session, &swapchainCreateInfo, &swapchains[i]);

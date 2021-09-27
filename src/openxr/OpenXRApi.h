@@ -143,11 +143,6 @@ private:
 	// extensions
 	bool monado_stick_on_ball_ext = false;
 
-	bool fb_swapchain_update_state_ext = false;
-	bool fb_swapchain_update_state_opengles_ext = false;
-	bool fb_foveation_ext = false;
-	bool fb_foveation_configuration_ext = false;
-
 	std::vector<const char *> enabled_extensions;
 	std::set<XRExtensionWrapper *> registered_extension_wrappers;
 	std::set<XRCompositionLayerProvider *> composition_layer_providers;
@@ -283,6 +278,9 @@ public:
 	XrSystemId get_system_id() { return systemId; }
 	XrSpace get_play_space() { return play_space; }
 	XrFrameState get_frame_state() { return frameState; }
+
+	uint32_t get_view_count() { return view_count; }
+	const XrSwapchain &get_swapchain(uint32_t eye) { return swapchains[eye]; }
 
 	bool get_keep_3d_linear() { return keep_3d_linear; };
 

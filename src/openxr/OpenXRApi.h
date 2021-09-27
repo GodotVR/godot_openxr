@@ -287,6 +287,7 @@ public:
 	String get_system_name() const { return system_name; }
 	uint32_t get_vendor_id() const { return vendor_id; }
 
+	float get_render_target_size_multiplier() { return render_target_size_multiplier; }
 	bool set_render_target_size_multiplier(float multiplier);
 
 	uint32_t get_view_count() const { return view_count; }

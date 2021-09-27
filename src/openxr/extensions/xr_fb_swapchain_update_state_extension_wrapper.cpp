@@ -13,7 +13,9 @@ XRFbSwapchainUpdateStateExtensionWrapper::XRFbSwapchainUpdateStateExtensionWrapp
 	openxr_api = OpenXRApi::openxr_get_api();
 	// These might be FB extensions but other vendors may implement them in due time as well.
 	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_NAME] = &fb_swapchain_update_state_ext;
+#ifdef XR_USE_GRAPHICS_API_OPENGL_ES
 	request_extensions[XR_FB_SWAPCHAIN_UPDATE_STATE_OPENGL_ES_EXTENSION_NAME] = &fb_swapchain_update_state_opengles_ext;
+#endif
 }
 
 XRFbSwapchainUpdateStateExtensionWrapper::~XRFbSwapchainUpdateStateExtensionWrapper() {
@@ -23,7 +25,9 @@ XRFbSwapchainUpdateStateExtensionWrapper::~XRFbSwapchainUpdateStateExtensionWrap
 
 void XRFbSwapchainUpdateStateExtensionWrapper::cleanup() {
 	fb_swapchain_update_state_ext = false;
+#ifdef XR_USE_GRAPHICS_API_OPENGL_ES
 	fb_swapchain_update_state_opengles_ext = false;
+#endif
 }
 
 XrResult XRFbSwapchainUpdateStateExtensionWrapper::initialize_fb_swapchain_update_state_extension(XrInstance instance) {

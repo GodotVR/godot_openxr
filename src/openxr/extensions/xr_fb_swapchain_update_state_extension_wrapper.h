@@ -39,7 +39,9 @@ private:
 
 	OpenXRApi *openxr_api = nullptr;
 	bool fb_swapchain_update_state_ext = false;
+#ifdef XR_USE_GRAPHICS_API_OPENGL_ES
 	bool fb_swapchain_update_state_opengles_ext = false;
+#endif
 };
 
 #endif // XR_FB_SWAPCHAIN_UPDATE_STATE_EXTENSION_WRAPPER_H

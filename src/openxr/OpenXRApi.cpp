@@ -861,10 +861,10 @@ bool OpenXRApi::initialiseSession() {
 	}
 
 	render_target_width = configuration_views[0].recommendedImageRectWidth * render_target_size_multiplier;
-	render_target_width = std::min(render_target_width, configuration_views[0].maxImageRectWidth);
+	render_target_width = (std::min)(render_target_width, configuration_views[0].maxImageRectWidth);
 
 	render_target_height = configuration_views[0].recommendedImageRectHeight * render_target_size_multiplier;
-	render_target_height = std::min(render_target_height, configuration_views[0].maxImageRectHeight);
+	render_target_height = (std::min)(render_target_height, configuration_views[0].maxImageRectHeight);
 
 	swapchain_sample_count = configuration_views[0].recommendedSwapchainSampleCount;
 
@@ -2459,6 +2459,10 @@ bool OpenXRApi::poll_events() {
 
 	XrResult pollResult = xrPollEvent(instance, &runtimeEvent);
 	while (pollResult == XR_SUCCESS) {
+		bool handled = false;
+		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+			handled |= wrapper->on_event_polled(runtimeEvent);
+		}
 		switch (runtimeEvent.type) {
 			case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
 				XrEventDataEventsLost *event = (XrEventDataEventsLost *)&runtimeEvent;
@@ -2568,10 +2572,6 @@ bool OpenXRApi::poll_events() {
 				// TODO: do something
 			} break;
 			default:
-				bool handled = false;
-				for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
-					handled |= wrapper->on_event_polled(runtimeEvent);
-				}
 				if (!handled) {
 					Godot::print_warning(String("OpenXR Unhandled event type ") + String::num_int64(runtimeEvent.type), __FUNCTION__, __FILE__, __LINE__);
 				}

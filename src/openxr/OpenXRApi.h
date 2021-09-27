@@ -153,6 +153,8 @@ private:
 	XrSystemId systemId;
 	XrSession session = XR_NULL_HANDLE;
 	XrSessionState state = XR_SESSION_STATE_UNKNOWN;
+	String system_name;
+	uint32_t vendor_id = 0;
 
 	bool is_steamvr = false;
 
@@ -278,8 +280,10 @@ public:
 	XrSystemId get_system_id() { return systemId; }
 	XrSpace get_play_space() { return play_space; }
 	XrFrameState get_frame_state() { return frameState; }
+	String get_system_name() const { return system_name; }
+	uint32_t get_vendor_id() const { return vendor_id; }
 
-	uint32_t get_view_count() { return view_count; }
+	uint32_t get_view_count() const { return view_count; }
 	const XrSwapchain &get_swapchain(uint32_t eye) { return swapchains[eye]; }
 
 	bool get_keep_3d_linear() { return keep_3d_linear; };

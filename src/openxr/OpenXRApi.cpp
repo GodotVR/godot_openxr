@@ -830,6 +830,9 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
+	system_name = systemProperties.systemName;
+	vendor_id = systemProperties.vendorId;
+
 	// TODO consider calling back into our extension wrappers if they need to react on data we just loaded....
 
 	if (!isViewConfigSupported(view_config_type, systemId)) {

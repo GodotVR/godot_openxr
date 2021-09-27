@@ -849,7 +849,7 @@ bool OpenXRApi::initialiseSession() {
 		return false;
 	}
 
-	configuration_views = (XrViewConfigurationView *)malloc(sizeof(XrViewConfigurationView) * view_count);
+	XrViewConfigurationView *configuration_views = (XrViewConfigurationView *)malloc(sizeof(XrViewConfigurationView) * view_count);
 	for (uint32_t i = 0; i < view_count; i++) {
 		configuration_views[i].type = XR_TYPE_VIEW_CONFIGURATION_VIEW;
 		configuration_views[i].next = nullptr;
@@ -859,6 +859,17 @@ bool OpenXRApi::initialiseSession() {
 	if (!xr_result(result, "Failed to enumerate view configuration views!")) {
 		return false;
 	}
+
+	render_target_width = configuration_views[0].recommendedImageRectWidth * render_target_size_multiplier;
+	render_target_width = std::min(render_target_width, configuration_views[0].maxImageRectWidth);
+
+	render_target_height = configuration_views[0].recommendedImageRectHeight * render_target_size_multiplier;
+	render_target_height = std::min(render_target_height, configuration_views[0].maxImageRectHeight);
+
+	swapchain_sample_count = configuration_views[0].recommendedSwapchainSampleCount;
+
+	free(configuration_views);
+	configuration_views = nullptr;
 
 	buffer_index = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 
@@ -947,6 +958,21 @@ bool OpenXRApi::initialiseSession() {
 	}
 
 	return true;
+}
+
+bool OpenXRApi::set_render_target_size_multiplier(float multiplier) {
+	if (is_initialised()) {
+		Godot::print_error("Setting the render target size multiplier is only allowed prior to initialization.", __FUNCTION__, __FILE__, __LINE__);
+		return false;
+	} else {
+		if (multiplier <= 0) {
+			Godot::print_error("Only positive values greater than 0 are supported.", __FUNCTION__, __FILE__, __LINE__);
+			return false;
+		}
+
+		this->render_target_size_multiplier = multiplier;
+		return true;
+	}
 }
 
 bool OpenXRApi::initialiseSpaces() {
@@ -1128,9 +1154,9 @@ bool OpenXRApi::initialiseSwapChains() {
 			.createFlags = 0,
 			.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
 			.format = swapchainFormatToUse,
-			.sampleCount = configuration_views->recommendedSwapchainSampleCount, // 1,
-			.width = configuration_views[i].recommendedImageRectWidth,
-			.height = configuration_views[i].recommendedImageRectHeight,
+			.sampleCount = swapchain_sample_count, // 1,
+			.width = render_target_width,
+			.height = render_target_height,
 			.faceCount = 1,
 			.arraySize = 1,
 			.mipCount = 1,
@@ -1249,8 +1275,8 @@ bool OpenXRApi::initialiseSwapChains() {
 		projection_views[i].subImage.imageArrayIndex = 0;
 		projection_views[i].subImage.imageRect.offset.x = 0;
 		projection_views[i].subImage.imageRect.offset.y = 0;
-		projection_views[i].subImage.imageRect.extent.width = configuration_views[i].recommendedImageRectWidth;
-		projection_views[i].subImage.imageRect.extent.height = configuration_views[i].recommendedImageRectHeight;
+		projection_views[i].subImage.imageRect.extent.width = render_target_width;
+		projection_views[i].subImage.imageRect.extent.height = render_target_height;
 	};
 
 	return true;
@@ -1448,10 +1474,6 @@ void OpenXRApi::uninitialize() {
 	cleanupSpaces();
 
 	// cleanup our session and instance
-	if (configuration_views) {
-		free(configuration_views);
-		configuration_views = NULL;
-	}
 	if (buffer_index != NULL) {
 		free(buffer_index);
 		buffer_index = NULL;
@@ -2025,8 +2047,8 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 #endif
 				images[eye][buffer_index[eye]].image, 0, 0, 0,
 				0, 0,
-				configuration_views[eye].recommendedImageRectWidth,
-				configuration_views[eye].recommendedImageRectHeight);
+				render_target_width,
+				render_target_height);
 		glBindTexture(GL_TEXTURE_2D, 0);
 		// printf("Copy godot texture %d into XR texture %d\n", texid,
 		// images[eye][bufferIndex].image);
@@ -2293,8 +2315,8 @@ void OpenXRApi::recommended_rendertarget_size(uint32_t *width, uint32_t *height)
 		*width = 0;
 		*height = 0;
 	} else {
-		*width = configuration_views[0].recommendedImageRectWidth;
-		*height = configuration_views[0].recommendedImageRectHeight;
+		*width = render_target_width;
+		*height = render_target_height;
 	}
 }
 

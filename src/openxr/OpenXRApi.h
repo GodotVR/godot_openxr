@@ -169,9 +169,13 @@ private:
 	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
 	XrSwapchainImageOpenGLKHR **images = NULL;
 #endif
+	float render_target_size_multiplier = 1.0f;
+	uint32_t render_target_width = 1024;
+	uint32_t render_target_height = 1024;
+	uint32_t swapchain_sample_count = 1;
+
 	XrSwapchain *swapchains = NULL;
 	uint32_t view_count;
-	XrViewConfigurationView *configuration_views = NULL;
 
 	XrCompositionLayerProjection *projectionLayer = NULL;
 	XrFrameState frameState = {};
@@ -282,6 +286,8 @@ public:
 	XrFrameState get_frame_state() { return frameState; }
 	String get_system_name() const { return system_name; }
 	uint32_t get_vendor_id() const { return vendor_id; }
+
+	bool set_render_target_size_multiplier(float multiplier);
 
 	uint32_t get_view_count() const { return view_count; }
 	const XrSwapchain &get_swapchain(uint32_t eye) { return swapchains[eye]; }

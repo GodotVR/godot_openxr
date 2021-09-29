@@ -119,6 +119,7 @@ material/0 = null
 motion_range = 1
 
 [node name="Skeleton" parent="FPSController/LeftHand/HandModel/Armature001" index="0"]
+bones/9/bound_children = [  ]
 motion_range = 1
 
 [node name="IndexTip" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
@@ -134,6 +135,7 @@ motion_range = 1
 albedo_texture = ExtResource( 5 )
 
 [node name="Skeleton" parent="FPSController/RightHand/HandModel/Armature" index="0"]
+bones/9/bound_children = [  ]
 motion_range = 1
 
 [node name="IndexTip" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="1"]

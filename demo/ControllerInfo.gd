@@ -17,9 +17,19 @@ func _process(_delta : float):
 
 		var joy_x = controller.get_joystick_axis(JOY_AXIS_0)
 		var joy_y = controller.get_joystick_axis(JOY_AXIS_1)
-		$Container/Control/Joystick/Puck.rect_position = Vector2(23 + joy_x * 23, 23 - joy_y * 23)
+		$Container/Joysticks/Primary/Background.color = Color(1.0, 1.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_12) else Color(0.7, 0.7, 0.7, 1.0)
+		$Container/Joysticks/Primary/Background/Puck.rect_position = Vector2(23 + joy_x * 23, 23 - joy_y * 23)
+		$Container/Joysticks/Primary/Background/Puck.color = Color(0.0, 0.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_14) else Color(0.0, 0.0, 0.0, 1.0)
+
+		joy_x = controller.get_joystick_axis(JOY_AXIS_6)
+		joy_y = controller.get_joystick_axis(JOY_AXIS_7)
+		$Container/Joysticks/Secondary/Background.color = Color(1.0, 1.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_11) else Color(0.7, 0.7, 0.7, 1.0)
+		$Container/Joysticks/Secondary/Background/Puck.rect_position = Vector2(23 + joy_x * 23, 23 - joy_y * 23)
+		$Container/Joysticks/Secondary/Background/Puck.color = Color(0.0, 0.0, 1.0, 1.0) if controller.is_button_pressed(JOY_BUTTON_13) else Color(0.0, 0.0, 0.0, 1.0)
 
 		$Container/AXButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_7)
-		$Container/BYMButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_1)
+		$Container/BYButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_1)
+		$Container/MenuButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_3)
+		$Container/SelectButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_4)
 		$Container/TriggerButton/Value.pressed = controller.is_button_pressed(JOY_VR_TRIGGER)
 		$Container/SideButton/Value.pressed = controller.is_button_pressed(JOY_VR_GRIP)

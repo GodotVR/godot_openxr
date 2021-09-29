@@ -5,6 +5,7 @@ Changes to the Godot OpenXR asset
 -------------------
 - Implemented Android build (currently using Oculus loader, Quest support only)
 - Fix invalid transforms generated from invalid space locations when using OpenXRSkeleton or OpenXRPose.
+- Improved action map supporting secondary thumbstick/trackpad, menu and select buttons.
 
 1.0.3
 -------------------

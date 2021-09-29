@@ -34,20 +34,47 @@ margin_right = 500.0
 margin_bottom = 36.0
 rect_min_size = Vector2( 500, 0 )
 
-[node name="Control" type="Control" parent="Container"]
+[node name="Joysticks" type="HBoxContainer" parent="Container"]
 margin_top = 40.0
 margin_right = 500.0
 margin_bottom = 90.0
-rect_min_size = Vector2( 0, 50 )
 
-[node name="Joystick" type="ColorRect" parent="Container/Control"]
+[node name="Primary" type="Control" parent="Container/Joysticks"]
+margin_right = 50.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 50, 50 )
+
+[node name="Background" type="ColorRect" parent="Container/Joysticks/Primary"]
 margin_right = 50.0
 margin_bottom = 50.0
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
-[node name="Puck" type="ColorRect" parent="Container/Control/Joystick"]
+[node name="Puck" type="ColorRect" parent="Container/Joysticks/Primary/Background"]
+margin_left = 23.0
+margin_top = 23.0
+margin_right = 27.0
+margin_bottom = 27.0
+color = Color( 0, 0, 0, 1 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Secondary" type="Control" parent="Container/Joysticks"]
+margin_left = 54.0
+margin_right = 104.0
+margin_bottom = 50.0
+rect_min_size = Vector2( 50, 50 )
+
+[node name="Background" type="ColorRect" parent="Container/Joysticks/Secondary"]
+margin_right = 50.0
+margin_bottom = 50.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Puck" type="ColorRect" parent="Container/Joysticks/Secondary/Background"]
 margin_left = 23.0
 margin_top = 23.0
 margin_right = 27.0
@@ -65,31 +92,63 @@ margin_bottom = 32.0
 
 [node name="Label" type="Label" parent="Container/AXButton"]
 margin_left = 28.0
-margin_right = 142.0
+margin_right = 141.0
 margin_bottom = 32.0
 custom_fonts/font = ExtResource( 2 )
 text = "A/X button"
 
-[node name="BYMButton" type="HBoxContainer" parent="Container"]
+[node name="BYButton" type="HBoxContainer" parent="Container"]
 margin_top = 130.0
 margin_right = 500.0
 margin_bottom = 162.0
 
-[node name="Value" type="CheckBox" parent="Container/BYMButton"]
+[node name="Value" type="CheckBox" parent="Container/BYButton"]
 margin_right = 24.0
 margin_bottom = 32.0
 
-[node name="Label" type="Label" parent="Container/BYMButton"]
+[node name="Label" type="Label" parent="Container/BYButton"]
 margin_left = 28.0
-margin_right = 207.0
+margin_right = 139.0
 margin_bottom = 32.0
 custom_fonts/font = ExtResource( 2 )
-text = "B/Y/Menu button"
+text = "B/Y button"
 
-[node name="TriggerButton" type="HBoxContainer" parent="Container"]
+[node name="MenuButton" type="HBoxContainer" parent="Container"]
 margin_top = 166.0
 margin_right = 500.0
 margin_bottom = 198.0
+
+[node name="Value" type="CheckBox" parent="Container/MenuButton"]
+margin_right = 24.0
+margin_bottom = 32.0
+
+[node name="Label" type="Label" parent="Container/MenuButton"]
+margin_left = 28.0
+margin_right = 159.0
+margin_bottom = 32.0
+custom_fonts/font = ExtResource( 2 )
+text = "Menu button"
+
+[node name="SelectButton" type="HBoxContainer" parent="Container"]
+margin_top = 202.0
+margin_right = 500.0
+margin_bottom = 234.0
+
+[node name="Value" type="CheckBox" parent="Container/SelectButton"]
+margin_right = 24.0
+margin_bottom = 32.0
+
+[node name="Label" type="Label" parent="Container/SelectButton"]
+margin_left = 28.0
+margin_right = 164.0
+margin_bottom = 32.0
+custom_fonts/font = ExtResource( 2 )
+text = "Select button"
+
+[node name="TriggerButton" type="HBoxContainer" parent="Container"]
+margin_top = 238.0
+margin_right = 500.0
+margin_bottom = 270.0
 
 [node name="Value" type="CheckBox" parent="Container/TriggerButton"]
 margin_right = 24.0
@@ -97,15 +156,15 @@ margin_bottom = 32.0
 
 [node name="Label" type="Label" parent="Container/TriggerButton"]
 margin_left = 28.0
-margin_right = 102.0
+margin_right = 100.0
 margin_bottom = 32.0
 custom_fonts/font = ExtResource( 2 )
 text = "Trigger"
 
 [node name="SideButton" type="HBoxContainer" parent="Container"]
-margin_top = 202.0
+margin_top = 274.0
 margin_right = 500.0
-margin_bottom = 234.0
+margin_bottom = 306.0
 
 [node name="Value" type="CheckBox" parent="Container/SideButton"]
 margin_right = 24.0

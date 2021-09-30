@@ -98,14 +98,17 @@ public:
 		// Buttons
 		ACTION_AX_BUTTON, // A/X button (button 7)
 		ACTION_BY_BUTTON, // B/Y button (button 1)
+		ACTION_AX_TOUCH, // Finger on A/X button (button 5)
+		ACTION_BY_TOUCH, // Finger on B/Y button (button 6)
 		ACTION_MENU_BUTTON, // Menu button (button 3)
 		ACTION_SELECT_BUTTON, // Menu button (button 4)
 		ACTION_FRONT_BUTTON, // front trigger as button (button 15)
+		ACTION_FRONT_TOUCH, // Finger on front trigger (button 16)
 		ACTION_SIDE_BUTTON, // side trigger/grip as button (button 2)
 		ACTION_PRIMARY_BUTTON, // Click on primary joystick/trackpad/thumbstick (button 14)
 		ACTION_SECONDARY_BUTTON, // Click on secondary joystick/trackpad/thumbstick (button 13)
 		ACTION_PRIMARY_TOUCH, // Finger is on primary joystick/trackpad/thumbstick (button 12)
-		ACTION_SECONDARY_TOUCH, // Finger is on secondary joystick/trackpad/thumbstick (button 12)
+		ACTION_SECONDARY_TOUCH, // Finger is on secondary joystick/trackpad/thumbstick (button 11)
 
 		// Output
 		ACTION_HAPTIC, // Haptic output
@@ -126,11 +129,14 @@ public:
 		{ "side_trigger", XR_ACTION_TYPE_FLOAT_INPUT, NULL },
 		{ "primary", XR_ACTION_TYPE_VECTOR2F_INPUT, NULL },
 		{ "secondary", XR_ACTION_TYPE_VECTOR2F_INPUT, NULL },
-		{ "ax_buttons", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
+		{ "ax_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "by_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
+		{ "ax_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
+		{ "by_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "menu_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "select_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "front_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
+		{ "front_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "side_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "primary_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
 		{ "secondary_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },

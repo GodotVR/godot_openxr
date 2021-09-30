@@ -10,6 +10,8 @@
 #include "openxr/OpenXRApi.h"
 #include "openxr/include/signals_util.h"
 
+#include "extensions/xr_extx_overlay_extension_wrapper.h"
+
 #include <cmath>
 #include <map>
 
@@ -1286,9 +1288,25 @@ bool OpenXRApi::initialiseSession() {
 	Godot::print("OpenXR Using OpenGL version: {0}", (char *)glGetString(GL_VERSION));
 	Godot::print("OpenXR Using OpenGL renderer: {0}", (char *)glGetString(GL_RENDERER));
 
+	void *session_next = static_cast<void *>(&graphics_binding_gl);
+
+	overlay_wrapper = XRExtxOverlayExtensionWrapper::get_singleton();
+	XrSessionCreateInfoOverlayEXTX overlay_info = {
+		.type = XR_TYPE_SESSION_CREATE_INFO_OVERLAY_EXTX,
+		.next = session_next,
+		.sessionLayersPlacement = 1, // placeholder
+	};
+	if (overlay_wrapper && overlay_wrapper->extx_overlay_ext) {
+		overlay_info.sessionLayersPlacement = static_cast<uint32_t>(overlay_wrapper->overlay_placement);
+		session_next = &overlay_info;
+		Godot::print("Running as OpenXR Overlay with placement {0}", overlay_info.sessionLayersPlacement);
+	} else {
+		Godot::print("NOT Running as OpenXR Overlay");
+	}
+
 	XrSessionCreateInfo session_create_info = {
 		.type = XR_TYPE_SESSION_CREATE_INFO,
-		.next = &graphics_binding_gl,
+		.next = session_next,
 		.createFlags = 0,
 		.systemId = systemId
 	};
@@ -2444,7 +2462,10 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 
 		layers_list.push_back((const XrCompositionLayerBaseHeader *)projectionLayer);
 
-		projectionLayer->layerFlags = layers_list.size() > 1 ? XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT : XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+		projectionLayer->layerFlags = XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
+		if (layers_list.size() > 1 || overlay_wrapper->extx_overlay_ext) {
+			projectionLayer->layerFlags |= XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+		}
 
 		XrFrameEndInfo frameEndInfo = {
 			.type = XR_TYPE_FRAME_END_INFO,
@@ -2962,6 +2983,14 @@ bool OpenXRApi::poll_events() {
 				}
 
 				// TODO: do something
+			} break;
+			case XR_TYPE_EVENT_DATA_MAIN_SESSION_VISIBILITY_CHANGED_EXTX: {
+				XrEventDataMainSessionVisibilityChangedEXTX *event =
+						(XrEventDataMainSessionVisibilityChangedEXTX *)&runtimeEvent;
+				if (overlay_wrapper) {
+					overlay_wrapper->main_session_visible = event->visible;
+					Godot::print("Main session visibility changed: {0}", event->visible);
+				}
 			} break;
 			default:
 				if (!handled) {

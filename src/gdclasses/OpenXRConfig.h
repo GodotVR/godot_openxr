@@ -6,6 +6,7 @@
 
 #include "openxr/OpenXRApi.h"
 #include "openxr/extensions/xr_ext_performance_settings_extension_wrapper.h"
+#include "openxr/extensions/xr_extx_overlay_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_foveation_extension_wrapper.h"
@@ -19,6 +20,7 @@ private:
 	OpenXRApi *openxr_api;
 	XRFbColorSpaceExtensionWrapper *color_space_wrapper = nullptr;
 	XRFbDisplayRefreshRateExtensionWrapper *display_refresh_rate_wrapper = nullptr;
+	XRExtxOverlayExtensionWrapper *overlay_wrapper = nullptr;
 	XRFbFoveationExtensionWrapper *foveation_wrapper = nullptr;
 	XRExtPerformanceSettingsExtensionWrapper *performance_settings_wrapper = nullptr;
 
@@ -45,6 +47,10 @@ public:
 	double get_refresh_rate() const;
 	void set_refresh_rate(const double p_refresh_rate);
 	godot::Array get_available_refresh_rates() const;
+
+	int get_overlay_placement() const;
+	void set_overlay_placement(const int p_overlay_placement);
+	bool get_main_session_visible() const;
 
 	godot::Array get_enabled_extensions() const;
 

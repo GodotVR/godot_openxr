@@ -1,3 +1,4 @@
+// TODO: This define will be in openxr.h once we actually publish the extension
 #define XR_MND_BALL_ON_STICK_EXTENSION_NAME "XR_MNDX_ball_on_a_stick_controller"
 
 #ifdef WIN32

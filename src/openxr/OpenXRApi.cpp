@@ -86,7 +86,7 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 			},
 			{
 				"type": "bool",
-				"name": "ax_buttons",
+				"name": "ax_button",
 				"localised_name": "A and X buttons",
 				"paths": [
 					"/user/hand/left",
@@ -97,6 +97,24 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				"type": "bool",
 				"name": "by_button",
 				"localised_name": "B, Y buttons",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "ax_touch",
+				"localised_name": "A and X touch",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "by_touch",
+				"localised_name": "B, Y touch",
 				"paths": [
 					"/user/hand/left",
 					"/user/hand/right"
@@ -124,6 +142,15 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				"type": "bool",
 				"name": "front_button",
 				"localised_name": "Front trigger as a button",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "front_touch",
+				"localised_name": "Finger on front trigger",
 				"paths": [
 					"/user/hand/left",
 					"/user/hand/right"
@@ -491,7 +518,7 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
-				"action": "ax_buttons",
+				"action": "ax_button",
 				"paths": [
 					"/user/hand/left/input/x/click",
 					"/user/hand/right/input/a/click"
@@ -507,10 +534,34 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
+				"action": "ax_touch",
+				"paths": [
+					"/user/hand/left/input/x/touch",
+					"/user/hand/right/input/a/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_touch",
+				"paths": [
+					"/user/hand/left/input/y/touch",
+					"/user/hand/right/input/b/touch"
+				]
+			},
+			{
+				"set": "godot",
 				"action": "front_button",
 				"paths": [
 					"/user/hand/left/input/trigger/value",
 					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
 				]
 			},
 			{
@@ -607,7 +658,7 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
-				"action": "ax_buttons",
+				"action": "ax_button",
 				"paths": [
 					"/user/hand/left/input/a/click",
 					"/user/hand/right/input/a/click"
@@ -623,10 +674,34 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
+				"action": "ax_touch",
+				"paths": [
+					"/user/hand/left/input/a/touch",
+					"/user/hand/right/input/a/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_touch",
+				"paths": [
+					"/user/hand/left/input/b/touch",
+					"/user/hand/right/input/b/touch"
+				]
+			},
+			{
+				"set": "godot",
 				"action": "front_button",
 				"paths": [
 					"/user/hand/left/input/trigger/click",
 					"/user/hand/right/input/trigger/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
 				]
 			},
 			{
@@ -2574,6 +2649,12 @@ void OpenXRApi::update_actions() {
 				if (default_actions[ACTION_BY_BUTTON].action != NULL) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 1, default_actions[ACTION_BY_BUTTON].action->get_as_bool(input_path));
 				}
+				if (default_actions[ACTION_AX_TOUCH].action != nullptr) {
+					arvr_api->godot_arvr_set_controller_button(godot_controller, 5, default_actions[ACTION_AX_TOUCH].action->get_as_bool(input_path));
+				}
+				if (default_actions[ACTION_BY_TOUCH].action != nullptr) {
+					arvr_api->godot_arvr_set_controller_button(godot_controller, 6, default_actions[ACTION_BY_TOUCH].action->get_as_bool(input_path));
+				}
 				if (default_actions[ACTION_MENU_BUTTON].action != NULL) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 3, default_actions[ACTION_MENU_BUTTON].action->get_as_bool(input_path));
 				}
@@ -2582,6 +2663,9 @@ void OpenXRApi::update_actions() {
 				}
 				if (default_actions[ACTION_FRONT_BUTTON].action != NULL) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 15, default_actions[ACTION_FRONT_BUTTON].action->get_as_bool(input_path));
+				}
+				if (default_actions[ACTION_FRONT_TOUCH].action != NULL) {
+					arvr_api->godot_arvr_set_controller_button(godot_controller, 16, default_actions[ACTION_FRONT_TOUCH].action->get_as_bool(input_path));
 				}
 				if (default_actions[ACTION_SIDE_BUTTON].action != NULL) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 2, default_actions[ACTION_SIDE_BUTTON].action->get_as_bool(input_path));

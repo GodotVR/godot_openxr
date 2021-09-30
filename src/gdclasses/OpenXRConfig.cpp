@@ -39,12 +39,30 @@ void OpenXRConfig::_register_methods() {
 	register_method("get_interaction_profiles", &OpenXRConfig::get_interaction_profiles);
 	register_method("set_interaction_profiles", &OpenXRConfig::set_interaction_profiles);
 	register_property<OpenXRConfig, String>("interaction_profiles", &OpenXRConfig::set_interaction_profiles, &OpenXRConfig::get_interaction_profiles, String(OpenXRApi::default_interaction_profiles_json), GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_MULTILINE_TEXT);
+
+	register_method("get_system_name", &OpenXRConfig::get_system_name);
+
+	register_method("get_cpu_level", &OpenXRConfig::get_cpu_level);
+	register_method("set_cpu_level", &OpenXRConfig::set_cpu_level);
+	register_property<OpenXRConfig, int>("cpu_level", &OpenXRConfig::set_cpu_level, &OpenXRConfig::get_cpu_level, XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
+
+	register_method("get_gpu_level", &OpenXRConfig::get_gpu_level);
+	register_method("set_gpu_level", &OpenXRConfig::set_gpu_level);
+	register_property<OpenXRConfig, int>("gpu_level", &OpenXRConfig::set_gpu_level, &OpenXRConfig::get_gpu_level, XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
+
+	register_method("get_render_target_size_multiplier", &OpenXRConfig::get_render_target_size_multiplier);
+	register_method("set_render_target_size_multiplier", &OpenXRConfig::set_render_target_size_multiplier);
+	register_property<OpenXRConfig, double>("render_target_size_multiplier", &OpenXRConfig::set_render_target_size_multiplier, &OpenXRConfig::get_render_target_size_multiplier, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
+
+	register_method("set_foveation_level", &OpenXRConfig::set_foveation_level);
 }
 
 OpenXRConfig::OpenXRConfig() {
 	openxr_api = OpenXRApi::openxr_get_api();
 	color_space_wrapper = XRFbColorSpaceExtensionWrapper::get_singleton();
 	display_refresh_rate_wrapper = XRFbDisplayRefreshRateExtensionWrapper::get_singleton();
+	foveation_wrapper = XRFbFoveationExtensionWrapper::get_singleton();
+	performance_settings_wrapper = XRExtPerformanceSettingsExtensionWrapper::get_singleton();
 }
 
 OpenXRConfig::~OpenXRConfig() {
@@ -215,5 +233,62 @@ void OpenXRConfig::set_interaction_profiles(const String p_interaction_profiles)
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		openxr_api->set_interaction_profiles_json(p_interaction_profiles);
+	}
+}
+
+String OpenXRConfig::get_system_name() const {
+	if (openxr_api == nullptr) {
+		return String();
+	} else {
+		return openxr_api->get_system_name();
+	}
+}
+
+int OpenXRConfig::get_cpu_level() const {
+	if (performance_settings_wrapper == nullptr) {
+		return XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
+	} else {
+		return performance_settings_wrapper->get_cpu_level();
+	}
+}
+
+void OpenXRConfig::set_cpu_level(int level) {
+	if (performance_settings_wrapper != nullptr) {
+		performance_settings_wrapper->set_cpu_level(static_cast<XrPerfSettingsLevelEXT>(level));
+	}
+}
+
+int OpenXRConfig::get_gpu_level() const {
+	if (performance_settings_wrapper == nullptr) {
+		return XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
+	} else {
+		return performance_settings_wrapper->get_gpu_level();
+	}
+}
+
+void OpenXRConfig::set_gpu_level(int level) {
+	if (performance_settings_wrapper != nullptr) {
+		performance_settings_wrapper->set_gpu_level(static_cast<XrPerfSettingsLevelEXT>(level));
+	}
+}
+
+double OpenXRConfig::get_render_target_size_multiplier() const {
+	if (openxr_api == nullptr) {
+		return 1.0;
+	} else {
+		return openxr_api->get_render_target_size_multiplier();
+	}
+}
+
+void OpenXRConfig::set_render_target_size_multiplier(double multiplier) {
+	if (openxr_api != nullptr) {
+		openxr_api->set_render_target_size_multiplier(multiplier);
+	}
+}
+
+void OpenXRConfig::set_foveation_level(int level, bool is_dynamic) {
+	if (foveation_wrapper != nullptr) {
+		XrFoveationDynamicFB foveation_dynamic = is_dynamic ? XR_FOVEATION_DYNAMIC_LEVEL_ENABLED_FB : XR_FOVEATION_DYNAMIC_DISABLED_FB;
+		foveation_wrapper->set_foveation_level(static_cast<XrFoveationLevelFB>(level), foveation_dynamic);
 	}
 }

@@ -5,8 +5,10 @@
 #define OPENXR_CONFIG_H
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/extensions/xr_ext_performance_settings_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
+#include "openxr/extensions/xr_fb_foveation_extension_wrapper.h"
 #include <Node.hpp>
 
 namespace godot {
@@ -17,6 +19,8 @@ private:
 	OpenXRApi *openxr_api;
 	XRFbColorSpaceExtensionWrapper *color_space_wrapper = nullptr;
 	XRFbDisplayRefreshRateExtensionWrapper *display_refresh_rate_wrapper = nullptr;
+	XRFbFoveationExtensionWrapper *foveation_wrapper = nullptr;
+	XRExtPerformanceSettingsExtensionWrapper *performance_settings_wrapper = nullptr;
 
 public:
 	static void _register_methods();
@@ -49,6 +53,19 @@ public:
 
 	String get_interaction_profiles() const;
 	void set_interaction_profiles(const String p_interaction_profiles);
+
+	String get_system_name() const;
+
+	int get_cpu_level() const;
+	void set_cpu_level(int level);
+
+	int get_gpu_level() const;
+	void set_gpu_level(int level);
+
+	double get_render_target_size_multiplier() const;
+	void set_render_target_size_multiplier(double multiplier);
+
+	void set_foveation_level(int level, bool is_dynamic);
 };
 } // namespace godot
 

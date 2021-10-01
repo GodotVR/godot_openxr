@@ -59,7 +59,7 @@ class OpenXRPlugin(godot: Godot): GodotPlugin(godot) {
 
   override fun getPluginName() = "OpenXR"
 
-  override fun getPluginGDNativeLibrariesPaths() = setOf("godot_openxr.gdnlib")
+  override fun getPluginGDNativeLibrariesPaths() = setOf("addons/godot-openxr/config/godot_openxr.gdnlib")
 
   override fun onGLSurfaceCreated(gl: GL10, config: EGLConfig) {
     super.onGLSurfaceCreated(gl, config)

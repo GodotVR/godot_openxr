@@ -24,12 +24,6 @@ android {
         }
     }
 
-    sourceSets {
-        main {
-            assets.srcDirs += ['../demo/addons/godot-openxr/config']
-        }
-    }
-
     externalNativeBuild {
         cmake {
             path "CMakeLists.txt"
@@ -62,3 +56,20 @@ dependencies {
 
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlinVersion}"
 }
+
+// When using the aar binary only, the *.gdns and *gdnlib files need to be in the same location
+// relative to the `assets` directory, so we recreate the relative directories and copy them prior
+// to building the aar binary.
+final relativeAddonsConfigDir = "addons/godot-openxr/config/"
+final sourceDir = "../demo/$relativeAddonsConfigDir"
+final targetDir = "src/main/assets/$relativeAddonsConfigDir"
+
+task copyAddonsConfig(type: Copy) {
+    doFirst {
+        delete(targetDir)
+    }
+    from sourceDir
+    into targetDir
+}
+
+preBuild.dependsOn(copyAddonsConfig)

@@ -302,6 +302,7 @@ void Action::do_haptic_pulse(const XrPath p_path, XrDuration p_duration, float p
 		vibration.next = NULL;
 		vibration.duration = p_duration;
 		vibration.frequency = p_frequency;
+		vibration.amplitude = p_amplitude;
 
 		XrResult res = xrApplyHapticFeedback(xr_api->get_session(), &action_info, (const XrHapticBaseHeader *)&vibration);
 		xr_api->xr_result(res, "Applying haptic pulse");

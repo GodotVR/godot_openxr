@@ -4,6 +4,7 @@
 #include "ARVRInterface.h"
 #include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
 #include "openxr/extensions/xr_ext_performance_settings_extension_wrapper.h"
+#include "openxr/extensions/xr_extx_overlay_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_foveation_extension_wrapper.h"
@@ -126,6 +127,7 @@ godot_bool godot_arvr_initialize(void *p_data) {
 		arvr_data->openxr_api->register_extension_wrapper<XRFbColorSpaceExtensionWrapper>();
 		arvr_data->openxr_api->register_extension_wrapper<XRFbDisplayRefreshRateExtensionWrapper>();
 		arvr_data->openxr_api->register_extension_wrapper<XRExtHandTrackingExtensionWrapper>();
+		arvr_data->openxr_api->register_extension_wrapper<XRExtxOverlayExtensionWrapper>();
 
 		// not initialise
 		arvr_data->openxr_api->initialize();

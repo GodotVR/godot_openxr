@@ -46,11 +46,13 @@
 
 #include "openxr/extensions/xr_composition_layer_provider.h"
 #include "openxr/extensions/xr_extension_wrapper.h"
+
 #include "openxr/include/openxr_inc.h"
 #include <openxr/openxr_platform.h>
 
 // forward declare this
 class OpenXRApi;
+class XRExtxOverlayExtensionWrapper;
 
 #include "openxr/actions/action.h"
 #include "openxr/actions/actionset.h"
@@ -260,6 +262,8 @@ private:
 
 	bool parse_action_sets(const godot::String &p_json);
 	bool parse_interaction_profiles(const godot::String &p_json);
+
+	XRExtxOverlayExtensionWrapper *overlay_wrapper;
 
 public:
 	static OpenXRApi *openxr_get_api();

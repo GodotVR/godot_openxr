@@ -40,6 +40,9 @@ void OpenXRConfig::_register_methods() {
 	register_method("set_interaction_profiles", &OpenXRConfig::set_interaction_profiles);
 	register_property<OpenXRConfig, String>("interaction_profiles", &OpenXRConfig::set_interaction_profiles, &OpenXRConfig::get_interaction_profiles, String(OpenXRApi::default_interaction_profiles_json), GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_MULTILINE_TEXT);
 
+	register_method("get_main_session_visible", &OpenXRConfig::get_main_session_visible);
+	register_property<OpenXRConfig, int>("overlay_placement", &OpenXRConfig::set_overlay_placement, &OpenXRConfig::get_overlay_placement, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT);
+
 	register_method("get_system_name", &OpenXRConfig::get_system_name);
 
 	register_method("get_cpu_level", &OpenXRConfig::get_cpu_level);
@@ -61,6 +64,7 @@ OpenXRConfig::OpenXRConfig() {
 	openxr_api = OpenXRApi::openxr_get_api();
 	color_space_wrapper = XRFbColorSpaceExtensionWrapper::get_singleton();
 	display_refresh_rate_wrapper = XRFbDisplayRefreshRateExtensionWrapper::get_singleton();
+	overlay_wrapper = XRExtxOverlayExtensionWrapper::get_singleton();
 	foveation_wrapper = XRFbFoveationExtensionWrapper::get_singleton();
 	performance_settings_wrapper = XRExtPerformanceSettingsExtensionWrapper::get_singleton();
 }
@@ -71,6 +75,7 @@ OpenXRConfig::~OpenXRConfig() {
 	}
 	color_space_wrapper = nullptr;
 	display_refresh_rate_wrapper = nullptr;
+	overlay_wrapper = nullptr;
 }
 
 void OpenXRConfig::_init() {
@@ -180,9 +185,31 @@ double OpenXRConfig::get_refresh_rate() const {
 	}
 }
 
+bool OpenXRConfig::get_main_session_visible() const {
+	if (overlay_wrapper == nullptr) {
+		return false;
+	} else {
+		return overlay_wrapper->main_session_visible;
+	}
+}
+
 void OpenXRConfig::set_refresh_rate(const double p_refresh_rate) {
 	if (display_refresh_rate_wrapper != nullptr) {
 		display_refresh_rate_wrapper->set_refresh_rate(p_refresh_rate);
+	}
+}
+
+int OpenXRConfig::get_overlay_placement() const {
+	if (overlay_wrapper == nullptr) {
+		return 0;
+	} else {
+		return overlay_wrapper->overlay_placement;
+	}
+}
+
+void OpenXRConfig::set_overlay_placement(const int p_overlay_placement) {
+	if (overlay_wrapper != nullptr) {
+		overlay_wrapper->overlay_placement = p_overlay_placement;
 	}
 }
 

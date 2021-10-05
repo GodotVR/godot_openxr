@@ -9,6 +9,10 @@ func _ready():
 	print("Supported refresh rates: " + str($FPSController/Configuration.get_available_refresh_rates()))
 	print("Supported color spaces: " + str($FPSController/Configuration.get_available_color_spaces()))
 	print("Current color space: " + str($FPSController/Configuration.get_color_space()))
+	print("Main session visible: " + str($FPSController/Configuration.get_main_session_visible()))
+
+
+var main_session_visible = false;
 
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame
@@ -33,3 +37,15 @@ func _process(delta):
 	# this is a little dirty but we're going to just tie the trigger input of our controllers to their haptic output for testing
 	$FPSController/LeftHandController.rumble = $FPSController/LeftHandController.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
 	$FPSController/RightHandController.rumble = $FPSController/RightHandController.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
+
+	var main_session_visible_now = $FPSController/Configuration.get_main_session_visible();
+	var main_session_visible_changed = main_session_visible != main_session_visible_now
+	main_session_visible = main_session_visible_now
+
+	if  (main_session_visible_changed):
+		var env = $WorldEnvironment.get_environment()
+		if (main_session_visible):
+			get_tree().get_root().set_transparent_background(true)
+		else:
+			get_tree().get_root().set_transparent_background(false)
+

@@ -10,6 +10,7 @@
 #include "openxr/OpenXRApi.h"
 #include "openxr/include/signals_util.h"
 
+#include <algorithm>
 #include <cmath>
 #include <map>
 

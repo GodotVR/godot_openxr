@@ -1,9 +1,11 @@
+tool
 extends RigidBody
+
+class_name XRToolsPickable
 
 # Set hold mode
 export (bool) var press_to_hold = true
 export (bool) var reset_transform_on_pickup = true
-export (NodePath) var center_pickup_on = null
 export (NodePath) var highlight_mesh_instance = null
 export  (int, LAYERS_3D_PHYSICS) var picked_up_layer = 0
 
@@ -11,6 +13,7 @@ export  (int, LAYERS_3D_PHYSICS) var picked_up_layer = 0
 onready var original_parent = get_parent()
 onready var original_collision_mask = collision_mask
 onready var original_collision_layer = collision_layer
+var original_mode
 
 onready var highlight_material = preload("res://addons/godot-xr-tools/materials/highlight.tres")
 var original_materials = Array()
@@ -28,6 +31,11 @@ func is_picked_up():
 		return true
 
 	return false
+
+# action is called when user presses the action button while holding this object
+func action():
+	# override in script to implement
+	pass
 
 func _update_highlight():
 	if highlight_mesh_instance_node:
@@ -67,6 +75,9 @@ func pick_up(by, with_controller):
 	picked_up_by = by
 	by_controller = with_controller
 
+	# Remember the mode before pickup
+	original_mode = mode
+
 	# turn off physics on our pickable object
 	mode = RigidBody.MODE_STATIC
 	collision_layer = picked_up_layer
@@ -88,7 +99,7 @@ func pick_up(by, with_controller):
 		global_transform = original_transform
 
 # we are being let go
-func let_go(starting_linear_velocity = Vector3(0.0, 0.0, 0.0)):
+func let_go(p_linear_velocity = Vector3(), p_angular_velocity = Vector3()):
 	if picked_up_by:
 		# get our current global transform
 		var t = global_transform
@@ -99,14 +110,13 @@ func let_go(starting_linear_velocity = Vector3(0.0, 0.0, 0.0)):
 
 		# reposition it and apply impulse
 		global_transform = t
-		mode = RigidBody.MODE_RIGID
+		mode = original_mode
 		collision_mask = original_collision_mask
 		collision_layer = original_collision_layer
 
 		# set our starting velocity
-		linear_velocity = starting_linear_velocity
-
-#		apply_impulse(Vector3(0.0, 0.0, 0.0), impulse)
+		linear_velocity = p_linear_velocity
+		angular_velocity = p_angular_velocity
 
 		# we are no longer picked up
 		picked_up_by = null
@@ -121,6 +131,10 @@ func _ready():
 			for i in range(0, highlight_mesh_instance_node.get_surface_material_count()):
 				original_materials.push_back(highlight_mesh_instance_node.get_surface_material(i))
 
-	if center_pickup_on:
-		# if we have center pickup on set obtain our node
-		center_pickup_on_node = get_node(center_pickup_on)
+	# if we have center pickup on set obtain our node
+	center_pickup_on_node = get_node("PickupCenter")
+
+func _get_configuration_warning():
+	if reset_transform_on_pickup and !find_node("PickupCenter"):
+		return "Missing PickupCenter child node for 'reset transform on pickup'"
+	return ""

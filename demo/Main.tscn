@@ -70,13 +70,10 @@ scene = ExtResource( 9 )
 collision_layer = 0
 
 [node name="Function_Teleport" parent="FPSController/LeftHandController" index="1" instance=ExtResource( 10 )]
-collision_mask = 1022
 camera = NodePath("../../ARVRCamera")
 
 [node name="Function_pointer" parent="FPSController/LeftHandController" index="2" instance=ExtResource( 13 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 show_target = true
-collision_mask = 1024
 collide_with_areas = true
 
 [node name="RightHandController" parent="FPSController" index="3"]
@@ -95,9 +92,7 @@ smooth_rotation = true
 canFly = false
 
 [node name="Function_pointer" parent="FPSController/RightHandController" index="2" instance=ExtResource( 13 )]
-transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0 )
 show_target = true
-collision_mask = 1024
 collide_with_areas = true
 
 [node name="Left_grip_pose" parent="FPSController" instance=ExtResource( 7 )]
@@ -119,7 +114,6 @@ material/0 = null
 motion_range = 1
 
 [node name="Skeleton" parent="FPSController/LeftHand/HandModel/Armature001" index="0"]
-bones/9/bound_children = [  ]
 motion_range = 1
 
 [node name="IndexTip" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
@@ -135,7 +129,6 @@ motion_range = 1
 albedo_texture = ExtResource( 5 )
 
 [node name="Skeleton" parent="FPSController/RightHand/HandModel/Armature" index="0"]
-bones/9/bound_children = [  ]
 motion_range = 1
 
 [node name="IndexTip" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="1"]

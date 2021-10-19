@@ -1,13 +1,20 @@
-2.1 (in progress)
-=================
+# 2.2
+- Changed default physics layers to make more sense (minor breaking change)
+- Replaced Center On Node property with PickupCenter node you can place
+- Made Object_pickable script work by itself and registers as class `XRToolsPickable`
+- New Object_interactable convenience script that registers as class `XRToolsInteractable` that reacts to our pointer function
+- Removed ducktype switch from pointer, pointer will use signals over ducktyping automatically (minor breaking change)
+
+# 2.1
 - added option to highlight object that can be picked up
 - added option to snap object to given location (if reset transform is true)
 - added callback when shader cache has finished
 - using proper UI for layers
 - added hand controllers that react on trigger and grip input
+- fixed delta on move and slide (breaking change!)
+- letting go of an object now adds angular velocity
 
-2.0
-===
+# 2.0
 - Renamed add on to **godot-xr-tools**
 - Add enums to our export variables
 - Add a switch on pickable objects to keep their current positioning when picked up
@@ -16,8 +23,7 @@
 - Fixed sizing issue with teleport
 - Added option to change pickup range
 
-1.2
-===
+# 1.2
 - Assign button to teleport function and no longer need to set origin
 - Added pickable object support
 - Fixed positioning of direct movement collision shape
@@ -26,8 +32,7 @@
 - Added 2D in 3D viewport for UI
 - Improved throwing by assigning linear velocity
 
-1.1*
-====
+# 1.1*
 - previous versions were not tracked
 
 * Note that version history before 1.2 was not kept and is thus incomplete

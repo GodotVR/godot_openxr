@@ -45,6 +45,8 @@ openxr_library_path = ""
 sources = []
 openxr_loader_dll_source = ""
 openxr_loader_dll_target = ""
+openxr_loader_pdb_source = ""
+openxr_loader_pdb_target = ""
 
 # Platform dependent settings
 if env['platform'] == "windows":
@@ -56,6 +58,10 @@ if env['platform'] == "windows":
     # copy our loaded dll
     openxr_loader_dll_source = env['openxr_loader_path'] + "x64/bin/openxr_loader.dll"
     openxr_loader_dll_target = target_path + "openxr_loader.dll"
+
+    if env['target'] in ('debug', 'd'):
+        openxr_loader_pdb_source = env['openxr_loader_path'] + "x64/bin/openxr_loader.pdb"
+        openxr_loader_pdb_target = target_path + "openxr_loader.pdb"
 
     # Check some environment settings
     if env['use_llvm']:
@@ -163,6 +169,12 @@ if openxr_loader_dll_target != '':
     env.AddPostAction(library, Copy(
         openxr_loader_dll_target,
         openxr_loader_dll_source
+    ))
+
+if openxr_loader_pdb_target != '':
+    env.AddPostAction(library, Copy(
+        openxr_loader_pdb_target,
+        openxr_loader_pdb_source
     ))
 
 if cdb_supported and env['generate_cdb']:

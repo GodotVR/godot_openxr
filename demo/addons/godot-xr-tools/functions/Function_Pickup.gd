@@ -32,23 +32,45 @@ var object_in_area = Array()
 var closest_object = null
 var picked_up_object = null
 
-var last_position = Vector3(0.0, 0.0, 0.0)
-var velocities = Array()
+var last_transform = Transform()
+var linear_velocities = Array()
+var angular_velocities = Array()
+var deltas = Array()
 
 func set_pickup_range(new_range):
 	pickup_range = new_range
 	if $CollisionShape:
 		$CollisionShape.shape.radius = pickup_range
 
-func _get_velocity():
+func _get_linear_velocity():
 	var velocity = Vector3(0.0, 0.0, 0.0)
-	var count = velocities.size()
-	
-	if count > 0:
-		for v in velocities:
+	var count = linear_velocities.size()
+	var delta = 0.0
+
+	for d in deltas:
+		delta = delta + d
+
+	if delta > 0.0 and count > 0:
+		for v in linear_velocities:
 			velocity = velocity + v
-		
-		velocity = velocity / count
+
+		velocity = velocity / delta
+	
+	return velocity
+
+func _get_angular_velocity():
+	var velocity = Vector3(0.0, 0.0, 0.0)
+	var count = angular_velocities.size()
+	var delta = 0.0
+
+	for d in deltas:
+		delta = delta + d
+
+	if delta > 0.0 and count > 0:
+		for v in angular_velocities:
+			velocity = velocity + v
+
+		velocity = velocity / delta
 	
 	return velocity
 
@@ -90,7 +112,7 @@ func _update_closest_object():
 func drop_object():
 	if picked_up_object:
 		# let go of this object
-		picked_up_object.let_go(_get_velocity() * impulse_factor)
+		picked_up_object.let_go(_get_linear_velocity() * impulse_factor, _get_angular_velocity())
 		picked_up_object = null
 		emit_signal("has_dropped")
 
@@ -127,16 +149,29 @@ func _on_button_release(p_button):
 func _ready():
 	get_parent().connect("button_pressed", self, "_on_button_pressed")
 	get_parent().connect("button_release", self, "_on_button_release")
-	last_position = global_transform.origin
+	last_transform = global_transform
 	
 	# re-assign now that our collision shape has been constructed
 	set_pickup_range(pickup_range)
 
 func _process(delta):
-	velocities.push_back((global_transform.origin - last_position) / delta)
-	if velocities.size() > max_samples:
-		velocities.pop_front()
+	# Calculate our linear velocity
+	var linear_velocity = (global_transform.origin - last_transform.origin)
+	linear_velocities.push_back(linear_velocity)
+	if linear_velocities.size() > max_samples:
+		linear_velocities.pop_front()
 	
-	last_position = global_transform.origin
+	# Calculate our angular velocity
+	var delta_basis = global_transform.basis * last_transform.basis.inverse()
+	var angular_velocity = delta_basis.get_euler()
+	angular_velocities.push_back(angular_velocity)
+	if angular_velocities.size() > max_samples:
+		angular_velocities.pop_front()
+	
+	deltas.push_back(delta)
+	if deltas.size() > max_samples:
+		deltas.pop_front()
+	
+	last_transform = global_transform
 	_update_closest_object()
 

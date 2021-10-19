@@ -8,8 +8,26 @@
 
 config_version=4
 
-_global_script_classes=[  ]
+_global_script_classes=[ {
+"base": "Area",
+"class": "XRToolsInteractableArea",
+"language": "GDScript",
+"path": "res://addons/godot-xr-tools/objects/Interactable_area.gd"
+}, {
+"base": "PhysicsBody",
+"class": "XRToolsInteractableBody",
+"language": "GDScript",
+"path": "res://addons/godot-xr-tools/objects/Interactable_body.gd"
+}, {
+"base": "RigidBody",
+"class": "XRToolsPickable",
+"language": "GDScript",
+"path": "res://addons/godot-xr-tools/objects/Object_pickable.gd"
+} ]
 _global_script_class_icons={
+"XRToolsInteractableArea": "",
+"XRToolsInteractableBody": "",
+"XRToolsPickable": ""
 }
 
 [application]
@@ -42,10 +60,9 @@ Fire={
 [layer_names]
 
 3d_render/layer_20="Shadow only"
-3d_physics/layer_1="Player"
-3d_physics/layer_2="Environment"
-3d_physics/layer_3="Objects"
+3d_physics/layer_1="Default"
 3d_physics/layer_11="UI"
+3d_physics/layer_20="Player"
 
 [rendering]
 

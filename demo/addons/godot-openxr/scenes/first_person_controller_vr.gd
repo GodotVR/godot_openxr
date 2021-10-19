@@ -23,7 +23,6 @@ func initialise() -> bool:
 		vp.arvr = true
 
 		# Our interface will tell us whether we should keep our render buffer in linear color space
-		# If true our preview will be darker.
 		vp.keep_3d_linear = $Configuration.keep_3d_linear()
 
 		# increase our physics engine update speed

@@ -1,5 +1,6 @@
 package org.godotengine.plugin.vr.openxr
 
+import android.util.Log
 import org.godotengine.godot.Godot
 import org.godotengine.godot.plugin.GodotPlugin
 import java.util.concurrent.ConcurrentLinkedQueue
@@ -14,9 +15,18 @@ import javax.microedition.khronos.opengles.GL10
  */
 class OpenXRPlugin(godot: Godot): GodotPlugin(godot) {
   companion object {
+    private val TAG = OpenXRPlugin::class.java.simpleName
+    private var loadedSharedLibs = false
+
     init {
-      System.loadLibrary("openxr_loader")
-      System.loadLibrary("godot_openxr")
+      loadedSharedLibs = try {
+        System.loadLibrary("openxr_loader")
+        System.loadLibrary("godot_openxr")
+        true
+      } catch (e: UnsatisfiedLinkError) {
+        Log.e(TAG, "Unable to load the godot_openxr shared libraries")
+        false
+      }
     }
   }
 
@@ -63,13 +73,17 @@ class OpenXRPlugin(godot: Godot): GodotPlugin(godot) {
 
   override fun onGLSurfaceCreated(gl: GL10, config: EGLConfig) {
     super.onGLSurfaceCreated(gl, config)
-    initializeWrapper()
+    invokeNative {
+      initializeWrapper()
+    }
   }
 
   override fun onMainDestroy() {
     super.onMainDestroy()
-    runOnRenderThread {
-      uninitializeWrapper()
+    invokeNative {
+      runOnRenderThread {
+        uninitializeWrapper()
+      }
     }
   }
 
@@ -87,6 +101,20 @@ class OpenXRPlugin(godot: Godot): GodotPlugin(godot) {
   private fun onFocusLost() = eventListeners.forEach { it.onFocusLost() }
   private fun onSessionBegun() = eventListeners.forEach { it.onSessionBegun() }
   private fun onSessionEnding() = eventListeners.forEach { it.onSessionEnding() }
+
+  internal inline fun invokeNative(body: () -> Unit) {
+    if (loadedSharedLibs) {
+      body()
+    }
+  }
+
+  internal inline fun <reified T> invokeNativeWithDefault(defaultValue: T, body: () -> T): T {
+    return if (loadedSharedLibs) {
+      body()
+    } else {
+      defaultValue
+    }
+  }
 
   private external fun initializeWrapper()
 

@@ -29,15 +29,15 @@ JNIEXPORT jintArray JNICALL JNI_METHOD(nativeGetAvailableXrColorSpaces)(JNIEnv *
 	return array_to_jintArray(env, color_spaces_values);
 }
 
-JNIEXPORT jdouble JNICALL JNI_METHOD(getRefreshRate)(JNIEnv *, jclass, jobject) {
+JNIEXPORT jdouble JNICALL JNI_METHOD(nativeGetRefreshRate)(JNIEnv *, jclass) {
 	return XRFbDisplayRefreshRateExtensionWrapper::get_singleton()->get_refresh_rate();
 }
 
-JNIEXPORT void JNICALL JNI_METHOD(setRefreshRate)(JNIEnv *, jclass, jobject, jdouble refresh_rate) {
+JNIEXPORT void JNICALL JNI_METHOD(nativeSetRefreshRate)(JNIEnv *, jclass, jdouble refresh_rate) {
 	XRFbDisplayRefreshRateExtensionWrapper::get_singleton()->set_refresh_rate(refresh_rate);
 }
 
-JNIEXPORT jdoubleArray JNICALL JNI_METHOD(getAvailableRefreshRates)(JNIEnv *env, jclass, jobject) {
+JNIEXPORT jdoubleArray JNICALL JNI_METHOD(nativeGetAvailableRefreshRates)(JNIEnv *env, jclass) {
 	godot::Array refresh_rates = XRFbDisplayRefreshRateExtensionWrapper::get_singleton()->get_available_refresh_rates();
 	return array_to_jdoubleArray(env, refresh_rates);
 }
@@ -66,14 +66,14 @@ JNIEXPORT jboolean JNICALL JNI_METHOD(nativeSetGpuLevel)(JNIEnv *, jclass, jint 
 	return XRExtPerformanceSettingsExtensionWrapper::get_singleton()->set_gpu_level(static_cast<XrPerfSettingsLevelEXT>(level));
 }
 
-JNIEXPORT jfloat JNICALL JNI_METHOD(getRenderTargetSizeMultiplier)(JNIEnv *, jclass, jobject) {
+JNIEXPORT jfloat JNICALL JNI_METHOD(nativeGetRenderTargetSizeMultiplier)(JNIEnv *, jclass) {
 	OpenXRApi *openxr_api = OpenXRApi::openxr_get_api();
 	jfloat multiplier = openxr_api->get_render_target_size_multiplier();
 	OpenXRApi::openxr_release_api();
 	return multiplier;
 }
 
-JNIEXPORT jboolean JNICALL JNI_METHOD(setRenderTargetSizeMultiplier)(JNIEnv *, jclass, jobject, jfloat multiplier) {
+JNIEXPORT jboolean JNICALL JNI_METHOD(nativeSetRenderTargetSizeMultiplier)(JNIEnv *, jclass, jfloat multiplier) {
 	OpenXRApi *openxr_api = OpenXRApi::openxr_get_api();
 	jboolean result = openxr_api->set_render_target_size_multiplier(multiplier);
 	OpenXRApi::openxr_release_api();

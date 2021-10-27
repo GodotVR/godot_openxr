@@ -20,10 +20,6 @@ android {
         targetSdkVersion versions.targetSdk
         versionCode 1
         versionName "1.0"
-
-        ndk {
-            abiFilters "arm64-v8a"
-        }
     }
 
     sourceSets {
@@ -33,11 +29,28 @@ android {
     }
 
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility versions.javaVersion
+        targetCompatibility versions.javaVersion
     }
     kotlinOptions {
         jvmTarget = '1.8'
+    }
+
+    flavorDimensions "xrMode"
+    productFlavors {
+        ovr {
+            applicationIdSuffix ".ovr"
+            versionNameSuffix "-ovr"
+            ndk {
+                abiFilters "arm64-v8a", "armeabi-v7a"
+            }
+            missingDimensionStrategy 'functionality', 'full'
+        }
+        pancake {
+            applicationIdSuffix ".pancake"
+            versionNameSuffix "-pancake"
+            missingDimensionStrategy 'functionality', 'stub'
+        }
     }
 }
 

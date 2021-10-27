@@ -45,26 +45,26 @@ task generatePluginBinary(type: Copy) {
  * Generate the plugin native shared libraries.
  */
 task generateSharedLibs(type: Copy) {
-    dependsOn(":GodotOpenXR:externalNativeBuildDebug")
-    dependsOn(":GodotOpenXR:externalNativeBuildRelease")
+    dependsOn(":GodotOpenXR:externalNativeBuildFullDebug")
+    dependsOn(":GodotOpenXR:externalNativeBuildFullRelease")
 
     // Specify the base directory. All following 'into' targets will be relative
     // to this directory.
     into("$outputDir/sharedLibs")
 
     // Copy the generated debug shared libs into the outputs directory
-    from("android/build/intermediates/cmake/debug/obj") {
+    from("android/build/intermediates/cmake/fullDebug/obj") {
         into("debug")
     }
 
     // Copy the generated release shared libs into the outputs directory
-    from("android/build/intermediates/cmake/release/obj") {
+    from("android/build/intermediates/cmake/fullRelease/obj") {
         into("release")
     }
 
     // Copy the 64bit generated debug shared libs into our plugin
     // Note that our CI will distribute the runtime versions
-    from("android/build/intermediates/cmake/debug/obj/arm64-v8a") {
+    from("android/build/intermediates/cmake/fullDebug/obj/arm64-v8a") {
         into("../../../../demo/addons/godot-openxr/bin/android")
     }
 }

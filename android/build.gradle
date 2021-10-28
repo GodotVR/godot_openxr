@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 10006
-        versionName '1.0.6'
+        versionCode 10007
+        versionName '1.0.7'
         setProperty("archivesBaseName", "godotopenxr.${versionName}")
 
         externalNativeBuild {

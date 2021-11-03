@@ -70,13 +70,13 @@ jobs:
 
       - name: Run the build for godot-cpp (Linux)
         run: |
-          cd $GITHUB_WORKSPACE/godot-cpp
+          cd $GITHUB_WORKSPACE/thirdparty/godot-cpp
           scons platform=${{ matrix.platform }} -j2 target=release generate_bindings=yes bits=64
         if: matrix.platform == 'linux'
 
       - name: Run the build for godot-cpp (Windows)
         run: |
-          cd ${env:GITHUB_WORKSPACE}\godot-cpp
+          cd ${env:GITHUB_WORKSPACE}\thirdparty\godot-cpp
           scons platform=${{ matrix.platform }} -j2 target=release generate_bindings=yes bits=64
         if: matrix.platform == 'windows'
 
@@ -95,8 +95,8 @@ jobs:
       # for android, run generate bindings python script
       - name: Generate bindings (Android)
         run: |
-          cd $GITHUB_WORKSPACE/godot-cpp
-          python ../android/generate.py
+          cd $GITHUB_WORKSPACE/thirdparty/godot-cpp
+          python ../../android/generate.py
         if: matrix.platform == 'android'
 
       # then run gradlew to build aar
@@ -125,7 +125,7 @@ jobs:
           name: build-files-windows
           path: |
             demo/addons/godot-openxr/bin/win64/libgodot_openxr.dll
-            openxr_loader/1.0.18/x64/bin/openxr_loader.dll
+            thirdparty/openxr_loader/x64/bin/openxr_loader.dll
         if: matrix.platform == 'windows'
 
       # for android, copy aar
@@ -160,7 +160,7 @@ jobs:
           cp -r godot_openxr/demo/addons/godot-openxr godot_openxr_plugin/addons
           cp build-files-linux/libgodot_openxr.so godot_openxr_plugin/addons/godot-openxr/bin/linux/libgodot_openxr.so
           cp build-files-windows/demo/addons/godot-openxr/bin/win64/libgodot_openxr.dll godot_openxr_plugin/addons/godot-openxr/bin/win64/libgodot_openxr.dll
-          cp build-files-windows/openxr_loader/1.0.18/x64/bin/openxr_loader.dll godot_openxr_plugin/addons/godot-openxr/bin/win64/openxr_loader.dll
+          cp build-files-windows/thirdparty/openxr_loader/x64/bin/openxr_loader.dll godot_openxr_plugin/addons/godot-openxr/bin/win64/openxr_loader.dll
           cp build-files-android/sharedLibs/release/arm64-v8a/* godot_openxr_plugin/addons/godot-openxr/bin/android/
           # cp build-files-android/outputs/aar/*.aar godot_openxr_plugin/addons/godot-openxr/bin/android/
           # cp godot_openxr/android/godot_openxr.gdap godot_openxr_plugin/addons/godot-openxr/bin/android/godot_openxr.gdap

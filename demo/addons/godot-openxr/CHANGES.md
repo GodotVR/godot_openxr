@@ -1,6 +1,10 @@
 Changes to the Godot OpenXR asset
 =================================
 
+1.1.1
+-------------------
+- Organised all third party resources into a thirdparty folder for easy maintenance.
+
 1.1.0
 -------------------
 - Implemented Android build (currently using Oculus loader, Quest support only)

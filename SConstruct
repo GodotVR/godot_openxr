@@ -23,7 +23,7 @@ opts.AddVariables(
     PathVariable('target_path', 'The path where the lib is installed.', 'demo/addons/godot-openxr/bin/'),
     PathVariable('target_name', 'The library name.', 'libgodot_openxr', PathVariable.PathAccept),
 )
-opts.Add(PathVariable('openxr_loader_path', 'The path where our openxr loader is located.', 'openxr_loader/1.0.18/'))
+opts.Add(PathVariable('openxr_loader_path', 'The path where our openxr loader is located.', 'thirdparty/openxr_loader/'))
 opts.Add(BoolVariable('use_llvm', "Use the LLVM / Clang compiler", 'no'))
 if cdb_supported:
     opts.Add(BoolVariable('generate_cdb', 'Generate compile_commands.json', 'no'))
@@ -32,9 +32,9 @@ if cdb_supported:
 opts.Update(env)
 
 # Other needed paths
-godot_glad_path = "glad/"
-godot_headers_path = "godot-cpp/godot-headers/"
-godot_cpp_path = "godot-cpp/"
+godot_glad_path = "thirdparty/glad/"
+godot_headers_path = "thirdparty/godot-cpp/godot-headers/"
+godot_cpp_path = "thirdparty/godot-cpp/"
 godot_cpp_library = "libgodot-cpp"
 target_path = env['target_path']
 

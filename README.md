@@ -29,9 +29,9 @@ This will also include the `godot-headers` submodule.
 
 This submodule needs to be compiled with the following
 ```
-cd godot-cpp
+cd thirdparty/godot-cpp
 scons platform=<platform> target=release generate_bindings=yes
-cd ..
+cd ../..
 ```
 Replace `<platform>` with `linux` or `windows` depending on your platform.
 

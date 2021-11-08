@@ -1,8 +1,8 @@
 ext.versions = [
     gradlePluginVersion: '4.2.1',
     compileSdk         : 30,
-    minSdk             : 19,
-    targetSdk          : 30,
+    minSdk             : 19, // Also update 'android/src/main/AndroidManifest.xml#minSdkVersion' value
+    targetSdk          : 30, // Also update 'android/src/main/AndroidManifest.xml#targetSdkVersion' value
     buildTools         : '30.0.3',
     kotlinVersion      : '1.5.20',
     ndkVersion         : "21.4.7075529",

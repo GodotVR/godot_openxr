@@ -12,6 +12,12 @@ GLAD is an OpenGL loader library
 
 ## Godot-cpp
 
+Godots CPP bindings library (submoduled)
+
+- Upstream: https://github.com/godotengine/godot-cpp
+- Version:
+- License: MIT
+
 ## Oculus Mobile SDK
 
 This is a copy of the Oculus OpenXR mobile SDK downloaded from [here](https://developer.oculus.com/downloads/package/oculus-openxr-mobile-sdk).
@@ -20,7 +26,7 @@ This is a copy of the Oculus OpenXR mobile SDK downloaded from [here](https://de
 - Version: 33.0.0
 - License: https://developer.oculus.com/licenses/oculussdk/
 
-## OpenXR loader 1.0.18
+## OpenXR loader
 
 This is a copy of the Khronos OpenXR loader library for Windows. We use the include files for all platforms.
 

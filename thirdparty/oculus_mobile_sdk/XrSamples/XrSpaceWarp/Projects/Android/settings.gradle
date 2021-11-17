@@ -1,0 +1,5 @@
+rootProject.projectDir = new File(settingsDir, '../../../..')
+rootProject.name = "XrSpaceWarp"
+
+include ':', \
+    ':XrSamples:XrSpaceWarp:Projects:Android'

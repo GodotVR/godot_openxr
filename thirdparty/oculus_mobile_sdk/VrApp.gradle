@@ -260,7 +260,7 @@ class GenDebugKeystore extends DefaultTask {
   @TaskAction
   genDebugKeystore() {
     if ( !project.file("android.debug.keystore").exists() ) {
-      def pythonCmd = 'python'
+      def pythonCmd = 'python3'
       if (Os.isFamily(Os.FAMILY_WINDOWS)) {
         pythonCmd = "${project.rootProject.projectDir}/bin/scripts/build/ovrbuild_keystore.py.bat"
         project.exec {

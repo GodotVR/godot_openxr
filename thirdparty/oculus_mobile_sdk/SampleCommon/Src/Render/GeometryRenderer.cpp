@@ -151,8 +151,6 @@ void GeometryRenderer::Init(const GlGeometry::Descriptor& d) {
     /// gpu state needs alpha blending
     gc.GpuState.depthEnable = gc.GpuState.depthMaskEnable = true;
     gc.GpuState.blendEnable = ovrGpuState::BLEND_ENABLE;
-    gc.GpuState.blendSrc = GL_SRC_ALPHA;
-    gc.GpuState.blendDst = GL_ONE_MINUS_SRC_ALPHA;
 }
 
 void GeometryRenderer::Shutdown() {
@@ -165,6 +163,10 @@ void GeometryRenderer::Update() {
 }
 
 void GeometryRenderer::Render(std::vector<ovrDrawSurface>& surfaceList) {
+    ovrGraphicsCommand& gc = SurfaceDef_.graphicsCommand;
+    gc.GpuState.blendMode = BlendMode;
+    gc.GpuState.blendSrc = BlendSrc;
+    gc.GpuState.blendDst = BlendDst;
     surfaceList.push_back(ovrDrawSurface(ModelMatrix_, &SurfaceDef_));
 }
 

@@ -11,7 +11,11 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #ifndef OVR_JniUtils_h
 #define OVR_JniUtils_h
 
+#include "OVR_Types.h"
+
+#if defined(OVR_OS_ANDROID)
 #include "OVR_LogUtils.h"
+#endif // defined(OVR_OS_ANDROID)
 
 //==============================================================
 // Various helper functions.

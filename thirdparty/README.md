@@ -23,7 +23,7 @@ Godots CPP bindings library (submoduled)
 This is a copy of the Oculus OpenXR mobile SDK downloaded from [here](https://developer.oculus.com/downloads/package/oculus-openxr-mobile-sdk).
 
 - Upstream: https://developer.oculus.com/downloads/package/oculus-openxr-mobile-sdk
-- Version: 33.0.0
+- Version: 34.0.0
 - License: https://developer.oculus.com/licenses/oculussdk/
 
 ## OpenXR loader

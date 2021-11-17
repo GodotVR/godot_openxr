@@ -43,10 +43,7 @@ void XRExtHandTrackingExtensionWrapper::on_state_ready() {
 }
 
 void XRExtHandTrackingExtensionWrapper::on_process_openxr() {
-	// TODO: Tends to crash randomly on Quest, needs to investigate.
-#ifndef ANDROID
 	update_handtracking();
-#endif
 }
 
 void XRExtHandTrackingExtensionWrapper::on_state_stopping() {
@@ -214,15 +211,19 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				// not successful? then we do nothing.
 				hand_trackers[i].is_initialised = false;
 			} else {
-				hand_trackers[i].velocities.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT;
-				hand_trackers[i].velocities.jointCount = XR_HAND_JOINT_COUNT_EXT;
-				hand_trackers[i].velocities.jointVelocities = hand_trackers[i].joint_velocities;
+				hand_trackers[i].velocities = {
+					.type = XR_TYPE_HAND_JOINT_VELOCITIES_EXT,
+					.jointCount = XR_HAND_JOINT_COUNT_EXT,
+					.jointVelocities = hand_trackers[i].joint_velocities,
+				};
 
-				hand_trackers[i].locations.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT;
-				hand_trackers[i].locations.next = &hand_trackers[i].velocities;
-				hand_trackers[i].locations.isActive = false;
-				hand_trackers[i].locations.jointCount = XR_HAND_JOINT_COUNT_EXT;
-				hand_trackers[i].locations.jointLocations = hand_trackers[i].joint_locations;
+				hand_trackers[i].locations = {
+					.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
+					.next = &hand_trackers[i].velocities,
+					.isActive = false,
+					.jointCount = XR_HAND_JOINT_COUNT_EXT,
+					.jointLocations = hand_trackers[i].joint_locations,
+				};
 
 				hand_trackers[i].is_initialised = true;
 			}
@@ -238,9 +239,10 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 			XrHandJointsMotionRangeInfoEXT motionRangeInfo;
 
 			if (hand_motion_range_ext) {
-				motionRangeInfo.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT;
-				motionRangeInfo.next = nullptr;
-				motionRangeInfo.handJointsMotionRange = hand_trackers[i].motion_range;
+				motionRangeInfo = {
+					.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT,
+					.handJointsMotionRange = hand_trackers[i].motion_range,
+				};
 
 				locateInfo.next = &motionRangeInfo;
 			}

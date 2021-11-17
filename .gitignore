@@ -18,7 +18,7 @@ compile_commands.json
 
 # Ignore Gradle build output directory
 android/build
-android/.cxx
+.cxx
 
 # Ignore intellij configuration files and directories
 .idea

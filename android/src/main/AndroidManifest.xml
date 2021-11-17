@@ -26,7 +26,7 @@
 
         <meta-data
                 android:name="com.oculus.supportedDevices"
-                android:value="quest|delmar"
+                android:value="all"
                 tools:node="replace" />
 
         <!-- Enable Android views rendering. -->

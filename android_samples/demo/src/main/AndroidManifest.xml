@@ -28,7 +28,7 @@
 
         <meta-data
             android:name="com.oculus.supportedDevices"
-            android:value="quest|delmar"/>
+            android:value="all"/>
 
         <!-- Enable Android views rendering. -->
         <meta-data

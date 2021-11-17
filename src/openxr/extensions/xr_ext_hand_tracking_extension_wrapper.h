@@ -14,7 +14,7 @@ public:
 	bool is_initialised = false;
 	XrHandJointsMotionRangeEXT motion_range = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
 
-	XrHandTrackerEXT hand_tracker;
+	XrHandTrackerEXT hand_tracker = XR_NULL_HANDLE;
 	XrHandJointLocationEXT joint_locations[XR_HAND_JOINT_COUNT_EXT];
 	XrHandJointVelocityEXT joint_velocities[XR_HAND_JOINT_COUNT_EXT];
 

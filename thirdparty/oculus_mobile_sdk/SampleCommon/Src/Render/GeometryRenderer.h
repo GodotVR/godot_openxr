@@ -42,6 +42,9 @@ class GeometryRenderer {
     OVR::Vector3f SpecularLightDirection = {1, 1, 1};
     OVR::Vector3f SpecularLightColor = {1, 1, 1};
     OVR::Vector3f AmbientLightColor = {.1, .1, .1};
+    GLenum BlendSrc = GL_SRC_ALPHA;
+    GLenum BlendDst = GL_ONE_MINUS_SRC_ALPHA;
+    GLenum BlendMode = GL_FUNC_ADD;
 
    private:
     ovrSurfaceDef SurfaceDef_;

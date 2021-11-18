@@ -31,5 +31,5 @@ This is a copy of the Oculus OpenXR mobile SDK downloaded from [here](https://de
 This is a copy of the Khronos OpenXR loader library for Windows. We use the include files for all platforms.
 
 - Upstream: https://github.com/KhronosGroup/OpenXR-SDK/releases
-- Version 1.0.18
+- Version 1.0.20
 - License: Apache 2.0 or MIT

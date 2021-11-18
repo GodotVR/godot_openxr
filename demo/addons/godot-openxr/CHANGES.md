@@ -4,6 +4,7 @@ Changes to the Godot OpenXR asset
 1.1.1
 -------------------
 - Organised all third party resources into a thirdparty folder for easy maintenance.
+- Update to OpenXR 1.0.20
 
 1.1.0
 -------------------

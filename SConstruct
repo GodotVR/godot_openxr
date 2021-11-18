@@ -53,15 +53,16 @@ if env['platform'] == "windows":
     target_path += "win64/"
     godot_cpp_library += '.windows'
     openxr_include_path += env['openxr_loader_path'] + "include/"
-    openxr_library_path += env['openxr_loader_path'] + "x64/lib"
+    openxr_library_path += env['openxr_loader_path'] + "native/x64/release/lib"
 
     # copy our loaded dll
-    openxr_loader_dll_source = env['openxr_loader_path'] + "x64/bin/openxr_loader.dll"
+    openxr_loader_dll_source = env['openxr_loader_path'] + "native/x64/release/bin/openxr_loader.dll"
     openxr_loader_dll_target = target_path + "openxr_loader.dll"
 
-    if env['target'] in ('debug', 'd'):
-        openxr_loader_pdb_source = env['openxr_loader_path'] + "x64/bin/openxr_loader.pdb"
-        openxr_loader_pdb_target = target_path + "openxr_loader.pdb"
+    # no longer includes this in 1.0.20...
+    #if env['target'] in ('debug', 'd'):
+    #    openxr_loader_pdb_source = env['openxr_loader_path'] + "x64/bin/openxr_loader.pdb"
+    #    openxr_loader_pdb_target = target_path + "openxr_loader.pdb"
 
     # Check some environment settings
     if env['use_llvm']:

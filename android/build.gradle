@@ -9,8 +9,8 @@ android {
     defaultConfig {
         minSdkVersion versions.minSdk
         targetSdkVersion versions.targetSdk
-        versionCode 10008 // Also update 'src/main/AndroidManifest.xml#versionCode' value
-        versionName '1.0.8' // Also update 'src/main/AndroidManifest.xml#versionName' value
+        versionCode 10101 // Also update 'src/main/AndroidManifest.xml#versionCode' value
+        versionName '1.1.1' // Also update 'src/main/AndroidManifest.xml#versionName' value
         setProperty("archivesBaseName", "godotopenxr.${versionName}")
 
         externalNativeBuild {

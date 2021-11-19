@@ -589,7 +589,6 @@ int64_t XRInterfaceOpenXR::_get_camera_feed_id() const {
 	return 0;
 }
 
-/* BLOCKED by https://github.com/godotengine/godot/pull/51179
 RID XRInterfaceOpenXR::_get_external_color_texture() {
 	if (openxr_api != nullptr) {
 		return openxr_api->get_external_color_texture();
@@ -602,4 +601,3 @@ RID XRInterfaceOpenXR::_get_external_depth_texture() {
 	// TODO we should support this
 	return RID();
 }
-*/

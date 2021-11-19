@@ -109,10 +109,8 @@ public:
 	virtual void _set_anchor_detection_is_enabled(bool enabled) override;
 	virtual int64_t _get_camera_feed_id() const override;
 
-	/* BLOCKED by https://github.com/godotengine/godot/pull/51179
 	virtual RID _get_external_color_texture();
 	virtual RID _get_external_depth_texture();
-	*/
 
 	/* Future feature
 	virtual RID _get_external_vrs_texture(uint64_t p_view);

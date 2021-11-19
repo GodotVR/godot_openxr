@@ -9,7 +9,7 @@
             "command": "scons",
             "group": "build",
             "options": {
-                "cwd": "${workspaceFolder}/godot-cpp"
+                "cwd": "${workspaceFolder}/thirdparty/godot-cpp"
             },
             "windows": {
                 "args": [

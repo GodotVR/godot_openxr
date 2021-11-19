@@ -1303,7 +1303,7 @@ bool OpenXRApi::initialiseSession() {
 		VkPhysicalDevice vk_physical_device = (VkPhysicalDevice)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_PHYSICAL_DEVICE, RID(), 0);
 		VkDevice vk_device = (VkDevice)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_DEVICE, RID(), 0);
 		uint32_t vk_queue_family_index = (uint32_t)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE_FAMILY_INDEX, RID(), 0);
-		uint32_t vk_queue_index = (uint32_t)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE, RID(), 0);
+		uint32_t vk_queue_index = 0; // (uint32_t)rendering_device->get_driver_resource(RenderingDevice::DRIVER_RESOURCE_VULKAN_QUEUE, RID(), 0);
 
 		VkPhysicalDevice xr_physical_device = nullptr;
 
@@ -2527,16 +2527,14 @@ void OpenXRApi::render_openxr(const RID &p_render_target) {
 	if (!frameState.shouldRender || !view_pose_valid) {
 		// external texture support should always be available in Godot 4 once we implement it fully...
 
-		/* TODO uncomment this once we implement external texture support
-			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-				.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-				.next = nullptr
-			};
-			result = xrReleaseSwapchainImage(swapchain, &swapchainImageReleaseInfo);
-			if (!xr_result(result, "failed to release swapchain image!")) {
-				return;
-			}
-		*/
+		XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
+			.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
+			.next = nullptr
+		};
+		result = xrReleaseSwapchainImage(swapchain, &swapchainImageReleaseInfo);
+		if (!xr_result(result, "failed to release swapchain image!")) {
+			return;
+		}
 
 		// MS wants these in order..
 		// submit 0 layers when we shouldn't render
@@ -2555,6 +2553,7 @@ void OpenXRApi::render_openxr(const RID &p_render_target) {
 		return;
 	}
 
+	/*
 	if (true) { // remove this once we implement external texture support
 		result = acquire_image();
 		if (!xr_result(result, "failed to acquire swapchain image!")) {
@@ -2567,6 +2566,7 @@ void OpenXRApi::render_openxr(const RID &p_render_target) {
 
 		}
 	}
+	*/
 
 	XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
 		.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
@@ -2671,7 +2671,7 @@ void OpenXRApi::fill_projection_matrix(int eye, double p_z_near, double p_z_far,
 		return;
 	}
 
-	XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_OPENGL, views[eye].fov, (float) p_z_near, (float) p_z_far);
+	XrMatrix4x4f_CreateProjectionFov(&matrix, GRAPHICS_VULKAN, views[eye].fov, (float) p_z_near, (float) p_z_far);
 
 	for (int i = 0; i < 16; i++) {
 		p_projection[i] = matrix.m[i];

@@ -1,0 +1,18 @@
+[gd_scene load_steps=2 format=3 uid="uid://cs5xqplciaf6n"]
+
+[ext_resource type="PackedScene" uid="uid://2cpffg47dnkg" path="res://addons/godot-openxr/editor/interaction_profiles/OpenXRInteractionProfileBase.tscn" id="1_7wwal"]
+
+[node name="OculusTouchEditor" instance=ExtResource( "1_7wwal" )]
+
+[node name="Label" type="Label" parent="." index="0"]
+offset_left = 5.0
+offset_right = 117.0
+offset_bottom = 26.0
+text = "Testing Oculus"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" parent="." index="1"]
+offset_right = 117.0
+offset_bottom = 26.0

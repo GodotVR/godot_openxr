@@ -1,0 +1,113 @@
+[gd_scene load_steps=5 format=3 uid="uid://dybgntvkrcq7r"]
+
+[ext_resource type="Texture2D" uid="uid://djwv3ffjn2d5q" path="res://addons/godot-openxr/editor/icons/Add.svg" id="1_bra0n"]
+[ext_resource type="Script" path="res://addons/godot-openxr/editor/OpenXRActionSetEditor.gd" id="1_gw0hp"]
+[ext_resource type="Texture2D" uid="uid://bfpt0eqrwio3b" path="res://addons/godot-openxr/editor/icons/GuiTreeArrowDown.svg" id="2_lkxu5"]
+[ext_resource type="Texture2D" uid="uid://mnvm0xdqeboq" path="res://addons/godot-openxr/editor/icons/Remove.svg" id="3_7ffeh"]
+
+[node name="ActionSet" type="VBoxContainer"]
+script = ExtResource( "1_gw0hp" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Header" type="HBoxContainer" parent="."]
+offset_right = 360.0
+offset_bottom = 29.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Spacer" type="Control" parent="Header"]
+offset_right = 10.0
+offset_bottom = 29.0
+rect_min_size = Vector2(10, 0)
+
+[node name="Expanded" type="Button" parent="Header"]
+offset_left = 14.0
+offset_right = 38.0
+offset_bottom = 29.0
+icon = ExtResource( "2_lkxu5" )
+flat = true
+
+[node name="Name" type="TextEdit" parent="Header"]
+offset_left = 42.0
+offset_right = 267.0
+offset_bottom = 29.0
+rect_min_size = Vector2(200, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 16
+
+[node name="Priority" type="TextEdit" parent="Header"]
+offset_left = 271.0
+offset_right = 296.0
+offset_bottom = 29.0
+rect_min_size = Vector2(25, 0)
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="NewActionBtn" type="Button" parent="Header"]
+offset_left = 300.0
+offset_right = 328.0
+offset_bottom = 29.0
+hint_tooltip = "Add a new action to this action set"
+theme_override_font_sizes/font_size = 16
+icon = ExtResource( "1_bra0n" )
+flat = true
+
+[node name="RemActionSetBtn" type="Button" parent="Header"]
+offset_left = 332.0
+offset_right = 360.0
+offset_bottom = 29.0
+hint_tooltip = "Remove this action set"
+icon = ExtResource( "3_7ffeh" )
+flat = true
+
+[node name="Spacer" type="Control" parent="."]
+visible = false
+offset_top = 33.0
+offset_right = 360.0
+offset_bottom = 38.0
+rect_min_size = Vector2(5, 5)
+
+[node name="Labels" type="HBoxContainer" parent="."]
+offset_top = 33.0
+offset_right = 360.0
+offset_bottom = 59.0
+
+[node name="Spacer" type="Control" parent="Labels"]
+offset_right = 20.0
+offset_bottom = 26.0
+rect_min_size = Vector2(20, 0)
+
+[node name="Action" type="Label" parent="Labels"]
+offset_left = 24.0
+offset_right = 224.0
+offset_bottom = 26.0
+rect_min_size = Vector2(200, 0)
+size_flags_horizontal = 3
+text = "Action"
+align = 1
+
+[node name="Type" type="Label" parent="Labels"]
+offset_left = 228.0
+offset_right = 328.0
+offset_bottom = 26.0
+rect_min_size = Vector2(100, 0)
+text = "Type
+"
+align = 1
+
+[node name="Spacer2" type="Control" parent="Labels"]
+offset_left = 332.0
+offset_right = 360.0
+offset_bottom = 26.0
+rect_min_size = Vector2(28, 0)
+
+[connection signal="pressed" from="Header/Expanded" to="." method="_on_Expanded_pressed"]
+[connection signal="text_changed" from="Header/Name" to="." method="_on_Name_text_changed"]
+[connection signal="text_changed" from="Header/Priority" to="." method="_on_Priority_text_changed"]
+[connection signal="pressed" from="Header/NewActionBtn" to="." method="_on_NewActionBtn_pressed"]
+[connection signal="pressed" from="Header/RemActionSetBtn" to="." method="_on_RemActionSetBtn_pressed"]

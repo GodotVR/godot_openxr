@@ -1,0 +1,49 @@
+[gd_scene load_steps=3 format=3 uid="uid://mj3n5x8ay37f"]
+
+[ext_resource type="Script" path="res://addons/godot-openxr/editor/OpenXRActionEditor.gd" id="1_ugu0o"]
+[ext_resource type="Texture2D" uid="uid://mnvm0xdqeboq" path="res://addons/godot-openxr/editor/icons/Remove.svg" id="2_idutx"]
+
+[node name="Action" type="HBoxContainer"]
+script = ExtResource( "1_ugu0o" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Spacer" type="Control" parent="."]
+offset_right = 20.0
+offset_bottom = 29.0
+rect_min_size = Vector2(20, 0)
+
+[node name="Name" type="TextEdit" parent="."]
+offset_left = 24.0
+offset_right = 224.0
+offset_bottom = 29.0
+rect_min_size = Vector2(200, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_font_sizes/font_size = 16
+
+[node name="ActionType" type="OptionButton" parent="."]
+offset_left = 228.0
+offset_right = 328.0
+offset_bottom = 29.0
+rect_min_size = Vector2(100, 0)
+theme_override_font_sizes/font_size = 16
+text = "Bool"
+items = ["Bool", null, false, 0, null, "Float", null, false, 1, null, "Vector2", null, false, 2, null, "Pose", null, false, 3, null]
+selected = 0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="DeleteActionBtn" type="Button" parent="."]
+offset_left = 332.0
+offset_right = 360.0
+offset_bottom = 29.0
+hint_tooltip = "Delete this action"
+icon = ExtResource( "2_idutx" )
+flat = true
+
+[connection signal="text_changed" from="Name" to="." method="_on_Name_text_changed"]
+[connection signal="item_selected" from="ActionType" to="." method="_on_ActionType_item_selected"]
+[connection signal="pressed" from="DeleteActionBtn" to="." method="_on_DeleteActionBtn_pressed"]

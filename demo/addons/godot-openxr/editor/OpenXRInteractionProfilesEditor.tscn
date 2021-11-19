@@ -1,0 +1,104 @@
+[gd_scene load_steps=3 format=3 uid="uid://cgxg524djbh77"]
+
+[ext_resource type="Texture2D" uid="uid://djwv3ffjn2d5q" path="res://addons/godot-openxr/editor/icons/Add.svg" id="1_nu60h"]
+[ext_resource type="Script" path="res://addons/godot-openxr/editor/OpenXRInteractionProfilesEditor.gd" id="1_wyd57"]
+
+[node name="InteractionProfiles" type="MarginContainer"]
+offset_right = 419.0
+offset_bottom = 39.0
+size_flags_horizontal = 3
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_bottom = 5
+script = ExtResource( "1_wyd57" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Background" type="ColorRect" parent="."]
+offset_top = 5.0
+offset_right = 423.0
+offset_bottom = 52.0
+color = Color(0, 0, 0, 0.196078)
+
+[node name="HeaderBG" type="ColorRect" parent="."]
+offset_top = 5.0
+offset_right = 423.0
+offset_bottom = 50.0
+rect_min_size = Vector2(0, 45)
+size_flags_vertical = 0
+color = Color(1, 1, 1, 0.0784314)
+
+[node name="Container" type="VBoxContainer" parent="."]
+offset_top = 5.0
+offset_right = 423.0
+offset_bottom = 52.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Spacer" type="Control" parent="Container"]
+offset_right = 423.0
+offset_bottom = 5.0
+rect_min_size = Vector2(0, 5)
+
+[node name="Header" type="HBoxContainer" parent="Container"]
+offset_top = 9.0
+offset_right = 423.0
+offset_bottom = 38.0
+size_flags_horizontal = 3
+
+[node name="Spacer" type="Control" parent="Container/Header"]
+offset_right = 20.0
+offset_bottom = 29.0
+rect_min_size = Vector2(20, 0)
+
+[node name="IPLabel" type="Label" parent="Container/Header"]
+offset_left = 24.0
+offset_top = 1.0
+offset_right = 178.0
+offset_bottom = 27.0
+theme_override_font_sizes/font_size = 16
+text = "Interaction profiles: "
+align = 2
+
+[node name="InteractionProfiles" type="OptionButton" parent="Container/Header"]
+offset_left = 182.0
+offset_right = 382.0
+offset_bottom = 29.0
+rect_min_size = Vector2(200, 0)
+size_flags_horizontal = 3
+theme_override_font_sizes/font_size = 16
+
+[node name="NewInteractionProfileBtn" type="Button" parent="Container/Header"]
+offset_left = 386.0
+offset_right = 414.0
+offset_bottom = 29.0
+hint_tooltip = "Create a new action set"
+theme_override_font_sizes/font_size = 16
+icon = ExtResource( "1_nu60h" )
+flat = true
+
+[node name="Spacer2" type="Control" parent="Container/Header"]
+offset_left = 418.0
+offset_right = 423.0
+offset_bottom = 29.0
+rect_min_size = Vector2(5, 0)
+
+[node name="Spacer2" type="Control" parent="Container"]
+offset_top = 42.0
+offset_right = 423.0
+offset_bottom = 47.0
+rect_min_size = Vector2(0, 5)
+
+[node name="NewInteractionProfileDialog" type="Popup" parent="."]
+title = "New interaction profile"
+size = Vector2i(300, 100)
+
+[node name="Label" type="Label" parent="NewInteractionProfileDialog"]
+offset_right = 93.0
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 16
+text = "This is a test"
+
+[connection signal="item_selected" from="Container/Header/InteractionProfiles" to="." method="_on_InteractionProfiles_item_selected"]
+[connection signal="pressed" from="Container/Header/NewInteractionProfileBtn" to="." method="_on_NewInteractionProfileBtn_pressed"]

@@ -17,8 +17,7 @@ class OpenXRActionSet : public Resource {
 
 private:
 	String name;
-	String localized_name;
-	int priority;
+	int priority = 0;
 
 	std::vector<Ref<OpenXRAction>> actions;
 
@@ -29,23 +28,14 @@ public:
 	void set_name(const String &p_name);
 	String get_name() const;
 
-	void set_localized_name(const String &p_name);
-	String get_localized_name() const;
-
 	void set_priority(int p_priority);
 	int get_priority() const;
 
 	void clear_actions();
 	void add_action(Ref<OpenXRAction> p_action);
 	void remove_action(Ref<OpenXRAction> p_action);
-	int number_of_actions() const;
-	Ref<OpenXRAction> get_action(int p_index) const;
-
-	/* this needs https://github.com/godotengine/godot-cpp/pull/656
-	Array _get_property_list();
-	Variant _get(const String p_name) const;
-	bool _set(const String p_name, Variant p_value);
-	*/
+	Array get_actions() const;
+	void set_actions(Array p_actions);
 
 	OpenXRActionSet();
 	~OpenXRActionSet();

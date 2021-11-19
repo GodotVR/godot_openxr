@@ -10,13 +10,18 @@ using namespace godot;
 void OpenXRActionSets::_bind_methods() {
 	ClassDB::bind_method(D_METHOD("add_action_set", "action_set"), &OpenXRActionSets::add_action_set);
 	ClassDB::bind_method(D_METHOD("remove_action_set", "action_set"), &OpenXRActionSets::remove_action_set);
-	ClassDB::bind_method(D_METHOD("number_of_action_sets"), &OpenXRActionSets::number_of_action_sets);
-	ClassDB::bind_method(D_METHOD("get_action_set", "index"), &OpenXRActionSets::get_action_set);
+	ClassDB::bind_method(D_METHOD("get_action_sets"), &OpenXRActionSets::get_action_sets);
+	ClassDB::bind_method(D_METHOD("set_action_sets", "sets"), &OpenXRActionSets::set_action_sets);
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "action_sets", PROPERTY_HINT_RESOURCE_TYPE, "OpenXRActionSet", PROPERTY_USAGE_NO_EDITOR), "set_action_sets", "get_action_sets");
 
 	ClassDB::bind_method(D_METHOD("add_interaction_profile", "interaction_profile"), &OpenXRActionSets::add_interaction_profile);
 	ClassDB::bind_method(D_METHOD("remove_interaction_profile", "interaction_profile"), &OpenXRActionSets::remove_interaction_profile);
-	ClassDB::bind_method(D_METHOD("number_of_interaction_profiles"), &OpenXRActionSets::number_of_interaction_profiles);
-	ClassDB::bind_method(D_METHOD("get_interaction_profile", "index"), &OpenXRActionSets::get_interaction_profile);
+	ClassDB::bind_method(D_METHOD("get_interaction_profiles"), &OpenXRActionSets::get_interaction_profiles);
+	ClassDB::bind_method(D_METHOD("set_interaction_profiles", "profiles"), &OpenXRActionSets::set_interaction_profiles);
+	ADD_PROPERTY(PropertyInfo(Variant::ARRAY, "interaction_profiles", PROPERTY_HINT_RESOURCE_TYPE, "OpenXRInteractionProfile", PROPERTY_USAGE_NO_EDITOR), "set_interaction_profiles", "get_interaction_profiles");
+
+	ADD_SIGNAL(MethodInfo("action_sets_changed"));
+	ADD_SIGNAL(MethodInfo("interaction_profiles_changed"));
 }
 
 void OpenXRActionSets::clear_action_sets() {
@@ -26,6 +31,9 @@ void OpenXRActionSets::clear_action_sets() {
 		action_sets.back().unref();
 		action_sets.pop_back();
 	}
+
+	emit_signal("action_sets_changed");
+	notify_property_list_changed();
 }
 
 void OpenXRActionSets::add_action_set(Ref<OpenXRActionSet> p_action_set) {
@@ -37,6 +45,9 @@ void OpenXRActionSets::add_action_set(Ref<OpenXRActionSet> p_action_set) {
 
 	// Then set our reference
 	action_sets.back() = p_action_set;
+
+	emit_signal("action_sets_changed");
+	notify_property_list_changed();
 }
 
 void OpenXRActionSets::remove_action_set(Ref<OpenXRActionSet> p_action_set) {
@@ -44,21 +55,43 @@ void OpenXRActionSets::remove_action_set(Ref<OpenXRActionSet> p_action_set) {
 		if (action_sets[i] == p_action_set) {
 			action_sets[i].unref();
 			action_sets.erase(action_sets.begin() + i);
+
+			emit_signal("action_sets_changed");
+			notify_property_list_changed();
 			return;
 		}
 	}
 }
 
-int OpenXRActionSets::number_of_action_sets() const {
-	return action_sets.size();
+Array OpenXRActionSets::get_action_sets() const {
+	Array arr;
+
+	for (auto action_set : action_sets) {
+		Variant var = action_set;
+		arr.push_back(var);
+	}	
+
+	return arr;
 }
 
-Ref<OpenXRActionSet> OpenXRActionSets::get_action_set(int p_index) const {
-	if (p_index >= 0 && p_index < action_sets.size()) {
-		return action_sets[p_index];
-	} else {
-		return Ref<OpenXRActionSet>();
+void OpenXRActionSets::set_action_sets(Array p_action_sets) {
+	// In theory this setter should only be used when our resource is loaded.
+	// We should add a sort at the end.
+
+	while (action_sets.size() > 0) {
+		action_sets.back().unref();
+		action_sets.pop_back();
 	}
+
+	for (int i = 0; i < p_action_sets.size(); i++) {
+		Ref<OpenXRActionSet> action_set;
+
+		action_set = p_action_sets[i];
+		action_sets.push_back(action_set);
+	}
+
+	emit_signal("action_sets_changed");
+	notify_property_list_changed();
 }
 
 void OpenXRActionSets::clear_interaction_profiles() {
@@ -68,6 +101,9 @@ void OpenXRActionSets::clear_interaction_profiles() {
 		interaction_profiles.back().unref();
 		interaction_profiles.pop_back();
 	}
+
+	emit_signal("interaction_profiles_changed");
+	notify_property_list_changed();
 }
 
 void OpenXRActionSets::add_interaction_profile(Ref<OpenXRInteractionProfile> p_interaction_profile) {
@@ -79,6 +115,9 @@ void OpenXRActionSets::add_interaction_profile(Ref<OpenXRInteractionProfile> p_i
 
 	// Then set our reference
 	interaction_profiles.back() = p_interaction_profile;
+
+	emit_signal("interaction_profiles_changed");
+	notify_property_list_changed();
 }
 
 void OpenXRActionSets::remove_interaction_profile(Ref<OpenXRInteractionProfile> p_interaction_profile) {
@@ -86,132 +125,44 @@ void OpenXRActionSets::remove_interaction_profile(Ref<OpenXRInteractionProfile> 
 		if (interaction_profiles[i] == p_interaction_profile) {
 			interaction_profiles[i].unref();
 			interaction_profiles.erase(interaction_profiles.begin() + i);
+
+			emit_signal("interaction_profiles_changed");
+			notify_property_list_changed();
 			return;
 		}
 	}
 }
 
-int OpenXRActionSets::number_of_interaction_profiles() const {
-	return interaction_profiles.size();
-}
-
-Ref<OpenXRInteractionProfile> OpenXRActionSets::get_interaction_profile(int p_index) const {
-	if (p_index >= 0 && p_index < interaction_profiles.size()) {
-		return interaction_profiles[p_index];
-	} else {
-		return Ref<OpenXRInteractionProfile>();
-	}
-}
-
-/* this needs https://github.com/godotengine/godot-cpp/pull/656
-Array OpenXRActionSets::_get_property_list() {
-	// We are returning hidden entries for our action sets and interaction profiles so they get saved into our resource file
-	// These are not for direct use.
-
+Array OpenXRActionSets::get_interaction_profiles() const {
 	Array arr;
 
-	// TODO might want to do something here to remove unreferenced entries in action_sets and interaction_profiles?
-
-	// add an entry for every actionset we have
-	for(int i = 0; i < action_sets.size(); i++) {
-		Dictionary property;
-
-		String name = "action_sets/";
-		name += String::num((double) i, 0);
-
-		property["name"] = name;
-		property["type"] = Variant::OBJECT;
-		property["hint"] = PROPERTY_HINT_RESOURCE_TYPE;
-		property["hint_string"] = "OpenXRActionSet";
-		property["usage"] = PROPERTY_USAGE_NO_EDITOR; // don't show in editor, only load from/save to tscn
-
-		arr.push_back(property);
-	}
-
-	// add an entry for every interaction profile we have
-	for(int i = 0; i < interaction_profiles.size(); i++) {
-		Dictionary property;
-
-		String name = "interaction_profile/";
-		name += String::num((double) i, 0);
-
-		property["name"] = name;
-		property["type"] = Variant::OBJECT;
-		property["hint"] = PROPERTY_HINT_RESOURCE_TYPE;
-		property["hint_string"] = "OpenXRInteractionProfile";
-		property["usage"] = PROPERTY_USAGE_NO_EDITOR; // don't show in editor, only load from/save to tscn
-
-		arr.push_back(property);
-	}
+	for (auto interaction_profile : interaction_profiles) {
+		Variant var = interaction_profile;
+		arr.push_back(var);
+	}	
 
 	return arr;
 }
 
-Variant OpenXRActionSets::_get(const String p_name) const {
-	Variant ret;
+void OpenXRActionSets::set_interaction_profiles(Array p_interaction_profiles) {
+	// In theory this setter should only be used when our resource is loaded.
+	// We should add a sort at the end.
 
-	String str_action_sets = "action_sets/";
-	String str_interaction_profiles = "interaction_profiles/";
-
-	if (p_name.begins_with(str_action_sets)) {
-		String index = p_name.split("/")[1];
-		int id = index.to_int();
-
-		return Variant(get_action_set(id));
-	} else if (p_name.begins_with(str_interaction_profiles)) {
-		String index = p_name.split("/")[1];
-		int id = index.to_int();
-
-		return Variant(get_interaction_profile(id));
+	while (interaction_profiles.size() > 0) {
+		interaction_profiles.back().unref();
+		interaction_profiles.pop_back();
 	}
 
-	// Must be a property of our superclass, returning an empty (NIL) variant will handle it further
-	return ret;
-}
+	for (int i = 0; i < p_interaction_profiles.size(); i++) {
+		Ref<OpenXRInteractionProfile> interaction_profile;
 
-bool OpenXRActionSets::_set(const String p_name, Variant p_value) {
-	// Note that this is basically only called when we're loading an action sets resource from disk
-
-	String str_action_sets = "action_sets/";
-	String str_interaction_profiles = "interaction_profiles/";
-
-	if (p_name.begins_with(str_action_sets)) {
-		Ref<OpenXRActionSet> action_set = p_value;
-
-		if (action_set.is_valid()) {
-			String index = p_name.split("/")[1];
-			int id = index.to_int();
-
-			if (action_sets.size() < id - 1) {
-				action_sets.resize(id + 1);
-			}
-
-			action_sets[id] = action_set;
-		}
-
-		return true;
-	} else if (p_name.begins_with(str_interaction_profiles)) {
-		Ref<OpenXRInteractionProfile> interaction_profile = p_value;
-
-		if (interaction_profiles.is_valid()) {
-			String index = p_name.split("/")[1];
-			int id = index.to_int();
-
-			if (interaction_profiles.size() < id - 1) {
-				interaction_profiles.resize(id + 1);
-			}
-
-			interaction_profiles[id] = interaction_profile;
-		}
-
-		return true;
+		interaction_profile = p_interaction_profiles[i];
+		interaction_profiles.push_back(interaction_profile);
 	}
 
-
-	// Must be a property of our superclass, returning false will handle it further
-	return false;
+	emit_signal("interaction_profiles_changed");
+	notify_property_list_changed();
 }
-*/
 
 OpenXRActionSets::OpenXRActionSets() {
 	// nothing to do here yet...

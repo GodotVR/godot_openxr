@@ -26,20 +26,14 @@ public:
 	void clear_action_sets();
 	void add_action_set(Ref<OpenXRActionSet> p_action_set);
 	void remove_action_set(Ref<OpenXRActionSet> p_action_set);
-	int number_of_action_sets() const;
-	Ref<OpenXRActionSet> get_action_set(int p_index) const;
+	Array get_action_sets() const;
+	void set_action_sets(Array p_action_sets);
 
 	void clear_interaction_profiles();
 	void add_interaction_profile(Ref<OpenXRInteractionProfile> p_interaction_profile);
 	void remove_interaction_profile(Ref<OpenXRInteractionProfile> p_interaction_profile);
-	int number_of_interaction_profiles() const;
-	Ref<OpenXRInteractionProfile> get_interaction_profile(int p_index) const;
-
-	/* this needs https://github.com/godotengine/godot-cpp/pull/656
-	Array _get_property_list();
-	Variant _get(const String p_name) const;
-	bool _set(const String p_name, Variant p_value);
-	*/
+	Array get_interaction_profiles() const;
+	void set_interaction_profiles(Array p_interaction_profiles);
 
 	OpenXRActionSets();
 	~OpenXRActionSets();

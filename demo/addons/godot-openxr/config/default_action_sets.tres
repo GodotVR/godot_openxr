@@ -1,3 +1,64 @@
-[gd_resource type="OpenXRActionSets" format=3 uid="uid://b8qf8b0ow1ecq"]
+[gd_resource type="OpenXRActionSets" load_steps=19 format=3 uid="uid://b8qf8b0ow1ecq"]
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_nmyta"]
+name = "Trigger Click"
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_8i5hj"]
+name = "Trigger"
+action_type = 1
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_vit8o"]
+name = "Primary"
+action_type = 2
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_yowxf"]
+name = "Primary Click"
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_oh6hf"]
+name = "Primary Touch"
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_kqoxw"]
+name = "Secondary"
+action_type = 2
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_4d4bt"]
+name = "Secondary Click"
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_ey2gr"]
+name = "Secondary Touch"
+
+[sub_resource type="OpenXRActionSet" id="OpenXRActionSet_x717l"]
+name = "Default action set"
+actions = [SubResource( "OpenXRAction_nmyta" ), SubResource( "OpenXRAction_8i5hj" ), SubResource( "OpenXRAction_vit8o" ), SubResource( "OpenXRAction_yowxf" ), SubResource( "OpenXRAction_oh6hf" ), SubResource( "OpenXRAction_kqoxw" ), SubResource( "OpenXRAction_4d4bt" ), SubResource( "OpenXRAction_ey2gr" )]
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_g4ij7"]
+name = "1"
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_7og27"]
+name = "2"
+
+[sub_resource type="OpenXRAction" id="OpenXRAction_r0gpv"]
+name = "3"
+
+[sub_resource type="OpenXRActionSet" id="OpenXRActionSet_or5hx"]
+name = "test set 2"
+actions = [SubResource( "OpenXRAction_g4ij7" ), SubResource( "OpenXRAction_7og27" ), SubResource( "OpenXRAction_r0gpv" )]
+
+[sub_resource type="OpenXRInteractionProfile" id="OpenXRInteractionProfile_ls1r4"]
+path = "/interaction_profiles/khr/simple_controller"
+
+[sub_resource type="OpenXRInteractionProfile" id="OpenXRInteractionProfile_tylk0"]
+path = "/interaction_profiles/htc/vive_controller"
+
+[sub_resource type="OpenXRInteractionProfile" id="OpenXRInteractionProfile_5sp78"]
+path = "/interaction_profiles/microsoft/motion_controller"
+
+[sub_resource type="OpenXRInteractionProfile" id="OpenXRInteractionProfile_muxk4"]
+path = "/interaction_profiles/oculus/touch_controller"
+
+[sub_resource type="OpenXRInteractionProfile" id="OpenXRInteractionProfile_swuw5"]
+path = "/interaction_profiles/valve/index_controller"
 
 [resource]
+action_sets = [SubResource( "OpenXRActionSet_x717l" ), SubResource( "OpenXRActionSet_or5hx" )]
+interaction_profiles = [SubResource( "OpenXRInteractionProfile_ls1r4" ), SubResource( "OpenXRInteractionProfile_tylk0" ), SubResource( "OpenXRInteractionProfile_5sp78" ), SubResource( "OpenXRInteractionProfile_muxk4" ), SubResource( "OpenXRInteractionProfile_swuw5" )]

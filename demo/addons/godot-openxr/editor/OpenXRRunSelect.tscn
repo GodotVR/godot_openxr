@@ -1,12 +1,13 @@
-[gd_scene load_steps=2 format=2]
+[gd_scene load_steps=2 format=3 uid="uid://7eqmk3bil2rq"]
 
-[ext_resource path="res://addons/godot-openxr/editor/OpenXRRunSelect.gd" type="Script" id=1]
+[ext_resource type="Script" path="res://addons/godot-openxr/editor/OpenXRRunSelect.gd" id="1"]
 
 [node name="OpenXRRunSelect" type="OptionButton"]
+theme_override_font_sizes/font_size = 16
 text = "Default"
-items = [ "Default", null, false, 0, null, "SteamVR", null, false, 2, null, "Oculus", null, false, 3, null, "Microsoft MR", null, false, 4, null ]
+items = ["Default", null, false, 0, null, "SteamVR", null, false, 2, null, "Oculus", null, false, 3, null, "Microsoft MR", null, false, 4, null]
 selected = 0
-script = ExtResource( 1 )
+script = ExtResource( "1" )
 __meta__ = {
 "_edit_use_anchors_": false
 }

@@ -1,0 +1,15 @@
+[gd_scene load_steps=2 format=3 uid="uid://b6qdhiwnlektq"]
+
+[ext_resource type="PackedScene" path="res://addons/godot-openxr/editor/interaction_profiles/OpenXRInteractionProfileBase.tscn" id="1_cmhyd"]
+
+[node name="HTCViveEditor" instance=ExtResource( "1_cmhyd" )]
+
+[node name="Label" type="Label" parent="." index="0"]
+offset_left = 218.0
+offset_top = 109.0
+offset_right = 343.0
+offset_bottom = 135.0
+text = "Testing HTC vive"
+__meta__ = {
+"_edit_use_anchors_": false
+}

@@ -22,8 +22,7 @@ public:
 
 private:
 	String name;
-	String localized_name;
-	ActionType action_type;
+	ActionType action_type = ACTION_BOOL;
 
 protected:
 	static void _bind_methods();
@@ -31,6 +30,9 @@ protected:
 public:
 	void set_name(const String &p_name);
 	String get_name() const;
+
+	void set_action_type(int p_type);
+	int get_action_type() const;
 
 	OpenXRAction();
 	~OpenXRAction();

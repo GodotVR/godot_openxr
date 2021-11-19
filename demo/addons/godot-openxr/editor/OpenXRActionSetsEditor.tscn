@@ -1,0 +1,113 @@
+[gd_scene load_steps=5 format=3 uid="uid://dq5euwagt54y1"]
+
+[ext_resource type="Script" path="res://addons/godot-openxr/editor/OpenXRActionSetsEditor.gd" id="1_oxgn0"]
+[ext_resource type="Texture2D" uid="uid://djwv3ffjn2d5q" path="res://addons/godot-openxr/editor/icons/Add.svg" id="2_lgomu"]
+[ext_resource type="Texture2D" uid="uid://clk0dx0i4513f" path="res://addons/godot-openxr/editor/icons/Save.svg" id="3_e5tjd"]
+[ext_resource type="PackedScene" uid="uid://cgxg524djbh77" path="res://addons/godot-openxr/editor/OpenXRInteractionProfilesEditor.tscn" id="4_n5i7l"]
+
+[node name="OpenXRActionSetsEditor" type="ScrollContainer"]
+offset_right = 1000.0
+offset_bottom = 200.0
+rect_min_size = Vector2(0, 200)
+size_flags_horizontal = 3
+script = ExtResource( "1_oxgn0" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Container" type="HBoxContainer" parent="."]
+offset_right = 1000.0
+offset_bottom = 200.0
+size_flags_horizontal = 3
+size_flags_vertical = 3
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ActionSets" type="MarginContainer" parent="Container"]
+offset_right = 283.0
+offset_bottom = 200.0
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_top = 5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_bottom = 5
+
+[node name="Background" type="ColorRect" parent="Container/ActionSets"]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 278.0
+offset_bottom = 195.0
+color = Color(0, 0, 0, 0.196078)
+
+[node name="HeaderBG" type="ColorRect" parent="Container/ActionSets"]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 278.0
+offset_bottom = 50.0
+rect_min_size = Vector2(0, 45)
+size_flags_vertical = 0
+color = Color(1, 1, 1, 0.0784314)
+
+[node name="Container" type="VBoxContainer" parent="Container/ActionSets"]
+offset_left = 5.0
+offset_top = 5.0
+offset_right = 278.0
+offset_bottom = 195.0
+
+[node name="Spacer" type="Control" parent="Container/ActionSets/Container"]
+offset_right = 273.0
+offset_bottom = 5.0
+rect_min_size = Vector2(0, 5)
+
+[node name="Header" type="HBoxContainer" parent="Container/ActionSets/Container"]
+offset_top = 9.0
+offset_right = 273.0
+offset_bottom = 38.0
+
+[node name="Label" type="Label" parent="Container/ActionSets/Container/Header"]
+offset_right = 200.0
+offset_bottom = 29.0
+rect_min_size = Vector2(200, 0)
+size_flags_horizontal = 3
+size_flags_vertical = 1
+theme_override_font_sizes/font_size = 16
+text = "Action sets"
+align = 1
+valign = 1
+
+[node name="NewActionSetBtn" type="Button" parent="Container/ActionSets/Container/Header"]
+offset_left = 204.0
+offset_right = 232.0
+offset_bottom = 29.0
+hint_tooltip = "Create a new action set"
+theme_override_font_sizes/font_size = 16
+icon = ExtResource( "2_lgomu" )
+flat = true
+
+[node name="SaveBtn" type="Button" parent="Container/ActionSets/Container/Header"]
+offset_left = 236.0
+offset_right = 264.0
+offset_bottom = 29.0
+hint_tooltip = "Save action sets"
+icon = ExtResource( "3_e5tjd" )
+flat = true
+
+[node name="Spacer" type="Control" parent="Container/ActionSets/Container/Header"]
+offset_left = 268.0
+offset_right = 273.0
+offset_bottom = 29.0
+rect_min_size = Vector2(5, 0)
+
+[node name="Spacer2" type="Control" parent="Container/ActionSets/Container"]
+offset_top = 42.0
+offset_right = 273.0
+offset_bottom = 47.0
+rect_min_size = Vector2(0, 5)
+
+[node name="InteractionProfiles" parent="Container" instance=ExtResource( "4_n5i7l" )]
+offset_left = 287.0
+offset_right = 1000.0
+offset_bottom = 200.0
+
+[connection signal="pressed" from="Container/ActionSets/Container/Header/NewActionSetBtn" to="." method="_on_NewActionSetBtn_pressed"]
+[connection signal="pressed" from="Container/ActionSets/Container/Header/SaveBtn" to="." method="_on_SaveBtn_pressed"]

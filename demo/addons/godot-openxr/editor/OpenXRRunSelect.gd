@@ -1,13 +1,12 @@
+@tool
 extends OptionButton
 
-# @tool
-
 var available_runtimes : Array = Array()
-onready var platform = OS.get_name()
+@onready var platform = OS.get_name()
 
 var home_folder = ''
 
-func _parse_path(p_path):
+func _parse_path(p_path) -> String:
 	# we might want to add more stuff here at some point
 	p_path = p_path.replace("~", home_folder)
 	return p_path
@@ -31,8 +30,10 @@ func _ready():
 	# read our json file, may have entries for multiple platforms, we'll filter them later
 	var f = File.new()
 	if (f.open("res://addons/godot-openxr/runtimes.json", File.READ)) == OK:
-		var json = JSON.parse(f.get_as_text())
-		available_runtimes = json.result as Array
+		var json = JSON.new()
+		var err : int = json.parse(f.get_as_text())
+		if err == OK:
+			available_runtimes = json.get_data()
 		f.close()
 
 	# check what our current value is
@@ -44,8 +45,8 @@ func _ready():
 		add_item("Default", -1)
 
 		# check which runtimes are actually available
-		var dir = Directory.new()
-		var index = 0
+		var dir : Directory = Directory.new()
+		var index : int = 0
 		for i in available_runtimes.size():
 			var runtime = available_runtimes[i]
 			var path = _parse_path(runtime["path"])
@@ -63,8 +64,7 @@ func _ready():
 		# I guess nothing supported on this platform
 		visible = false
 
-func _on_OpenXRRunSelect_item_selected(index):
-	# this need latest 3.2.4
+func _on_OpenXRRunSelect_item_selected(index : int):
 	if index == 0:
 		print("Returning to default")
 		OS.set_environment("XR_RUNTIME_JSON", "")

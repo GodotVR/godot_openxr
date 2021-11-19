@@ -1,0 +1,24 @@
+[gd_scene load_steps=2 format=3 uid="uid://2cpffg47dnkg"]
+
+[ext_resource type="Script" path="res://addons/godot-openxr/editor/interaction_profiles/OpenXRInteractionProfileBase.gd" id="1_gouh7"]
+
+[node name="InteractionProfileBase" type="MarginContainer"]
+rect_min_size = Vector2(100, 100)
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_right = 5
+theme_override_constants/margin_left = 5
+theme_override_constants/margin_bottom = 5
+script = ExtResource( "1_gouh7" )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="ColorRect" type="ColorRect" parent="."]
+offset_left = 5.0
+offset_right = 95.0
+offset_bottom = 95.0
+color = Color(1, 1, 1, 0.0980392)
+__meta__ = {
+"_edit_use_anchors_": false
+}

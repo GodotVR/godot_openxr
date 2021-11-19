@@ -8,6 +8,22 @@
 
 config_version=4
 
+_global_script_classes=[{
+"base": "ScrollContainer",
+"class": &"OpenXRActionSetsEditor",
+"language": &"GDScript",
+"path": "res://addons/godot-openxr/editor/OpenXRActionSetsEditor.gd"
+}, {
+"base": "MarginContainer",
+"class": &"OpenXRInteractionProfileBase",
+"language": &"GDScript",
+"path": "res://addons/godot-openxr/editor/interaction_profiles/OpenXRInteractionProfileBase.gd"
+}]
+_global_script_class_icons={
+"OpenXRActionSetsEditor": "",
+"OpenXRInteractionProfileBase": ""
+}
+
 [application]
 
 config/name="Godot OpenXR demo"
@@ -20,7 +36,7 @@ window/vsync/use_vsync=false
 
 [editor_plugins]
 
-enabled=PackedStringArray()
+enabled=PackedStringArray("res://addons/godot-openxr/plugin.cfg")
 
 [gdnative]
 

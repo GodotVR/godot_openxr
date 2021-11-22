@@ -154,6 +154,9 @@ viewport_size = Vector2( 600, 400 )
 scene = ExtResource( 12 )
 collision_layer = 1024
 
+[connection signal="failed_initialisation" from="FPSController" to="." method="_on_FPSController_failed_initialisation"]
+[connection signal="initialised" from="FPSController" to="." method="_on_FPSController_initialised"]
+
 [editable path="FPSController"]
 [editable path="FPSController/LeftHand"]
 [editable path="FPSController/LeftHand/HandModel"]

@@ -1,26 +1,45 @@
 extends ARVROrigin
 
+signal initialised
+signal failed_initialisation
+
+export var auto_initialise = true
+export var start_passthrough = false
 export (NodePath) var viewport = null
 
 var interface : ARVRInterface
 
+func _ready():
+	if auto_initialise:
+		initialise()
+
 func initialise() -> bool:
-	var interface = ARVRServer.find_interface("OpenXR")
+	if interface:
+		# we are already initialised
+		return true
+
+	interface = ARVRServer.find_interface("OpenXR")
 	if interface and interface.initialize():
 		print("OpenXR Interface initialized")
 
-		# Comment to disable passthrough
-		$Configuration.start_passthrough()
-
-		# Connect to our plugin signals
-		_connect_plugin_signals()
-
+		# Find the viewport we're using to render our XR output
 		var vp : Viewport = null
 		if viewport:
 			vp = get_node(viewport)
 
 		if !vp:
 			vp = get_viewport()
+
+		# Start passthrough?
+		if start_passthrough:
+			# make sure our viewports background is transparent
+			vp.transparent_bg = true
+
+			# enable our passthrough
+			$Configuration.start_passthrough()
+
+		# Connect to our plugin signals
+		_connect_plugin_signals()
 
 		# Change our viewport so it is tied to our ARVR interface and renders to our HMD
 		vp.arvr = true
@@ -42,9 +61,10 @@ func initialise() -> bool:
 			# Match our physics to our HMD
 			Engine.iterations_per_second = refresh_rate
 
-		# $Left_hand.set_physics_process(true)
+		emit_signal("initialised")
 		return true
 	else:
+		emit_signal("failed_initialisation")
 		return false
 
 func _connect_plugin_signals():

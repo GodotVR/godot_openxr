@@ -1,15 +1,5 @@
 extends Spatial
 
-func _ready():
-	# Start our OpenXR session
-	$FPSController.initialise()
-
-	# Just for testing, output the enabled extensions
-	print("Enabled extensions: " + str($FPSController/Configuration.get_enabled_extensions()))
-	print("Supported refresh rates: " + str($FPSController/Configuration.get_available_refresh_rates()))
-	print("Supported color spaces: " + str($FPSController/Configuration.get_available_color_spaces()))
-	print("Current color space: " + str($FPSController/Configuration.get_color_space()))
-
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame
 	if (Input.is_key_pressed(KEY_ESCAPE)):
@@ -33,3 +23,14 @@ func _process(delta):
 	# this is a little dirty but we're going to just tie the trigger input of our controllers to their haptic output for testing
 	$FPSController/LeftHandController.rumble = $FPSController/LeftHandController.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
 	$FPSController/RightHandController.rumble = $FPSController/RightHandController.get_joystick_axis(JOY_VR_ANALOG_TRIGGER)
+
+func _on_FPSController_initialised():
+	# Just for testing, output the enabled extensions
+	print("Enabled extensions: " + str($FPSController/Configuration.get_enabled_extensions()))
+	print("Supported refresh rates: " + str($FPSController/Configuration.get_available_refresh_rates()))
+	print("Supported color spaces: " + str($FPSController/Configuration.get_available_color_spaces()))
+	print("Current color space: " + str($FPSController/Configuration.get_color_space()))
+
+func _on_FPSController_failed_initialisation():
+	# exit our app
+	get_tree().quit()

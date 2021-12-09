@@ -3613,7 +3613,7 @@ void android_main(struct android_app* app) {
                     // by any drawcalls, the pixel will be kept as clear color, which can't be used
                     // as correct motion vector. XrRuntime will try to generate it automaticlly, but
                     // it need to know if there is any motion driven by the application artificial
-                    // locomotion, appSpaceDeltaPose provide the information for that.
+                    // locomotion, appSpaceDeltaPose provides the information for that.
                     // 2. Turn off extrapolation for extreme case: for example if the app had
                     // triggered a huge camera movement, we might want to disable frame
                     // extrapolation for the frame appSpaceDeltaPose can be used to detect cases

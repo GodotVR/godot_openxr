@@ -23,20 +23,10 @@ func initialise() -> bool:
 		print("OpenXR Interface initialized")
 
 		# Find the viewport we're using to render our XR output
-		var vp : Viewport = null
-		if viewport:
-			vp = get_node(viewport)
-
-		if !vp:
-			vp = get_viewport()
+		var vp : Viewport = _get_xr_viewport()
 
 		# Start passthrough?
-		if start_passthrough:
-			# make sure our viewports background is transparent
-			vp.transparent_bg = true
-
-			# enable our passthrough
-			$Configuration.start_passthrough()
+		_start_passthrough()
 
 		# Connect to our plugin signals
 		_connect_plugin_signals()
@@ -66,6 +56,20 @@ func initialise() -> bool:
 	else:
 		emit_signal("failed_initialisation")
 		return false
+
+func _get_xr_viewport() -> Viewport:
+	if viewport:
+		return get_node(viewport)
+	else:
+		return get_viewport()
+
+func _start_passthrough():
+	if start_passthrough:
+		# make sure our viewports background is transparent
+		_get_xr_viewport().transparent_bg = true
+
+		# enable our passthrough
+		$Configuration.start_passthrough()
 
 func _connect_plugin_signals():
 	ARVRServer.connect("openxr_session_begun", self, "_on_openxr_session_begun")

@@ -5,7 +5,7 @@ Changes to the Godot OpenXR asset
 -------------------
 - Organised all third party resources into a thirdparty folder for easy maintenance.
 - Update to OpenXR 1.0.20
-- Update to Oculus OpenXR Mobile SDK v34
+- Update to Oculus OpenXR Mobile SDK v35
 - Added support for Oculus passthrough (Quest support only).
 - Fixed hand tracking support on Oculus Quest devices.
 - Added option to automatically initialise plugin when using the premade scenes.

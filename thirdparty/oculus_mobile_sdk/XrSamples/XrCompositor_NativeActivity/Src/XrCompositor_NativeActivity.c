@@ -2127,9 +2127,6 @@ static void ovrRenderer_RenderFrame(
         GL(glScissor(0, 0, frameBuffer->Width, frameBuffer->Height));
         GL(glClearColor(0.0f, 0.0f, 0.0f, clearAlpha));
         GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-        GL(glScissor(1, 1, frameBuffer->Width - 2, frameBuffer->Height - 2));
-        GL(glClearColor(0.125f, 0.0f, 0.125f, clearAlpha));
-        GL(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
         GL(glBindVertexArray(scene->GroundPlane.VertexArrayObject));
         GL(glDrawElements(GL_TRIANGLES, scene->GroundPlane.IndexCount, GL_UNSIGNED_SHORT, NULL));
 

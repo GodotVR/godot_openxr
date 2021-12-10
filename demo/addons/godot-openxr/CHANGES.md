@@ -9,6 +9,7 @@ Changes to the Godot OpenXR asset
 - Added support for Oculus passthrough (Quest support only).
 - Fixed hand tracking support on Oculus Quest devices.
 - Added option to automatically initialise plugin when using the premade scenes.
+- Added function to retrieve playspace
 
 1.1.0
 -------------------

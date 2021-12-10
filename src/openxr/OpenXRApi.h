@@ -337,6 +337,8 @@ public:
 	XrFormFactor get_form_factor() const;
 	void set_form_factor(const XrFormFactor p_form_factor);
 
+	Size2 get_play_space_bounds();
+
 	godot::Array get_enabled_extensions() const;
 
 	static const char *default_action_sets_json;

@@ -71,6 +71,8 @@ public:
 
 	bool start_passthrough();
 	void stop_passthrough();
+
+	godot::Array get_play_space();
 };
 } // namespace godot
 

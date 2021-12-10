@@ -3,11 +3,21 @@ extends ARVROrigin
 signal initialised
 signal failed_initialisation
 
+# Also add signals so we can have other parts of the application react to this.
+signal session_begun
+signal session_ending
+signal focused_state
+signal visible_state
+signal pose_recentered
+
 export var auto_initialise = true
 export var start_passthrough = false
 export (NodePath) var viewport = null
 
 var interface : ARVRInterface
+
+func get_interface() -> ARVRInterface:
+	return interface
 
 func _ready():
 	if auto_initialise:
@@ -59,7 +69,8 @@ func initialise() -> bool:
 
 func _get_xr_viewport() -> Viewport:
 	if viewport:
-		return get_node(viewport)
+		var vp : Viewport = get_node(viewport)
+		return vp
 	else:
 		return get_viewport()
 
@@ -80,15 +91,20 @@ func _connect_plugin_signals():
 
 func _on_openxr_session_begun():
 	print("OpenXR session begun")
+	emit_signal("session_begun")
 
 func _on_openxr_session_ending():
 	print("OpenXR session ending")
+	emit_signal("session_ending")
 
 func _on_openxr_focused_state():
 	print("OpenXR focused state")
+	emit_signal("focused_state")
 
 func _on_openxr_visible_state():
 	print("OpenXR visible state")
+	emit_signal("visible_state")
 
 func _on_openxr_pose_recentered():
 	print("OpenXR pose recentered")
+	emit_signal("pose_recentered")

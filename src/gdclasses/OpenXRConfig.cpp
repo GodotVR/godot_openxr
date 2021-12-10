@@ -1,9 +1,11 @@
 /////////////////////////////////////////////////////////////////////////////////////
 // Our OpenXR config GDNative object
 
-#include "gdclasses/OpenXRConfig.h"
+#include <ARVRServer.hpp>
 #include <Dictionary.hpp>
 #include <GlobalConstants.hpp>
+
+#include "gdclasses/OpenXRConfig.h"
 
 using namespace godot;
 
@@ -58,6 +60,8 @@ void OpenXRConfig::_register_methods() {
 
 	register_method("start_passthrough", &OpenXRConfig::start_passthrough);
 	register_method("stop_passthrough", &OpenXRConfig::stop_passthrough);
+
+	register_method("get_play_space", &OpenXRConfig::get_play_space);
 }
 
 OpenXRConfig::OpenXRConfig() {
@@ -305,4 +309,38 @@ void OpenXRConfig::stop_passthrough() {
 	if (passthrough_wrapper) {
 		passthrough_wrapper->stop_passthrough();
 	}
+}
+
+godot::Array OpenXRConfig::get_play_space() {
+	ARVRServer *server = ARVRServer::get_singleton();
+	Array arr;
+	Vector3 sides[4] = {
+		Vector3(-0.5f, 0.0f, -0.5f),
+		Vector3(0.5f, 0.0f, -0.5f),
+		Vector3(0.5f, 0.0f, 0.5f),
+		Vector3(-0.5f, 0.0f, 0.5f),
+	};
+
+	if (openxr_api && server) {
+		Size2 extends = openxr_api->get_play_space_bounds();
+		if (extends.width != 0.0 && extends.height != 0.0) {
+			Transform reference_frame = server->get_reference_frame();
+
+			for (int i = 0; i < 4; i++) {
+				Vector3 coord = sides[i];
+
+				// scale it up
+				coord.x *= extends.width;
+				coord.z *= extends.height;
+
+				// now apply our reference
+				Vector3 out = reference_frame.xform(coord);
+				arr.push_back(out);
+			}
+		} else {
+			Godot::print("No extends available.");
+		}
+	}
+
+	return arr;
 }

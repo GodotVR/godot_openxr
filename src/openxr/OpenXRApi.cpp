@@ -2021,6 +2021,25 @@ void OpenXRApi::set_form_factor(const XrFormFactor p_form_factor) {
 	}
 }
 
+Size2 OpenXRApi::get_play_space_bounds() {
+	Size2 ret;
+
+	if (is_initialised()) {
+		XrExtent2Df extends;
+
+		XrResult result = xrGetReferenceSpaceBoundsRect(session, play_space_type, &extends);
+		if (!xr_result(result, "Couldn't obtain play space bounds!")) {
+			return ret;
+		}
+		// Godot::print("OpenXR obtained extends {0} {1}.", extends.width, extends.height);
+
+		ret.width = extends.width;
+		ret.height = extends.height;
+	}
+
+	return ret;
+}
+
 godot::Array OpenXRApi::get_enabled_extensions() const {
 	godot::Array arr;
 

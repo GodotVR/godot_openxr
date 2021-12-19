@@ -53,7 +53,7 @@ void XRFbPassthroughExtensionWrapper::on_instance_initialized(const XrInstance i
 }
 
 bool XRFbPassthroughExtensionWrapper::is_passthrough_valid() {
-	return fb_passthrough_ext && passthrough_handle != XR_NULL_HANDLE && passthrough_layer != XR_NULL_HANDLE;
+	return fb_passthrough_ext && passthrough_handle != XR_NULL_HANDLE;
 }
 
 bool XRFbPassthroughExtensionWrapper::is_composition_passthrough_layer_ready() {
@@ -68,7 +68,15 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 	// Start the passthrough feature
 	Godot::print("Starting passthrough feature...");
 	XrResult result = xrPassthroughStartFB(passthrough_handle);
-	if (!openxr_api->xr_result(result, "Failed to start passthrough")) {
+	if (!is_valid_passthrough_result(result, "Failed to start passthrough")) {
+		stop_passthrough();
+		return false;
+	}
+
+	// Create the passthrough layer
+	Godot::print("Creating passthrough layer...");
+	result = xrCreatePassthroughLayerFB(openxr_api->get_session(), &passthrough_layer_config, &passthrough_layer);
+	if (!is_valid_passthrough_result(result, "Failed to create the passthrough layer")) {
 		stop_passthrough();
 		return false;
 	}
@@ -76,19 +84,15 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 	// Resume the passthrough layer
 	Godot::print("Starting passthrough layer...");
 	result = xrPassthroughLayerResumeFB(passthrough_layer);
-	if (!openxr_api->xr_result(result, "Failed to start the passthrough layer")) {
+	if (!is_valid_passthrough_result(result, "Failed to start the passthrough layer")) {
 		stop_passthrough();
 		return false;
 	}
 
-	// Enable the viewport transparent background
+	// Check if the the viewport has transparent background
 	Viewport *viewport = get_main_viewport();
-	if (viewport) {
-		viewport->set_transparent_background(true);
-	} else {
-		Godot::print_warning("Unable to retrieve the viewport", __FUNCTION__, __FILE__, __LINE__);
-		stop_passthrough();
-		return false;
+	if (viewport && !viewport->has_transparent_background()) {
+		Godot::print_warning("Main viewport doesn't have transparent background! Passthrough may not properly render.", __FUNCTION__, __FILE__, __LINE__);
 	}
 
 	composition_passthrough_layer.layerHandle = passthrough_layer;
@@ -102,13 +106,6 @@ void XRFbPassthroughExtensionWrapper::on_session_initialized(const XrSession ses
 		Godot::print("Creating passthrough feature...");
 		XrResult result = xrCreatePassthroughFB(openxr_api->get_session(), &passthrough_create_info, &passthrough_handle);
 		if (!openxr_api->xr_result(result, "Failed to create passthrough")) {
-			return;
-		}
-
-		// Create the passthrough layer
-		Godot::print("Creating passthrough layer...");
-		result = xrCreatePassthroughLayerFB(openxr_api->get_session(), &passthrough_layer_config, &passthrough_layer);
-		if (!openxr_api->xr_result(result, "Failed to create the passthrough layer")) {
 			return;
 		}
 	}
@@ -129,20 +126,19 @@ void XRFbPassthroughExtensionWrapper::stop_passthrough() {
 
 	composition_passthrough_layer.layerHandle = XR_NULL_HANDLE;
 
-	// Disable the viewport transparent background
-	Viewport *viewport = get_main_viewport();
-	if (viewport) {
-		viewport->set_transparent_background(false);
-	} else {
-		Godot::print_warning("Unable to retrieve the viewport", __FUNCTION__, __FILE__, __LINE__);
-	}
-
 	XrResult result;
 	if (passthrough_layer != XR_NULL_HANDLE) {
 		// Stop the layer
 		Godot::print("Stopping passthrough layer...");
 		result = xrPassthroughLayerPauseFB(passthrough_layer);
 		openxr_api->xr_result(result, "Unable to stop passthrough layer");
+
+		// Destroy the layer
+		Godot::print("Destroying passthrough layer...");
+		result = xrDestroyPassthroughLayerFB(passthrough_layer);
+		if (openxr_api->xr_result(result, "Unable to destroy passthrough layer")) {
+			passthrough_layer = XR_NULL_HANDLE;
+		}
 	}
 
 	if (passthrough_handle != XR_NULL_HANDLE) {
@@ -157,15 +153,6 @@ void XRFbPassthroughExtensionWrapper::on_session_destroyed() {
 		stop_passthrough();
 
 		XrResult result;
-		if (passthrough_layer != XR_NULL_HANDLE) {
-			// Destroy the layer
-			Godot::print("Destroying passthrough layer...");
-			result = xrDestroyPassthroughLayerFB(passthrough_layer);
-			if (openxr_api->xr_result(result, "Unable to destroy passthrough layer")) {
-				passthrough_layer = XR_NULL_HANDLE;
-			}
-		}
-
 		if (passthrough_handle != XR_NULL_HANDLE) {
 			Godot::print("Destroying passthrough feature...");
 			result = xrDestroyPassthroughFB(passthrough_handle);

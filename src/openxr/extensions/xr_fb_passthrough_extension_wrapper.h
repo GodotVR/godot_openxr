@@ -166,6 +166,14 @@ private:
 
 	bool is_passthrough_valid();
 
+	// TODO: Temporary workaround (https://github.com/GodotVR/godot_openxr/issues/138)
+	//  Address a bug in the passthrough api where XR_ERROR_UNEXPECTED_STATE_PASSTHROUGH_FB is
+	//  returned even when the operation is valid on Meta Quest devices.
+	//  The issue should be addressed on that platform in OS release v37.
+	inline bool is_valid_passthrough_result(XrResult result, const char *format) {
+		return openxr_api->xr_result(result, format) || result == XR_ERROR_UNEXPECTED_STATE_PASSTHROUGH_FB;
+	}
+
 	bool is_composition_passthrough_layer_ready();
 
 	static XRFbPassthroughExtensionWrapper *singleton;

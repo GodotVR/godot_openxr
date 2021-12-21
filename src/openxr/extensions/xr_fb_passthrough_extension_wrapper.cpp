@@ -81,14 +81,6 @@ bool XRFbPassthroughExtensionWrapper::start_passthrough() {
 		return false;
 	}
 
-	// Resume the passthrough layer
-	Godot::print("Starting passthrough layer...");
-	result = xrPassthroughLayerResumeFB(passthrough_layer);
-	if (!is_valid_passthrough_result(result, "Failed to start the passthrough layer")) {
-		stop_passthrough();
-		return false;
-	}
-
 	// Check if the the viewport has transparent background
 	Viewport *viewport = get_main_viewport();
 	if (viewport && !viewport->has_transparent_background()) {
@@ -128,11 +120,6 @@ void XRFbPassthroughExtensionWrapper::stop_passthrough() {
 
 	XrResult result;
 	if (passthrough_layer != XR_NULL_HANDLE) {
-		// Stop the layer
-		Godot::print("Stopping passthrough layer...");
-		result = xrPassthroughLayerPauseFB(passthrough_layer);
-		openxr_api->xr_result(result, "Unable to stop passthrough layer");
-
 		// Destroy the layer
 		Godot::print("Destroying passthrough layer...");
 		result = xrDestroyPassthroughLayerFB(passthrough_layer);

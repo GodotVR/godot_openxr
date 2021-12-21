@@ -192,6 +192,7 @@ private:
 		.type = XR_TYPE_PASSTHROUGH_LAYER_CREATE_INFO_FB,
 		.next = nullptr,
 		.passthrough = passthrough_handle,
+		.flags = XR_PASSTHROUGH_IS_RUNNING_AT_CREATION_BIT_FB,
 		.purpose = XR_PASSTHROUGH_LAYER_PURPOSE_RECONSTRUCTION_FB,
 	};
 	XrPassthroughStyleFB passthrough_layer_style = {

@@ -54,15 +54,30 @@ __meta__ = {
 }
 
 [node name="ToggleBounds" type="Button" parent="."]
-margin_left = 422.073
-margin_top = 15.119
-margin_right = 584.073
-margin_bottom = 53.119
+margin_left = 375.0
+margin_top = 10.0
+margin_right = 595.0
+margin_bottom = 49.119
+rect_min_size = Vector2( 220, 0 )
 custom_fonts/font = ExtResource( 1 )
 text = "Toggle bounds"
 __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="TogglePassthrough" type="Button" parent="."]
+margin_left = 375.0
+margin_top = 55.0
+margin_right = 595.0
+margin_bottom = 93.0
+rect_min_size = Vector2( 220, 0 )
+custom_fonts/font = ExtResource( 1 )
+disabled = true
+text = "Toggle passthrough"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]
 [connection signal="pressed" from="ToggleBounds" to="." method="_on_ToggleBounds_pressed"]
+[connection signal="pressed" from="TogglePassthrough" to="." method="_on_TogglePassthrough_pressed"]

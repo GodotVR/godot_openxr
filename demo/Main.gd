@@ -1,9 +1,11 @@
 extends Spatial
 
 func _ready():
+	# Note that our initialised should have run by now, the _ready on FPController runs first!
 	var screen_instance = $Screen.get_scene_instance()
 	if screen_instance:
 		screen_instance.connect("toggle_bounds", self, "_on_toggle_bounds")
+		screen_instance.set_fp_controller($FPController)
 
 func _on_toggle_bounds():
 	$FPController/ShowBounds.visible = !$FPController/ShowBounds.visible

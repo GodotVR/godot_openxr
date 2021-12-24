@@ -54,6 +54,9 @@ directional_shadow_max_distance = 20.0
 
 [node name="FPController" parent="." instance=ExtResource( 4 )]
 
+[node name="ARVRCamera" parent="FPController" index="1"]
+far = 1000.0
+
 [node name="ShadowHead" type="MeshInstance" parent="FPController/ARVRCamera" index="0"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, -0.0187781, 0.103895 )
 layers = 524288

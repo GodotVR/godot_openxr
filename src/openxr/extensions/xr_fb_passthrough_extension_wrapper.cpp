@@ -52,8 +52,8 @@ void XRFbPassthroughExtensionWrapper::on_instance_initialized(const XrInstance i
 	}
 }
 
-bool XRFbPassthroughExtensionWrapper::is_passthrough_valid() {
-	return fb_passthrough_ext && passthrough_handle != XR_NULL_HANDLE;
+bool XRFbPassthroughExtensionWrapper::is_passthrough_enabled() {
+	return fb_passthrough_ext && passthrough_handle != XR_NULL_HANDLE && passthrough_layer != XR_NULL_HANDLE;
 }
 
 bool XRFbPassthroughExtensionWrapper::is_composition_passthrough_layer_ready() {
@@ -61,8 +61,12 @@ bool XRFbPassthroughExtensionWrapper::is_composition_passthrough_layer_ready() {
 }
 
 bool XRFbPassthroughExtensionWrapper::start_passthrough() {
-	if (!is_passthrough_valid()) {
+	if (passthrough_handle == XR_NULL_HANDLE) {
 		return false;
+	}
+
+	if (is_passthrough_enabled()) {
+		return true;
 	}
 
 	// Start the passthrough feature
@@ -98,6 +102,7 @@ void XRFbPassthroughExtensionWrapper::on_session_initialized(const XrSession ses
 		Godot::print("Creating passthrough feature...");
 		XrResult result = xrCreatePassthroughFB(openxr_api->get_session(), &passthrough_create_info, &passthrough_handle);
 		if (!openxr_api->xr_result(result, "Failed to create passthrough")) {
+			passthrough_handle = XR_NULL_HANDLE;
 			return;
 		}
 	}
@@ -123,9 +128,8 @@ void XRFbPassthroughExtensionWrapper::stop_passthrough() {
 		// Destroy the layer
 		Godot::print("Destroying passthrough layer...");
 		result = xrDestroyPassthroughLayerFB(passthrough_layer);
-		if (openxr_api->xr_result(result, "Unable to destroy passthrough layer")) {
-			passthrough_layer = XR_NULL_HANDLE;
-		}
+		openxr_api->xr_result(result, "Unable to destroy passthrough layer");
+		passthrough_layer = XR_NULL_HANDLE;
 	}
 
 	if (passthrough_handle != XR_NULL_HANDLE) {
@@ -143,9 +147,8 @@ void XRFbPassthroughExtensionWrapper::on_session_destroyed() {
 		if (passthrough_handle != XR_NULL_HANDLE) {
 			Godot::print("Destroying passthrough feature...");
 			result = xrDestroyPassthroughFB(passthrough_handle);
-			if (openxr_api->xr_result(result, "Unable to destroy passthrough feature")) {
-				passthrough_handle = XR_NULL_HANDLE;
-			}
+			openxr_api->xr_result(result, "Unable to destroy passthrough feature");
+			passthrough_handle = XR_NULL_HANDLE;
 		}
 	}
 }

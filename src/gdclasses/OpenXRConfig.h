@@ -69,6 +69,8 @@ public:
 
 	void set_foveation_level(int level, bool is_dynamic);
 
+	bool is_passthrough_supported();
+	bool is_passthrough_enabled();
 	bool start_passthrough();
 	void stop_passthrough();
 

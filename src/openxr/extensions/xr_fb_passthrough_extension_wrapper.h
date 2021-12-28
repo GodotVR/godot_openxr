@@ -25,6 +25,12 @@ public:
 
 	XrCompositionLayerBaseHeader *get_composition_layer() override;
 
+	bool is_passthrough_supported() {
+		return fb_passthrough_ext;
+	}
+
+	bool is_passthrough_enabled();
+
 	bool start_passthrough();
 
 	void stop_passthrough();
@@ -163,8 +169,6 @@ private:
 	XrResult initialize_fb_triangle_mesh_extension(XrInstance instance);
 
 	void cleanup();
-
-	bool is_passthrough_valid();
 
 	// TODO: Temporary workaround (https://github.com/GodotVR/godot_openxr/issues/138)
 	//  Address a bug in the passthrough api where XR_ERROR_UNEXPECTED_STATE_PASSTHROUGH_FB is

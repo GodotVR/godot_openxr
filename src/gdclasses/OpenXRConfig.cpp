@@ -58,6 +58,8 @@ void OpenXRConfig::_register_methods() {
 
 	register_method("set_foveation_level", &OpenXRConfig::set_foveation_level);
 
+	register_method("is_passthrough_supported", &OpenXRConfig::is_passthrough_supported);
+	register_method("is_passthrough_enabled", &OpenXRConfig::is_passthrough_enabled);
 	register_method("start_passthrough", &OpenXRConfig::start_passthrough);
 	register_method("stop_passthrough", &OpenXRConfig::stop_passthrough);
 
@@ -299,6 +301,14 @@ void OpenXRConfig::set_foveation_level(int level, bool is_dynamic) {
 		XrFoveationDynamicFB foveation_dynamic = is_dynamic ? XR_FOVEATION_DYNAMIC_LEVEL_ENABLED_FB : XR_FOVEATION_DYNAMIC_DISABLED_FB;
 		foveation_wrapper->set_foveation_level(static_cast<XrFoveationLevelFB>(level), foveation_dynamic);
 	}
+}
+
+bool OpenXRConfig::is_passthrough_supported() {
+	return passthrough_wrapper != nullptr && passthrough_wrapper->is_passthrough_supported();
+}
+
+bool OpenXRConfig::is_passthrough_enabled() {
+	return passthrough_wrapper != nullptr && passthrough_wrapper->is_passthrough_enabled();
 }
 
 bool OpenXRConfig::start_passthrough() {

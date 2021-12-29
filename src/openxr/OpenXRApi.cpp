@@ -2708,9 +2708,9 @@ void OpenXRApi::update_actions() {
 					// Full haptic control will be offered through another object
 					float haptic = arvr_api->godot_arvr_get_controller_rumble(godot_controller);
 					if (haptic > 0.0) {
-						// 17000.0 nanoseconds is slightly more then the duration of one frame if we're outputting at 60fps
+						// 17,000,000.0 nanoseconds (17ms) is slightly more then the duration of one frame if we're outputting at 60fps
 						// so if we sustain our pulse we should be issuing a new pulse before the old one ends
-						default_actions[ACTION_HAPTIC].action->do_haptic_pulse(input_path, 17000.0, XR_FREQUENCY_UNSPECIFIED, haptic);
+						default_actions[ACTION_HAPTIC].action->do_haptic_pulse(input_path, 17.0 * 1000 * 1000, XR_FREQUENCY_UNSPECIFIED, haptic);
 					}
 				}
 			} else if (inputmaps[i].godot_controller != -1) {

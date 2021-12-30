@@ -10,6 +10,7 @@ Changes to the Godot OpenXR asset
 - Fixed hand tracking support on Oculus Quest devices.
 - Added option to automatically initialise plugin when using the premade scenes.
 - Added function to retrieve playspace
+- Fixed rumble sending too short durations to controllers
 
 1.1.0
 -------------------

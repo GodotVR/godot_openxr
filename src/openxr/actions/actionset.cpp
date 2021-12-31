@@ -96,7 +96,7 @@ bool ActionSet::attach() {
 		Godot::print_error("Can't attach action set if it has not been created.", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
-	if (xr_api->session == NULL) {
+	if (xr_api->session == XR_NULL_HANDLE) {
 		Godot::print_error("Can't attach action set if there is no session.", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}

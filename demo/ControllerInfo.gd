@@ -8,10 +8,8 @@ func _ready():
 	# a little dirty but the parent of the parent of the parent should be the controller.
 	controller = get_node("../../../");
 
-	# we should be able to grab copy of our config
-	configuration = preload("res://addons/godot-openxr/config/OpenXRConfig.gdns")
-	if configuration:
-		configuration = configuration.new()
+	# and just go from there to get our configuration node
+	configuration = controller.get_node("../Configuration")
 
 func _process(_delta : float):
 	if controller:

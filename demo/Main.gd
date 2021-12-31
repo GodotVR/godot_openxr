@@ -1,5 +1,13 @@
 extends Spatial
 
+func _ready():
+	var screen_instance = $Screen.get_scene_instance()
+	if screen_instance:
+		screen_instance.connect("toggle_bounds", self, "_on_toggle_bounds")
+
+func _on_toggle_bounds():
+	$FPSController/ShowBounds.visible = !$FPSController/ShowBounds.visible
+
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame
 	if (Input.is_key_pressed(KEY_ESCAPE)):

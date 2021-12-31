@@ -5,7 +5,7 @@ export (NodePath) var configuration
 onready var configuration_node = get_node(configuration) if configuration else null
 
 func _update_bounds():
-	visible = false
+	$CSGPolygon.visible = false
 	if configuration_node:
 		var polygon : PoolVector2Array
 		var bounds = configuration_node.get_play_space()
@@ -21,11 +21,11 @@ func _update_bounds():
 				polygon.push_back(Vector2(bounds[i].x, bounds[i].z))
 
 			$CSGPolygon.polygon = polygon
-			visible = true
+			$CSGPolygon.visible = true
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
-	visible = false
+	$CSGPolygon.visible = false
 
 	var origin = get_node("..")
 	origin.connect("pose_recentered", self, "_update_bounds")

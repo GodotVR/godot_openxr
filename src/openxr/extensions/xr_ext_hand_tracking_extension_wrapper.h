@@ -35,7 +35,7 @@ public:
 
 	void on_state_stopping() override;
 
-	void on_instance_destroyed() override;
+	void on_session_destroyed() override;
 
 	const HandTracker *get_hand_tracker(uint32_t p_hand) const;
 

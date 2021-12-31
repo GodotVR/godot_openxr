@@ -50,7 +50,7 @@ void XRExtHandTrackingExtensionWrapper::on_state_stopping() {
 	cleanup_hand_tracking();
 }
 
-void XRExtHandTrackingExtensionWrapper::on_instance_destroyed() {
+void XRExtHandTrackingExtensionWrapper::on_session_destroyed() {
 	cleanup();
 }
 

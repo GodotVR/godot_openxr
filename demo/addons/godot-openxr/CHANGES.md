@@ -10,6 +10,7 @@ Changes to the Godot OpenXR asset
 - Use correct predictive timing for controllers.
 - Renamed `FPSController` node of the first person controller scene to `FPController`.
 - Fixed output range for the trigger and grip values.
+- Improvements to swapchain format selection.
 
 1.1.1
 -------------------

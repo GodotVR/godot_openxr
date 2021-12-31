@@ -48,6 +48,7 @@ void OpenXRPose::_register_methods() {
 			"/user/hand/left,/user/hand/right,/user/treadmill");
 
 	register_method("is_active", &OpenXRPose::is_active);
+	register_method("get_tracking_confidence", &OpenXRPose::get_tracking_confidence);
 }
 
 OpenXRPose::OpenXRPose() {

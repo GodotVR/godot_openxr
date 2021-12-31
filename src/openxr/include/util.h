@@ -41,6 +41,11 @@ using namespace godot;
 // The map should be of type std::map<const char *, PFN_xrVoidFunction*>
 #define LOAD_FUNC_POINTER_IN_MAP(map_name, func_name) map_name[#func_name] = (PFN_xrVoidFunction *)&func_name##_ptr
 
+#define ENUM_TO_STRING_CASE(e) \
+	case e: {                  \
+		return String(#e);     \
+	} break;
+
 static XrResult initialize_function_pointer_map(XrInstance instance, std::map<const char *, PFN_xrVoidFunction *> function_pointer_map) {
 	XrResult result;
 	for (auto const &entry : function_pointer_map) {

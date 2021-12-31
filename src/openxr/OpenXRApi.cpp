@@ -9,6 +9,7 @@
 
 #include "openxr/OpenXRApi.h"
 #include "openxr/include/signals_util.h"
+#include "openxr/include/util.h"
 
 #include <algorithm>
 #include <cmath>
@@ -16,6 +17,10 @@
 
 #ifdef ANDROID
 #include <jni/openxr_plugin_wrapper.h>
+#endif
+
+#ifndef GL_FRAMEBUFFER_SRGB_EXT
+#define GL_FRAMEBUFFER_SRGB_EXT 0x8DB9
 #endif
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1512,65 +1517,63 @@ bool OpenXRApi::initialiseSwapChains() {
 		return false;
 	}
 
-	// int64_t swapchainFormatToUse = swapchainFormats[0];
-	int64_t swapchainFormatToUse = 0;
+#ifdef DEBUG
+	// lets report on what we found...
+	Godot::print("OpenXR Supported Swapchain Formats");
+	for (uint64_t i = 0; i < swapchainFormatCount; i++) {
+		Godot::print("Found {0}", get_swapchain_format_name(swapchainFormats[i]));
+	}
+#endif
 
-	// With the GLES2 driver we're rendering directly into this buffer with a pipeline that assumes an RGBA8 buffer.
-	// With the GLES3 driver rendering happens into an RGBA16F buffer with all rendering happening in linear color space.
-	// This buffer is then copied into the texture we supply here during the post process stage where tone mapping, glow, DOF, screenspace reflection and conversion to sRGB is applied.
-	// As such we should chose an RGBA8 buffer here (note that an SRGB variant would allow automatic Linear to SRGB conversion but not sure if that is actually used)
+	// With the GLES2 driver we're rendering directly into this buffer with a pipeline that assumes a 32bit uniform buffer (i.e 0.0 - 1.0 = 0 - 255).
 
-	// We grab the first applicable one we find, OpenXR sorts these from best to worst choice..
+	// With the GLES3 driver rendering happens into an 64bit floating point buffer with all rendering happening in linear color space.
+	// This buffer is then copied into the texture we supply here during the post process stage where tone mapping, glow, DOF, screenspace reflection and conversion to sRGB is optionally applied.
+	// Again we're expected to supply a 32bit uniform buffer
 
-	keep_3d_linear = true; // This will only work correctly for GLES2 from Godot 3.4 onwards
+	// Note that OpenXR expects sRGB content if an sRGB buffer is used, else it expects linear, however sRGB buffers don't seem to work properly under GLES2.
+	// this is a problem especially on Quest where we have to use a 32bit buffer yet 8bits per color leads to awefull banding when linear color space is used.
 
-	Godot::print("OpenXR Swapchain Formats");
-	for (uint64_t i = 0; i < swapchainFormatCount && swapchainFormatToUse == 0; i++) {
-		// Godot::print("Found {0}\n", swapchainFormats[i]);
+	// We start by defining a list of formats we'd like to use from most to least, doesn't help every platform has slightly different names for these...
+
+	std::vector<RequestedSwapchainFormat> requested_swapchain_formats;
+
 #ifdef WIN32
-		/* disabling SRGB for now, we're rendering in linear color space...
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
-			swapchainFormatToUse = swapchainFormats[i];
-			Godot::print("OpenXR Using SRGB swapchain.");
-			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
-		}
-		*/
-		if (swapchainFormats[i] == GL_RGBA8) {
-			swapchainFormatToUse = swapchainFormats[i];
-			Godot::print("OpenXR Using RGBA swapchain.");
-		}
+	requested_swapchain_formats.push_back({ GL_SRGB8_ALPHA8, false });
+	requested_swapchain_formats.push_back({ GL_RGBA8, true });
 #elif ANDROID
-		/* disabling SRGB for now, we're rendering in linear color space...
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8 && video_driver == OS::VIDEO_DRIVER_GLES3) {
-			swapchainFormatToUse = swapchainFormats[i];
-			Godot::print("OpenXR Using SRGB swapchain.");
-			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
-		}
-		*/
-		if (swapchainFormats[i] == GL_RGBA8) {
-			swapchainFormatToUse = swapchainFormats[i];
-			Godot::print("OpenXR Using RGBA swapchain.");
-		}
+	requested_swapchain_formats.push_back({ GL_SRGB8_ALPHA8, false });
+	requested_swapchain_formats.push_back({ GL_RGBA8, true });
 #else
-		/* disabling SRGB for now, we're rendering in linear color space...
-		if (swapchainFormats[i] == GL_SRGB8_ALPHA8_EXT && video_driver == OS::VIDEO_DRIVER_GLES3) {
-			swapchainFormatToUse = swapchainFormats[i];
-			Godot::print("OpenXR Using SRGB swapchain.");
-			keep_3d_linear = false; // no the hardware will do conversions so we can supply sRGB values
+	requested_swapchain_formats.push_back({ GL_SRGB8_ALPHA8_EXT, false });
+	requested_swapchain_formats.push_back({ GL_RGBA8_EXT, true });
+#endif
+
+	int64_t swapchain_format_to_use = 0;
+
+	for (uint64_t i = 0; i < requested_swapchain_formats.size() && swapchain_format_to_use == 0; i++) {
+		for (uint64_t s = 0; s < swapchainFormatCount && swapchain_format_to_use == 0; s++) {
+			if (swapchainFormats[s] == requested_swapchain_formats[i].swapchain_format) {
+				swapchain_format_to_use = requested_swapchain_formats[i].swapchain_format;
+				keep_3d_linear = requested_swapchain_formats[i].is_linear;
+			}
 		}
-		*/
-		if (swapchainFormats[i] == GL_RGBA8_EXT) {
-			swapchainFormatToUse = swapchainFormats[i];
-			Godot::print("OpenXR Using RGBA swapchain.");
-		}
+	}
+
+	// Couldn't find any we want? Use the first one. We assume this is in linear color space.
+	if (swapchain_format_to_use == 0) {
+		swapchain_format_to_use = swapchainFormats[0];
+		keep_3d_linear = true;
+		Godot::print("OpenXR Couldn't find prefered swapchain format, using {0} in linear color space", get_swapchain_format_name(swapchain_format_to_use));
+#ifdef DEBUG
+	} else {
+		Godot::print("OpenXR Using swapchain format {0} in {1} color space", get_swapchain_format_name(swapchain_format_to_use), keep_3d_linear ? "linear" : "sRGB");
 #endif
 	}
 
-	// Couldn't find any we want? use the first one.
-	// If this is a RGBA16F texture OpenXR on Steam atleast expects linear color space and we'll end up with a too bright display
-	if (swapchainFormatToUse == 0) {
-		swapchainFormatToUse = swapchainFormats[0];
-		Godot::print("OpenXR Couldn't find prefered swapchain format, using {0}", swapchainFormatToUse);
+	if (!keep_3d_linear) {
+		// Make sure we keep our data in sRGB by turning linear to sRGB conversion off for the frame buffer. We are supplying data in sRGB.
+		glDisable(GL_FRAMEBUFFER_SRGB_EXT);
 	}
 
 	free(swapchainFormats);
@@ -1596,7 +1599,7 @@ bool OpenXRApi::initialiseSwapChains() {
 			.next = nullptr,
 			.createFlags = 0,
 			.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
-			.format = swapchainFormatToUse,
+			.format = swapchain_format_to_use,
 			.sampleCount = swapchain_sample_count, // 1,
 			.width = render_target_width,
 			.height = render_target_height,
@@ -3069,6 +3072,10 @@ bool OpenXRApi::poll_events() {
 						case XR_SESSION_STATE_EXITING:
 							on_state_exiting();
 							break;
+						case XR_SESSION_STATE_UNKNOWN:
+							// including just for CI, this value we ignore
+						case XR_SESSION_STATE_MAX_ENUM:
+							// including just for CI, this value should never be used
 						default:
 							break;
 					}
@@ -3310,4 +3317,176 @@ TrackingConfidence OpenXRApi::transform_from_location(const XrHandJointLocationE
 		r_transform = t;
 	}
 	return confidence;
+}
+
+godot::String OpenXRApi::get_swapchain_format_name(int64_t p_swapchain_format) {
+	// These are somewhat different per platform, will need to weed some stuff out...
+	switch (p_swapchain_format) {
+#ifdef WIN32
+		// using definitions from GLAD
+		ENUM_TO_STRING_CASE(GL_R8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RG8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGB8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGBA8_SNORM)
+		ENUM_TO_STRING_CASE(GL_R16_SNORM)
+		ENUM_TO_STRING_CASE(GL_RG16_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGB16_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGBA16_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGB4)
+		ENUM_TO_STRING_CASE(GL_RGB5)
+		ENUM_TO_STRING_CASE(GL_RGB8)
+		ENUM_TO_STRING_CASE(GL_RGB10)
+		ENUM_TO_STRING_CASE(GL_RGB12)
+		ENUM_TO_STRING_CASE(GL_RGB16)
+		ENUM_TO_STRING_CASE(GL_RGBA2)
+		ENUM_TO_STRING_CASE(GL_RGBA4)
+		ENUM_TO_STRING_CASE(GL_RGB5_A1)
+		ENUM_TO_STRING_CASE(GL_RGBA8)
+		ENUM_TO_STRING_CASE(GL_RGB10_A2)
+		ENUM_TO_STRING_CASE(GL_RGBA12)
+		ENUM_TO_STRING_CASE(GL_RGBA16)
+		ENUM_TO_STRING_CASE(GL_RGBA32F)
+		ENUM_TO_STRING_CASE(GL_RGB32F)
+		ENUM_TO_STRING_CASE(GL_RGBA16F)
+		ENUM_TO_STRING_CASE(GL_RGB16F)
+		ENUM_TO_STRING_CASE(GL_RGBA32UI)
+		ENUM_TO_STRING_CASE(GL_RGB32UI)
+		ENUM_TO_STRING_CASE(GL_RGBA16UI)
+		ENUM_TO_STRING_CASE(GL_RGB16UI)
+		ENUM_TO_STRING_CASE(GL_RGBA8UI)
+		ENUM_TO_STRING_CASE(GL_RGB8UI)
+		ENUM_TO_STRING_CASE(GL_RGBA32I)
+		ENUM_TO_STRING_CASE(GL_RGB32I)
+		ENUM_TO_STRING_CASE(GL_RGBA16I)
+		ENUM_TO_STRING_CASE(GL_RGB16I)
+		ENUM_TO_STRING_CASE(GL_RGBA8I)
+		ENUM_TO_STRING_CASE(GL_RGB8I)
+		ENUM_TO_STRING_CASE(GL_RGB10_A2UI)
+		ENUM_TO_STRING_CASE(GL_SRGB)
+		ENUM_TO_STRING_CASE(GL_SRGB8)
+		ENUM_TO_STRING_CASE(GL_SRGB_ALPHA)
+		ENUM_TO_STRING_CASE(GL_SRGB8_ALPHA8)
+		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT16)
+		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT24)
+		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT32)
+		ENUM_TO_STRING_CASE(GL_DEPTH24_STENCIL8)
+		ENUM_TO_STRING_CASE(GL_R11F_G11F_B10F)
+		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT32F)
+		ENUM_TO_STRING_CASE(GL_DEPTH32F_STENCIL8)
+
+#elif ANDROID
+		// using definitions from GLES3/gl3.h
+
+		ENUM_TO_STRING_CASE(GL_RGBA4)
+		ENUM_TO_STRING_CASE(GL_RGB5_A1)
+		ENUM_TO_STRING_CASE(GL_RGB565)
+		ENUM_TO_STRING_CASE(GL_RGB8)
+		ENUM_TO_STRING_CASE(GL_RGBA8)
+		ENUM_TO_STRING_CASE(GL_RGB10_A2)
+		ENUM_TO_STRING_CASE(GL_RGBA32F)
+		ENUM_TO_STRING_CASE(GL_RGB32F)
+		ENUM_TO_STRING_CASE(GL_RGBA16F)
+		ENUM_TO_STRING_CASE(GL_RGB16F)
+		ENUM_TO_STRING_CASE(GL_R11F_G11F_B10F)
+		ENUM_TO_STRING_CASE(GL_UNSIGNED_INT_10F_11F_11F_REV)
+		ENUM_TO_STRING_CASE(GL_RGB9_E5)
+		ENUM_TO_STRING_CASE(GL_UNSIGNED_INT_5_9_9_9_REV)
+		ENUM_TO_STRING_CASE(GL_RGBA32UI)
+		ENUM_TO_STRING_CASE(GL_RGB32UI)
+		ENUM_TO_STRING_CASE(GL_RGBA16UI)
+		ENUM_TO_STRING_CASE(GL_RGB16UI)
+		ENUM_TO_STRING_CASE(GL_RGBA8UI)
+		ENUM_TO_STRING_CASE(GL_RGB8UI)
+		ENUM_TO_STRING_CASE(GL_RGBA32I)
+		ENUM_TO_STRING_CASE(GL_RGB32I)
+		ENUM_TO_STRING_CASE(GL_RGBA16I)
+		ENUM_TO_STRING_CASE(GL_RGB16I)
+		ENUM_TO_STRING_CASE(GL_RGBA8I)
+		ENUM_TO_STRING_CASE(GL_RGB8I)
+		ENUM_TO_STRING_CASE(GL_RG)
+		ENUM_TO_STRING_CASE(GL_RG_INTEGER)
+		ENUM_TO_STRING_CASE(GL_R8)
+		ENUM_TO_STRING_CASE(GL_RG8)
+		ENUM_TO_STRING_CASE(GL_R16F)
+		ENUM_TO_STRING_CASE(GL_R32F)
+		ENUM_TO_STRING_CASE(GL_RG16F)
+		ENUM_TO_STRING_CASE(GL_RG32F)
+		ENUM_TO_STRING_CASE(GL_R8I)
+		ENUM_TO_STRING_CASE(GL_R8UI)
+		ENUM_TO_STRING_CASE(GL_R16I)
+		ENUM_TO_STRING_CASE(GL_R16UI)
+		ENUM_TO_STRING_CASE(GL_R32I)
+		ENUM_TO_STRING_CASE(GL_R32UI)
+		ENUM_TO_STRING_CASE(GL_RG8I)
+		ENUM_TO_STRING_CASE(GL_RG8UI)
+		ENUM_TO_STRING_CASE(GL_RG16I)
+		ENUM_TO_STRING_CASE(GL_RG16UI)
+		ENUM_TO_STRING_CASE(GL_RG32I)
+		ENUM_TO_STRING_CASE(GL_RG32UI)
+		ENUM_TO_STRING_CASE(GL_R8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RG8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGB8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGBA8_SNORM)
+		ENUM_TO_STRING_CASE(GL_RGB10_A2UI)
+		ENUM_TO_STRING_CASE(GL_SRGB)
+		ENUM_TO_STRING_CASE(GL_SRGB8)
+		ENUM_TO_STRING_CASE(GL_SRGB8_ALPHA8)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_R11_EAC)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_SIGNED_R11_EAC)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_RG11_EAC)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_SIGNED_RG11_EAC)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_RGB8_ETC2)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_SRGB8_ETC2)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_RGB8_PUNCHTHROUGH_ALPHA1_ETC2)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_SRGB8_PUNCHTHROUGH_ALPHA1_ETC2)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_RGBA8_ETC2_EAC)
+		ENUM_TO_STRING_CASE(GL_COMPRESSED_SRGB8_ALPHA8_ETC2_EAC)
+		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT16)
+		ENUM_TO_STRING_CASE(GL_DEPTH_COMPONENT24)
+		ENUM_TO_STRING_CASE(GL_DEPTH24_STENCIL8)
+
+#else
+		// using definitions from GL/gl.h
+		ENUM_TO_STRING_CASE(GL_ALPHA4_EXT)
+		ENUM_TO_STRING_CASE(GL_ALPHA8_EXT)
+		ENUM_TO_STRING_CASE(GL_ALPHA12_EXT)
+		ENUM_TO_STRING_CASE(GL_ALPHA16_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE4_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE8_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE12_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE16_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE4_ALPHA4_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE6_ALPHA2_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE8_ALPHA8_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE12_ALPHA4_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE12_ALPHA12_EXT)
+		ENUM_TO_STRING_CASE(GL_LUMINANCE16_ALPHA16_EXT)
+		ENUM_TO_STRING_CASE(GL_INTENSITY_EXT)
+		ENUM_TO_STRING_CASE(GL_INTENSITY4_EXT)
+		ENUM_TO_STRING_CASE(GL_INTENSITY8_EXT)
+		ENUM_TO_STRING_CASE(GL_INTENSITY12_EXT)
+		ENUM_TO_STRING_CASE(GL_INTENSITY16_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB2_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB4_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB5_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB8_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB10_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB12_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB16_EXT)
+		ENUM_TO_STRING_CASE(GL_RGBA2_EXT)
+		ENUM_TO_STRING_CASE(GL_RGBA4_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB5_A1_EXT)
+		ENUM_TO_STRING_CASE(GL_RGBA8_EXT)
+		ENUM_TO_STRING_CASE(GL_RGB10_A2_EXT)
+		ENUM_TO_STRING_CASE(GL_RGBA12_EXT)
+		ENUM_TO_STRING_CASE(GL_RGBA16_EXT)
+		ENUM_TO_STRING_CASE(GL_SRGB_EXT)
+		ENUM_TO_STRING_CASE(GL_SRGB8_EXT)
+		ENUM_TO_STRING_CASE(GL_SRGB_ALPHA_EXT)
+		ENUM_TO_STRING_CASE(GL_SRGB8_ALPHA8_EXT)
+#endif
+		default: {
+			return String("Swapchain format 0x") + String::num_int64(p_swapchain_format, 16);
+		} break;
+	}
 }

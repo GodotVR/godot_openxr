@@ -53,4 +53,16 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="ToggleBounds" type="Button" parent="."]
+margin_left = 422.073
+margin_top = 15.119
+margin_right = 584.073
+margin_bottom = 53.119
+custom_fonts/font = ExtResource( 1 )
+text = "Toggle bounds"
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
 [connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]
+[connection signal="pressed" from="ToggleBounds" to="." method="_on_ToggleBounds_pressed"]

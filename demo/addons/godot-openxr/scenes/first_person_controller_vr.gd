@@ -44,8 +44,7 @@ func initialise() -> bool:
 		# Change our viewport so it is tied to our ARVR interface and renders to our HMD
 		vp.arvr = true
 
-		# Our interface will tell us whether we should keep our render buffer in linear color space
-		vp.keep_3d_linear = $Configuration.keep_3d_linear()
+		# We can't set keep linear yet because we won't know the correct value until after our session has begun.
 
 		# increase our physics engine update speed
 		var refresh_rate = $Configuration.get_refresh_rate()
@@ -91,6 +90,12 @@ func _connect_plugin_signals():
 
 func _on_openxr_session_begun():
 	print("OpenXR session begun")
+
+	var vp : Viewport = _get_xr_viewport()
+	if vp:
+		# Our interface will tell us whether we should keep our render buffer in linear color space
+		vp.keep_3d_linear = $Configuration.keep_3d_linear()
+
 	emit_signal("session_begun")
 
 func _on_openxr_session_ending():

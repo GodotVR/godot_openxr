@@ -159,6 +159,11 @@ private:
 		ACTION_SET_FAILED
 	};
 
+	struct RequestedSwapchainFormat {
+		int64_t swapchain_format;
+		bool is_linear;
+	};
+
 	static OpenXRApi *singleton;
 	bool initialised = false;
 	bool running = false;
@@ -183,7 +188,7 @@ private:
 
 	bool is_steamvr = false;
 
-	bool keep_3d_linear = true;
+	bool keep_3d_linear = false;
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
 	XrSwapchainImageOpenGLKHR **images = NULL;
@@ -267,6 +272,8 @@ private:
 
 	bool parse_action_sets(const godot::String &p_json);
 	bool parse_interaction_profiles(const godot::String &p_json);
+
+	godot::String get_swapchain_format_name(int64_t p_swapchain_format);
 
 public:
 	static OpenXRApi *openxr_get_api();

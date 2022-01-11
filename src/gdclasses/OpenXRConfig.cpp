@@ -34,6 +34,8 @@ void OpenXRConfig::_register_methods() {
 
 	register_method("get_enabled_extensions", &OpenXRConfig::get_enabled_extensions);
 
+	register_method("get_tracking_confidence", &OpenXRConfig::get_tracking_confidence);
+
 	register_method("get_action_sets", &OpenXRConfig::get_action_sets);
 	register_method("set_action_sets", &OpenXRConfig::set_action_sets);
 	register_property<OpenXRConfig, String>("action_sets", &OpenXRConfig::set_action_sets, &OpenXRConfig::get_action_sets, String(OpenXRApi::default_action_sets_json), GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_MULTILINE_TEXT);
@@ -212,6 +214,14 @@ godot::Array OpenXRConfig::get_enabled_extensions() const {
 	} else {
 		return openxr_api->get_enabled_extensions();
 	}
+}
+
+int OpenXRConfig::get_tracking_confidence(const int p_godot_controller) const {
+	int confidence = 0;
+	if (openxr_api) {
+		confidence = int(openxr_api->get_controller_tracking_confidence(p_godot_controller));
+	}
+	return confidence;
 }
 
 String OpenXRConfig::get_action_sets() const {

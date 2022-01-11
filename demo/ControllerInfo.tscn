@@ -176,3 +176,10 @@ margin_right = 198.0
 margin_bottom = 32.0
 custom_fonts/font = ExtResource( 2 )
 text = "Side button/Grip"
+
+[node name="Tracking" type="Label" parent="Container"]
+margin_top = 310.0
+margin_right = 500.0
+margin_bottom = 342.0
+custom_fonts/font = ExtResource( 2 )
+text = "Tracking state"

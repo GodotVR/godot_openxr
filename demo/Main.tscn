@@ -56,11 +56,13 @@ refresh_rate = 0.0
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, -0.0187781, 0.103895 )
 layers = 524288
 mesh = SubResource( 1 )
+material/0 = null
 
 [node name="ShadowHMD" type="MeshInstance" parent="FPSController/ARVRCamera" index="1"]
 transform = Transform( -1.62921e-07, 0, 1, 0, 1, 0, -1, 0, -1.62921e-07, 1.44924e-09, 0, 0.00889538 )
 layers = 524288
 mesh = SubResource( 2 )
+material/0 = null
 
 [node name="LeftHandController" parent="FPSController" index="2"]
 visible = true
@@ -104,18 +106,24 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
 [node name="Grip" type="MeshInstance" parent="FPSController/Left_grip_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
 mesh = SubResource( 3 )
+material/0 = null
 
 [node name="Right_aim_pose" parent="FPSController" instance=ExtResource( 7 )]
 
 [node name="Grip" type="MeshInstance" parent="FPSController/Right_aim_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
 mesh = SubResource( 3 )
+material/0 = null
 
 [node name="LeftHand" parent="FPSController" instance=ExtResource( 14 )]
 motion_range = 1
 
 [node name="Skeleton" parent="FPSController/LeftHand/HandModel/Armature001" index="0"]
+bones/9/bound_children = [  ]
 motion_range = 1
+
+[node name="vr_glove_left_slim" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="0"]
+material/0 = null
 
 [node name="IndexTip" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
 transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.076153, 0.0915428, -0.715277, 0.692819, 0.0345973, 0.0355402, -0.164767 )
@@ -123,13 +131,18 @@ transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.07615
 [node name="ShowIndexTip" type="MeshInstance" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton/IndexTip" index="0"]
 visible = false
 mesh = SubResource( 4 )
+material/0 = null
 
 [node name="RightHand" parent="FPSController" instance=ExtResource( 15 )]
 motion_range = 1
 albedo_texture = ExtResource( 5 )
 
 [node name="Skeleton" parent="FPSController/RightHand/HandModel/Armature" index="0"]
+bones/9/bound_children = [  ]
 motion_range = 1
+
+[node name="vr_glove_right_slim" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="0"]
+material/0 = null
 
 [node name="IndexTip" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="1"]
 transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.69282, 0.977075, -0.19881, -0.0761527, -0.0345978, -0.164767, -0.0355401 )
@@ -137,6 +150,7 @@ transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.6928
 [node name="ShowIndexTip" type="MeshInstance" parent="FPSController/RightHand/HandModel/Armature/Skeleton/IndexTip" index="0"]
 visible = false
 mesh = SubResource( 4 )
+material/0 = null
 
 [node name="ShowBounds" parent="FPSController" instance=ExtResource( 16 )]
 configuration = NodePath("../Configuration")

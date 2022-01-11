@@ -39,7 +39,7 @@ public:
 	float get_as_float(const XrPath p_path);
 	godot::Vector2 get_as_vector(const XrPath p_path);
 	bool is_pose_active(const XrPath p_path);
-	godot::Transform get_as_pose(const XrPath p_path, float p_world_scale);
+	TrackingConfidence get_as_pose(const XrPath p_path, float p_world_scale, godot::Transform &r_transform);
 	void do_haptic_pulse(const XrPath p_path, XrDuration p_duration, float p_frequency, float p_amplitude);
 };
 

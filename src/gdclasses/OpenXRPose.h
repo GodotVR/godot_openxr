@@ -14,6 +14,7 @@ class OpenXRPose : public Spatial {
 
 private:
 	OpenXRApi *openxr_api;
+	TrackingConfidence confidence = TRACKING_CONFIDENCE_NONE;
 	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 	bool invisible_if_inactive = true;
 	String action;
@@ -44,6 +45,8 @@ public:
 
 	String get_path() const;
 	void set_path(const String p_path);
+
+	int get_tracking_confidence() const;
 };
 } // namespace godot
 

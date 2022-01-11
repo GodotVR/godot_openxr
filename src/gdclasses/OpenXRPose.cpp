@@ -135,13 +135,19 @@ void OpenXRPose::_physics_process(float delta) {
 	if (action == "SkeletonBase") {
 		if (path == "/user/hand/left") {
 			const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(0);
-			set_transform(reference_frame * openxr_api->transform_from_space_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws));
+			Transform t;
+			confidence = openxr_api->transform_from_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws, t);
+			set_transform(reference_frame * t);
 		} else if (path == "/user/hand/right") {
 			const HandTracker *hand_tracker = hand_tracking_wrapper->get_hand_tracker(1);
-			set_transform(reference_frame * openxr_api->transform_from_space_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws));
+			Transform t;
+			confidence = openxr_api->transform_from_location(hand_tracker->joint_locations[XR_HAND_JOINT_PALM_EXT], ws, t);
+			set_transform(reference_frame * t);
 		}
 	} else if (check_action_and_path()) {
-		set_transform(reference_frame * _action->get_as_pose(_path, ws));
+		Transform t;
+		confidence = _action->get_as_pose(_path, ws, t);
+		set_transform(reference_frame * t);
 	}
 }
 
@@ -195,4 +201,8 @@ void OpenXRPose::set_path(const String p_path) {
 	path = p_path;
 	_path = XR_NULL_PATH;
 	fail_cache = false;
+}
+
+int OpenXRPose::get_tracking_confidence() const {
+	return int(confidence);
 }

@@ -132,7 +132,8 @@ void OpenXRHand::_physics_process(float delta) {
 
 	if (hand_tracker->is_initialised && hand_tracker->locations.isActive) {
 		for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-			Transform t = openxr_api->transform_from_space_location(hand_tracker->joint_locations[i], ws);
+			Transform t;
+			openxr_api->transform_from_location(hand_tracker->joint_locations[i], ws, t);
 			// store the inverse to make live easier later on
 			inv_transforms[i] = t.inverse();
 

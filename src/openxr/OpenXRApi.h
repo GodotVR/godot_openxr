@@ -52,6 +52,12 @@
 // forward declare this
 class OpenXRApi;
 
+enum TrackingConfidence {
+	TRACKING_CONFIDENCE_NONE,
+	TRACKING_CONFIDENCE_LOW,
+	TRACKING_CONFIDENCE_HIGH
+};
+
 #include "openxr/actions/action.h"
 #include "openxr/actions/actionset.h"
 
@@ -72,15 +78,16 @@ public:
 		XrPath toplevel_path;
 		godot_int godot_controller;
 		XrPath active_profile; // note, this can be a profile added in the OpenXR runtime unknown to our default mappings
+		TrackingConfidence tracking_confidence;
 	};
 
 	InputMap inputmaps[USER_INPUT_MAX] = {
-		{ "/user/hand/left", XR_NULL_PATH, -1, XR_NULL_PATH },
-		{ "/user/hand/right", XR_NULL_PATH, -1, XR_NULL_PATH },
+		{ "/user/hand/left", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
+		{ "/user/hand/right", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
 		// gamepad is already supported in Godots own joystick handling, head we're using directly
-		// { "/user/foot/left", XR_NULL_PATH, -1, XR_NULL_PATH },
-		// { "/user/foot/right", XR_NULL_PATH, -1, XR_NULL_PATH },
-		// { "/user/treadmill", XR_NULL_PATH, -1, XR_NULL_PATH },
+		// { "/user/foot/left", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
+		// { "/user/foot/right", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
+		// { "/user/treadmill", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
 	};
 
 	// Default actions we support so we can mimic our old ARVRController handling
@@ -341,6 +348,8 @@ public:
 
 	godot::Array get_enabled_extensions() const;
 
+	TrackingConfidence get_controller_tracking_confidence(const int p_godot_controller) const;
+
 	static const char *default_action_sets_json;
 	godot::String get_action_sets_json() const;
 	void set_action_sets_json(const godot::String &p_action_sets_json);
@@ -384,8 +393,8 @@ public:
 	godot::Transform transform_from_pose(const XrPosef &p_pose, float p_world_scale);
 
 	// helper method to get a valid transform from an openxr space location
-	godot::Transform transform_from_space_location(const XrSpaceLocation &p_location, float p_world_scale);
-	godot::Transform transform_from_space_location(const XrHandJointLocationEXT &p_location, float p_world_scale);
+	TrackingConfidence transform_from_location(const XrSpaceLocation &p_location, float p_world_scale, Transform &r_transform);
+	TrackingConfidence transform_from_location(const XrHandJointLocationEXT &p_location, float p_world_scale, Transform &r_transform);
 };
 
 #endif /* !OPENXR_API_H */

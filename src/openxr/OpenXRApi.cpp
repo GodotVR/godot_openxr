@@ -2151,6 +2151,16 @@ godot::Array OpenXRApi::get_enabled_extensions() const {
 	return arr;
 }
 
+TrackingConfidence OpenXRApi::get_controller_tracking_confidence(const int p_godot_controller) const {
+	for (int i = 0; i < USER_INPUT_MAX; i++) {
+		if (inputmaps[i].godot_controller == p_godot_controller) {
+			return inputmaps[i].tracking_confidence;
+		}
+	}
+
+	return TRACKING_CONFIDENCE_NONE;
+}
+
 godot::String OpenXRApi::get_action_sets_json() const {
 	return action_sets_json;
 }
@@ -2738,7 +2748,7 @@ void OpenXRApi::update_actions() {
 				// Start with our pose, we put our ARVRController on our aim pose (may need to change this to our grip pose...)
 				godot_transform controller_transform;
 				Transform *t = (Transform *)&controller_transform;
-				*t = default_actions[ACTION_AIM_POSE].action->get_as_pose(input_path, ws);
+				inputmaps[i].tracking_confidence = default_actions[ACTION_AIM_POSE].action->get_as_pose(input_path, ws, *t);
 
 				arvr_api->godot_arvr_set_controller_transform(godot_controller, &controller_transform, true, true);
 
@@ -3207,24 +3217,65 @@ Transform OpenXRApi::transform_from_pose(const XrPosef &p_pose, float p_world_sc
 }
 
 template <typename T>
-Transform _transform_from_space_location(OpenXRApi &api, const T &p_location, float p_world_scale) {
+TrackingConfidence _transform_from_location(const T &p_location, Transform &r_transform) {
 	Basis basis;
 	Vector3 origin;
+	TrackingConfidence confidence = TRACKING_CONFIDENCE_NONE;
 	const auto &pose = p_location.pose;
+
+	// Check orientation
 	if (p_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) {
 		Quat q(pose.orientation.x, pose.orientation.y, pose.orientation.z, pose.orientation.w);
-		basis = Basis(q);
+		r_transform.basis = Basis(q);
+
+		if (p_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT) {
+			// Fully valid orientation, so either 3DOF or 6DOF tracking with high confidence so default to HIGH_TRACKING
+			confidence = TRACKING_CONFIDENCE_HIGH;
+		} else {
+			// Orientation is being tracked but we're using old/predicted data, so low tracking confidence
+			confidence = TRACKING_CONFIDENCE_LOW;
+		}
+	} else {
+		r_transform.basis = Basis();
 	}
+
+	// Check location
 	if (p_location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) {
-		origin = Vector3(pose.position.x, pose.position.y, pose.position.z) * p_world_scale;
+		r_transform.origin = Vector3(pose.position.x, pose.position.y, pose.position.z);
+
+		if (!(p_location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT)) {
+			// Location is being tracked but we're using old/predicted data, so low tracking confidence
+			confidence = TRACKING_CONFIDENCE_LOW;
+		} else if (confidence == TRACKING_CONFIDENCE_NONE) {
+			// Position tracking without orientation tracking?
+			confidence = TRACKING_CONFIDENCE_HIGH;
+		}
+	} else {
+		// No tracking or 3DOF I guess..
+		r_transform.origin = Vector3();
 	}
-	return Transform(basis, origin);
+
+	return confidence;
 }
 
-Transform OpenXRApi::transform_from_space_location(const XrSpaceLocation &p_location, float p_world_scale) {
-	return _transform_from_space_location(*this, p_location, p_world_scale);
+TrackingConfidence OpenXRApi::transform_from_location(const XrSpaceLocation &p_location, float p_world_scale, Transform &r_transform) {
+	Transform t;
+	TrackingConfidence confidence = _transform_from_location(p_location, t);
+	if (confidence != TRACKING_CONFIDENCE_NONE) {
+		// only update if we have tracking data
+		t.basis *= p_world_scale;
+		r_transform = t;
+	}
+	return confidence;
 }
 
-Transform OpenXRApi::transform_from_space_location(const XrHandJointLocationEXT &p_location, float p_world_scale) {
-	return _transform_from_space_location(*this, p_location, p_world_scale);
+TrackingConfidence OpenXRApi::transform_from_location(const XrHandJointLocationEXT &p_location, float p_world_scale, Transform &r_transform) {
+	Transform t;
+	TrackingConfidence confidence = _transform_from_location(p_location, t);
+	if (confidence != TRACKING_CONFIDENCE_NONE) {
+		// only update if we have tracking data
+		t.basis *= p_world_scale;
+		r_transform = t;
+	}
+	return confidence;
 }

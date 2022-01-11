@@ -50,6 +50,8 @@ public:
 
 	godot::Array get_enabled_extensions() const;
 
+	int get_tracking_confidence(const int p_godot_controller) const;
+
 	String get_action_sets() const;
 	void set_action_sets(const String p_action_sets);
 

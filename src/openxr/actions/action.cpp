@@ -197,16 +197,16 @@ bool Action::is_pose_active(XrPath p_path) {
 	}
 }
 
-Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
+TrackingConfidence Action::get_as_pose(XrPath p_path, float p_world_scale, Transform &r_transform) {
 	if (!xr_api->is_running()) {
 		// not running
-		return Transform();
+		return TRACKING_CONFIDENCE_NONE;
 	} else if (handle == XR_NULL_HANDLE || p_path == XR_NULL_PATH) {
 		// not initialised or setup fully
-		return Transform();
+		return TRACKING_CONFIDENCE_NONE;
 	} else if (type != XR_ACTION_TYPE_POSE_INPUT) {
 		// wrong type
-		return Transform();
+		return TRACKING_CONFIDENCE_NONE;
 	} else {
 		// find out the index for our path, note, thanks to register_path we can use our pointers here
 		uint64_t index = 0xFFFFFFFF;
@@ -218,7 +218,7 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 
 		if (index == 0xFFFFFFFF) {
 			// couldn't find it?
-			return Transform();
+			return TRACKING_CONFIDENCE_NONE;
 		}
 
 		if (toplevel_paths[index].space == XR_NULL_HANDLE) {
@@ -237,7 +237,7 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 
 			XrResult result = xrCreateActionSpace(xr_api->session, &actionSpaceInfo, &toplevel_paths[index].space);
 			if (!xr_api->xr_result(result, "failed to create pose space")) {
-				return Transform();
+				return TRACKING_CONFIDENCE_NONE;
 			}
 
 #ifdef DEBUG
@@ -252,9 +252,12 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 
 		XrResult result = xrLocateSpace(toplevel_paths[index].space, xr_api->play_space, xr_api->frameState.predictedDisplayTime, &location);
 		if (!xr_api->xr_result(result, "failed to locate space!")) {
-			return Transform();
+			return TRACKING_CONFIDENCE_NONE;
 		}
 
+		return xr_api->transform_from_location(location, p_world_scale, r_transform);
+
+		/*
 		bool spaceLocationValid =
 				//(location.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0 &&
 				(location.locationFlags & XR_SPACE_LOCATION_ORIENTATION_VALID_BIT) != 0;
@@ -276,6 +279,7 @@ Transform Action::get_as_pose(XrPath p_path, float p_world_scale) {
 		} else {
 			return Transform();
 		}
+		*/
 	}
 }
 

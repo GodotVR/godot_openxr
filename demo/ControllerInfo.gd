@@ -1,11 +1,17 @@
 extends Node2D
 
 var controller : ARVRController = null;
+var configuration
 
 # Called when the node enters the scene tree for the first time.
 func _ready():
 	# a little dirty but the parent of the parent of the parent should be the controller.
 	controller = get_node("../../../");
+
+	# we should be able to grab copy of our config
+	configuration = preload("res://addons/godot-openxr/config/OpenXRConfig.gdns")
+	if configuration:
+		configuration = configuration.new()
 
 func _process(_delta : float):
 	if controller:
@@ -33,3 +39,14 @@ func _process(_delta : float):
 		$Container/SelectButton/Value.pressed = controller.is_button_pressed(JOY_BUTTON_4)
 		$Container/TriggerButton/Value.pressed = controller.is_button_pressed(JOY_VR_TRIGGER)
 		$Container/SideButton/Value.pressed = controller.is_button_pressed(JOY_VR_GRIP)
+
+		if configuration:
+			var confidence = configuration.get_tracking_confidence(controller.controller_id)
+			if confidence == 0:
+				$Container/Tracking.text = "Not tracking"
+			elif confidence == 1:
+				$Container/Tracking.text = "Low confidence"
+			elif confidence == 2:
+				$Container/Tracking.text = "High confidence"
+			else:
+				$Container/Tracking.text = "Unknown tracking status"

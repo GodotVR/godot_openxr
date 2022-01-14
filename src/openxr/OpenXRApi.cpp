@@ -475,6 +475,107 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 		],
 	},
 	{
+		"path": "/interaction_profiles/hp/mixed_reality_controller",
+		"bindings": [
+			{
+				"set": "godot",
+				"action": "aim_pose",
+				"paths": [
+					"/user/hand/left/input/aim/pose",
+					"/user/hand/right/input/aim/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip_pose",
+				"paths": [
+					"/user/hand/left/input/grip/pose",
+					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_trigger",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_trigger",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary",
+				"paths": [
+					"/user/hand/left/input/thumbstick",
+					"/user/hand/right/input/thumbstick"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_button",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_button",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "menu_button",
+				"paths": [
+					"/user/hand/left/input/menu/click",
+					"/user/hand/right/input/menu/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_button",
+				"paths": [
+					"/user/hand/left/input/thumbstick/click",
+					"/user/hand/right/input/thumbstick/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_button",
+				"paths": [
+					"/user/hand/left/input/x/click",
+					"/user/hand/right/input/a/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_button",
+				"paths": [
+					"/user/hand/left/input/y/click",
+					"/user/hand/right/input/b/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "haptic",
+				"paths": [
+					"/user/hand/left/output/haptic",
+					"/user/hand/right/output/haptic"
+				]
+			},
+		],
+	},
+	{
 		"path": "/interaction_profiles/oculus/touch_controller",
 		"bindings": [
 			{

@@ -250,7 +250,8 @@ TrackingConfidence Action::get_as_pose(XrPath p_path, float p_world_scale, Trans
 		location.type = XR_TYPE_SPACE_LOCATION;
 		location.next = NULL;
 
-		XrResult result = xrLocateSpace(toplevel_paths[index].space, xr_api->play_space, xr_api->frameState.predictedDisplayTime, &location);
+		XrTime time = xr_api->get_next_frame_time(); // This data will be used for the next frame we render
+		XrResult result = xrLocateSpace(toplevel_paths[index].space, xr_api->play_space, time, &location);
 		if (!xr_api->xr_result(result, "failed to locate space!")) {
 			return TRACKING_CONFIDENCE_NONE;
 		}

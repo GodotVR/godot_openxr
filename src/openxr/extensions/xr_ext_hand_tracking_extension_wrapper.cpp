@@ -194,7 +194,8 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 		return;
 	}
 
-	const XrTime time = openxr_api->get_frame_state().predictedDisplayTime;
+	const XrTime time = openxr_api->get_next_frame_time(); // This data will be used for the next frame we render
+
 	XrResult result;
 
 	for (int i = 0; i < 2; i++) {

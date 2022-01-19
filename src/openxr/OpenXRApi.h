@@ -311,6 +311,7 @@ public:
 	XrFrameState get_frame_state() { return frameState; }
 	String get_system_name() const { return system_name; }
 	uint32_t get_vendor_id() const { return vendor_id; }
+	XrTime get_next_frame_time() const;
 
 	float get_render_target_size_multiplier() { return render_target_size_multiplier; }
 	bool set_render_target_size_multiplier(float multiplier);

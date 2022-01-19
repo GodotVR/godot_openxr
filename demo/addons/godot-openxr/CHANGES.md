@@ -7,6 +7,7 @@ Changes to the Godot OpenXR asset
 - Removed deprecated `com.samsung.android.vr.application.mode` meta-data tag.
 - Updated repo `README`.
 - Added controller tracking confidence
+- Use correct predictive timing for controllers.
 
 1.1.1
 -------------------

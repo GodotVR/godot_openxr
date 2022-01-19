@@ -1,4 +1,4 @@
-[gd_scene load_steps=21 format=2]
+[gd_scene load_steps=22 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://Ground.tscn" type="PackedScene" id=2]
@@ -24,6 +24,9 @@ mid_height = 0.1
 [sub_resource type="CapsuleMesh" id=2]
 radius = 0.03
 mid_height = 0.04
+
+[sub_resource type="CubeMesh" id=5]
+size = Vector3( 0.1, 0.1, 0.1 )
 
 [sub_resource type="CylinderMesh" id=3]
 top_radius = 0.01
@@ -62,6 +65,11 @@ material/0 = null
 transform = Transform( -1.62921e-07, 0, 1, 0, 1, 0, -1, 0, -1.62921e-07, 1.44924e-09, 0, 0.00889538 )
 layers = 524288
 mesh = SubResource( 2 )
+material/0 = null
+
+[node name="TestInView" type="MeshInstance" parent="FPSController/ARVRCamera" index="2"]
+transform = Transform( 0.981744, -0.0364435, -0.186685, 0, 0.981474, -0.191597, 0.190209, 0.188099, 0.963556, 0.129696, 0.100312, -0.347681 )
+mesh = SubResource( 5 )
 material/0 = null
 
 [node name="LeftHandController" parent="FPSController" index="2"]

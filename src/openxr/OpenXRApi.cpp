@@ -2451,6 +2451,23 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 	return true;
 }
 
+XrTime OpenXRApi::get_next_frame_time() const {
+	if (!initialised || !running) {
+		return 0;
+	}
+
+	// xrWaitFrame not run yet
+	if (frameState.predictedDisplayTime == 0) {
+		return 0;
+	}
+
+	// We retrieve our tracking information right before we render.
+	// We use the current frames predicted display time while rendering.
+	// However when position nodes in our scene, we update this while processing the next frame.
+	// We thus need to advance our frame timing by one frame when retreiving this data.
+	return frameState.predictedDisplayTime + frameState.predictedDisplayPeriod;
+}
+
 XrResult OpenXRApi::acquire_image(int eye) {
 	XrResult result;
 	XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
@@ -2885,6 +2902,7 @@ bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *
 		return false;
 	}
 
+	// Note that our views[eye].pose uses the current frames timing which is correct as this is what we use for rendering.
 	Transform *t = (Transform *)transform_for_eye;
 	*t = transform_from_pose(views[eye].pose, world_scale);
 
@@ -2906,7 +2924,21 @@ bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
 		.type = XR_TYPE_SPACE_LOCATION,
 		.next = NULL
 	};
-	result = xrLocateSpace(view_space, play_space, frameState.predictedDisplayTime, &location);
+
+	XrTime time;
+	if (form_factor == XR_FORM_FACTOR_HANDHELD_DISPLAY) {
+		// For handheld displays we are rendering MONO and this method is called both for our rendering position
+		// and to position our camera node for the next frame.
+		// It is more important to get the rendering right here.
+		// Note, there currently are no platforms where OpenXR is used with Godot that support this mode
+		// so it's probably a non issue for the time being. This is already resolved in Godot 4.
+		time = frameState.predictedDisplayTime;
+	} else {
+		// We retrieve our tracking information right before we render, we use the current frames predicted display time while rendering.
+		// Our head center however is retrieved to place our camera node in the scene after rendering for the next frame.
+		time = get_next_frame_time();
+	}
+	result = xrLocateSpace(view_space, play_space, time, &location);
 	if (!xr_result(result, "Failed to locate view space in play space!")) {
 		return false;
 	}

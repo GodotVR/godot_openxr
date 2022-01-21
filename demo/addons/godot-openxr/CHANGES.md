@@ -4,6 +4,7 @@ Changes to the Godot OpenXR asset
 1.2.0
 -------------------
 - Added interaction profile for the HP Reverb G2 controllers.
+- Removed deprecated `com.samsung.android.vr.application.mode` meta-data tag.
 
 1.1.1
 -------------------

@@ -23,11 +23,6 @@
     <application>
 
         <meta-data
-            android:name="com.samsung.android.vr.application.mode"
-            android:value="vr_only"
-            tools:node="replace" />
-
-        <meta-data
             android:name="org.godotengine.plugin.v1.OpenXR"
             android:value="org.godotengine.plugin.vr.openxr.OpenXRPlugin" />
 

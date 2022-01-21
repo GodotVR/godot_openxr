@@ -23,10 +23,6 @@
         android:supportsRtl="true">
 
         <meta-data
-            android:name="com.samsung.android.vr.application.mode"
-            android:value="vr_only"/>
-
-        <meta-data
             android:name="com.oculus.supportedDevices"
             android:value="all"/>
 

@@ -49,118 +49,118 @@ shadow_enabled = true
 shadow_bias = 0.01
 directional_shadow_max_distance = 20.0
 
-[node name="FPSController" parent="." instance=ExtResource( 4 )]
+[node name="FPController" parent="." instance=ExtResource( 4 )]
 
-[node name="Configuration" parent="FPSController" index="0"]
+[node name="Configuration" parent="FPController" index="0"]
 color_space = 0
 refresh_rate = 0.0
 
-[node name="ShadowHead" type="MeshInstance" parent="FPSController/ARVRCamera" index="0"]
+[node name="ShadowHead" type="MeshInstance" parent="FPController/ARVRCamera" index="0"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, -0.0187781, 0.103895 )
 layers = 524288
 mesh = SubResource( 1 )
 material/0 = null
 
-[node name="ShadowHMD" type="MeshInstance" parent="FPSController/ARVRCamera" index="1"]
+[node name="ShadowHMD" type="MeshInstance" parent="FPController/ARVRCamera" index="1"]
 transform = Transform( -1.62921e-07, 0, 1, 0, 1, 0, -1, 0, -1.62921e-07, 1.44924e-09, 0, 0.00889538 )
 layers = 524288
 mesh = SubResource( 2 )
 material/0 = null
 
-[node name="TestInView" type="MeshInstance" parent="FPSController/ARVRCamera" index="2"]
+[node name="TestInView" type="MeshInstance" parent="FPController/ARVRCamera" index="2"]
 transform = Transform( 0.981744, -0.0364435, -0.186685, 0, 0.981474, -0.191597, 0.190209, 0.188099, 0.963556, 0.129696, 0.100312, -0.347681 )
 mesh = SubResource( 5 )
 material/0 = null
 
-[node name="LeftHandController" parent="FPSController" index="2"]
+[node name="LeftHandController" parent="FPController" index="2"]
 visible = true
 
-[node name="Info" parent="FPSController/LeftHandController" index="0" instance=ExtResource( 8 )]
+[node name="Info" parent="FPController/LeftHandController" index="0" instance=ExtResource( 8 )]
 transform = Transform( 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, 0.0483518, 0.0719222, 0 )
 screen_size = Vector2( 0.16, 0.12 )
 viewport_size = Vector2( 600, 400 )
 scene = ExtResource( 9 )
 collision_layer = 0
 
-[node name="Function_Teleport" parent="FPSController/LeftHandController" index="1" instance=ExtResource( 10 )]
+[node name="Function_Teleport" parent="FPController/LeftHandController" index="1" instance=ExtResource( 10 )]
 camera = NodePath("../../ARVRCamera")
 
-[node name="Function_pointer" parent="FPSController/LeftHandController" index="2" instance=ExtResource( 13 )]
+[node name="Function_pointer" parent="FPController/LeftHandController" index="2" instance=ExtResource( 13 )]
 show_target = true
 collide_with_areas = true
 
-[node name="RightHandController" parent="FPSController" index="3"]
+[node name="RightHandController" parent="FPController" index="3"]
 visible = true
 
-[node name="Info" parent="FPSController/RightHandController" index="0" instance=ExtResource( 8 )]
+[node name="Info" parent="FPController/RightHandController" index="0" instance=ExtResource( 8 )]
 transform = Transform( 1, 0, 0, 0, 0.939693, 0.34202, 0, -0.34202, 0.939693, -0.0871993, 0.072, 0 )
 screen_size = Vector2( 0.16, 0.12 )
 viewport_size = Vector2( 600, 400 )
 scene = ExtResource( 9 )
 collision_layer = 0
 
-[node name="Function_Direct_movement" parent="FPSController/RightHandController" index="1" instance=ExtResource( 11 )]
+[node name="Function_Direct_movement" parent="FPController/RightHandController" index="1" instance=ExtResource( 11 )]
 camera = NodePath("../../ARVRCamera")
 smooth_rotation = true
 canFly = false
 
-[node name="Function_pointer" parent="FPSController/RightHandController" index="2" instance=ExtResource( 13 )]
+[node name="Function_pointer" parent="FPController/RightHandController" index="2" instance=ExtResource( 13 )]
 show_target = true
 collide_with_areas = true
 
-[node name="Left_grip_pose" parent="FPSController" instance=ExtResource( 7 )]
+[node name="Left_grip_pose" parent="FPController" instance=ExtResource( 7 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
 
-[node name="Grip" type="MeshInstance" parent="FPSController/Left_grip_pose"]
+[node name="Grip" type="MeshInstance" parent="FPController/Left_grip_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
 mesh = SubResource( 3 )
 material/0 = null
 
-[node name="Right_aim_pose" parent="FPSController" instance=ExtResource( 7 )]
+[node name="Right_aim_pose" parent="FPController" instance=ExtResource( 7 )]
 
-[node name="Grip" type="MeshInstance" parent="FPSController/Right_aim_pose"]
+[node name="Grip" type="MeshInstance" parent="FPController/Right_aim_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
 mesh = SubResource( 3 )
 material/0 = null
 
-[node name="LeftHand" parent="FPSController" instance=ExtResource( 14 )]
+[node name="LeftHand" parent="FPController" instance=ExtResource( 14 )]
 motion_range = 1
 
-[node name="Skeleton" parent="FPSController/LeftHand/HandModel/Armature001" index="0"]
+[node name="Skeleton" parent="FPController/LeftHand/HandModel/Armature001" index="0"]
 bones/9/bound_children = [  ]
 motion_range = 1
 
-[node name="vr_glove_left_slim" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="0"]
+[node name="vr_glove_left_slim" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="0"]
 material/0 = null
 
-[node name="IndexTip" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
+[node name="IndexTip" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
 transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.076153, 0.0915428, -0.715277, 0.692819, 0.0345973, 0.0355402, -0.164767 )
 
-[node name="ShowIndexTip" type="MeshInstance" parent="FPSController/LeftHand/HandModel/Armature001/Skeleton/IndexTip" index="0"]
+[node name="ShowIndexTip" type="MeshInstance" parent="FPController/LeftHand/HandModel/Armature001/Skeleton/IndexTip" index="0"]
 visible = false
 mesh = SubResource( 4 )
 material/0 = null
 
-[node name="RightHand" parent="FPSController" instance=ExtResource( 15 )]
+[node name="RightHand" parent="FPController" instance=ExtResource( 15 )]
 motion_range = 1
 albedo_texture = ExtResource( 5 )
 
-[node name="Skeleton" parent="FPSController/RightHand/HandModel/Armature" index="0"]
+[node name="Skeleton" parent="FPController/RightHand/HandModel/Armature" index="0"]
 bones/9/bound_children = [  ]
 motion_range = 1
 
-[node name="vr_glove_right_slim" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="0"]
+[node name="vr_glove_right_slim" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="0"]
 material/0 = null
 
-[node name="IndexTip" parent="FPSController/RightHand/HandModel/Armature/Skeleton" index="1"]
+[node name="IndexTip" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="1"]
 transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.69282, 0.977075, -0.19881, -0.0761527, -0.0345978, -0.164767, -0.0355401 )
 
-[node name="ShowIndexTip" type="MeshInstance" parent="FPSController/RightHand/HandModel/Armature/Skeleton/IndexTip" index="0"]
+[node name="ShowIndexTip" type="MeshInstance" parent="FPController/RightHand/HandModel/Armature/Skeleton/IndexTip" index="0"]
 visible = false
 mesh = SubResource( 4 )
 material/0 = null
 
-[node name="ShowBounds" parent="FPSController" instance=ExtResource( 16 )]
+[node name="ShowBounds" parent="FPController" instance=ExtResource( 16 )]
 configuration = NodePath("../Configuration")
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
@@ -174,11 +174,11 @@ viewport_size = Vector2( 600, 400 )
 scene = ExtResource( 12 )
 collision_layer = 1024
 
-[connection signal="failed_initialisation" from="FPSController" to="." method="_on_FPSController_failed_initialisation"]
-[connection signal="initialised" from="FPSController" to="." method="_on_FPSController_initialised"]
+[connection signal="failed_initialisation" from="FPController" to="." method="_on_FPController_failed_initialisation"]
+[connection signal="initialised" from="FPController" to="." method="_on_FPController_initialised"]
 
-[editable path="FPSController"]
-[editable path="FPSController/LeftHand"]
-[editable path="FPSController/LeftHand/HandModel"]
-[editable path="FPSController/RightHand"]
-[editable path="FPSController/RightHand/HandModel"]
+[editable path="FPController"]
+[editable path="FPController/LeftHand"]
+[editable path="FPController/LeftHand/HandModel"]
+[editable path="FPController/RightHand"]
+[editable path="FPController/RightHand/HandModel"]

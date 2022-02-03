@@ -8,6 +8,7 @@ Changes to the Godot OpenXR asset
 - Updated repo `README`.
 - Added controller tracking confidence
 - Use correct predictive timing for controllers.
+- Renamed `FPSController` node of the first person controller scene to `FPController`.
 
 1.1.1
 -------------------

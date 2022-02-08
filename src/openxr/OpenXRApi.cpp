@@ -2775,10 +2775,10 @@ void OpenXRApi::update_actions() {
 				// Button and axis are hardcoded..
 				// Axis
 				if (default_actions[ACTION_FRONT_TRIGGER].action != NULL) {
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 2, default_actions[ACTION_FRONT_TRIGGER].action->get_as_float(input_path), false); // 0.0 -> 1.0
+					arvr_api->godot_arvr_set_controller_axis(godot_controller, 2, default_actions[ACTION_FRONT_TRIGGER].action->get_as_float(input_path), true); // 0.0 -> 1.0
 				}
 				if (default_actions[ACTION_SIDE_TRIGGER].action != NULL) {
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 4, default_actions[ACTION_SIDE_TRIGGER].action->get_as_float(input_path), false); // 0.0 -> 1.0
+					arvr_api->godot_arvr_set_controller_axis(godot_controller, 4, default_actions[ACTION_SIDE_TRIGGER].action->get_as_float(input_path), true); // 0.0 -> 1.0
 				}
 				if (default_actions[ACTION_PRIMARY].action != NULL) {
 					Vector2 v = default_actions[ACTION_PRIMARY].action->get_as_vector(input_path);

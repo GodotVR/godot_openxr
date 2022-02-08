@@ -129,6 +129,13 @@ float Action::get_as_float(XrPath p_path) {
 
 		// we should do something with resultState.isActive
 
+		// clamp our value between -1.0 and 1.0, shouldn't be outside of this range but better safe then sorry...
+		if (resultState.currentState < -1.0) {
+			resultState.currentState = -1.0;
+		} else if (resultState.currentState > 1.0) {
+			resultState.currentState = 1.0;
+		}
+
 		return resultState.currentState;
 	}
 }

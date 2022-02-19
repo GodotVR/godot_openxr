@@ -2,7 +2,7 @@
 
 ## Versions
 
-Requires Godot 3.3 or later, does not (yet) work with Godot 4.
+Requires Godot 3.4 or later, does not (yet) work with Godot 4.
 Only supports Windows and Linux.
 
 ## Using this plugin

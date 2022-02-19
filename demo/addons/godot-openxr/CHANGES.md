@@ -1,6 +1,10 @@
 Changes to the Godot OpenXR asset
 =================================
 
+1.3.0
+-------------------
+- 
+
 1.2.0
 -------------------
 - Added interaction profile for the HP Reverb G2 controllers.

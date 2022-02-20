@@ -129,7 +129,7 @@ _global_script_class_icons={
 [application]
 
 config/name="Godot OpenXR demo"
-run/main_scene="res://Main.tscn"
+run/main_scene="res://Construct.tscn"
 config/icon="res://icon.png"
 
 [display]

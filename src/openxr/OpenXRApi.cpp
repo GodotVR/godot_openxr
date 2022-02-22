@@ -225,7 +225,7 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 const char *OpenXRApi::default_interaction_profiles_json = R"===(
 [
 	{
-		"path": "/interaction_profiles/khr/simple_controller",
+		"path": "/interaction_profiles/oculus/touch_controller",
 		"bindings": [
 			{
 				"set": "godot",
@@ -245,18 +245,105 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
-				"action": "menu_button",
+				"action": "front_trigger",
 				"paths": [
-					"/user/hand/left/input/menu/click",
-					"/user/hand/right/input/menu/click"
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
 				]
 			},
 			{
 				"set": "godot",
-				"action": "select_button",
+				"action": "side_trigger",
 				"paths": [
-					"/user/hand/left/input/select/click",
-					"/user/hand/right/input/select/click"
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary",
+				"paths": [
+					"/user/hand/left/input/thumbstick",
+					"/user/hand/right/input/thumbstick"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_button",
+				"paths": [
+					"/user/hand/left/input/x/click",
+					"/user/hand/right/input/a/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_button",
+				"paths": [
+					"/user/hand/left/input/y/click",
+					"/user/hand/right/input/b/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_touch",
+				"paths": [
+					"/user/hand/left/input/x/touch",
+					"/user/hand/right/input/a/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_touch",
+				"paths": [
+					"/user/hand/left/input/y/touch",
+					"/user/hand/right/input/b/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_button",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_button",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "menu_button",
+				"paths": [
+					"/user/hand/left/input/menu/click",
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_button",
+				"paths": [
+					"/user/hand/left/input/thumbstick/click",
+					"/user/hand/right/input/thumbstick/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_touch",
+				"paths": [
+					"/user/hand/left/input/thumbstick/touch",
+					"/user/hand/right/input/thumbstick/touch"
 				]
 			},
 			{
@@ -568,138 +655,6 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/y/click",
 					"/user/hand/right/input/b/click"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "haptic",
-				"paths": [
-					"/user/hand/left/output/haptic",
-					"/user/hand/right/output/haptic"
-				]
-			},
-		],
-	},
-	{
-		"path": "/interaction_profiles/oculus/touch_controller",
-		"bindings": [
-			{
-				"set": "godot",
-				"action": "aim_pose",
-				"paths": [
-					"/user/hand/left/input/aim/pose",
-					"/user/hand/right/input/aim/pose"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "grip_pose",
-				"paths": [
-					"/user/hand/left/input/grip/pose",
-					"/user/hand/right/input/grip/pose"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "front_trigger",
-				"paths": [
-					"/user/hand/left/input/trigger/value",
-					"/user/hand/right/input/trigger/value"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "side_trigger",
-				"paths": [
-					"/user/hand/left/input/squeeze/value",
-					"/user/hand/right/input/squeeze/value"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "primary",
-				"paths": [
-					"/user/hand/left/input/thumbstick",
-					"/user/hand/right/input/thumbstick"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "ax_button",
-				"paths": [
-					"/user/hand/left/input/x/click",
-					"/user/hand/right/input/a/click"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "by_button",
-				"paths": [
-					"/user/hand/left/input/y/click",
-					"/user/hand/right/input/b/click"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "ax_touch",
-				"paths": [
-					"/user/hand/left/input/x/touch",
-					"/user/hand/right/input/a/touch"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "by_touch",
-				"paths": [
-					"/user/hand/left/input/y/touch",
-					"/user/hand/right/input/b/touch"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "front_button",
-				"paths": [
-					"/user/hand/left/input/trigger/value",
-					"/user/hand/right/input/trigger/value"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "front_touch",
-				"paths": [
-					"/user/hand/left/input/trigger/touch",
-					"/user/hand/right/input/trigger/touch"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "side_button",
-				"paths": [
-					"/user/hand/left/input/squeeze/value",
-					"/user/hand/right/input/squeeze/value"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "menu_button",
-				"paths": [
-					"/user/hand/left/input/menu/click",
-				]
-			},
-			{
-				"set": "godot",
-				"action": "primary_button",
-				"paths": [
-					"/user/hand/left/input/thumbstick/click",
-					"/user/hand/right/input/thumbstick/click"
-				]
-			},
-			{
-				"set": "godot",
-				"action": "primary_touch",
-				"paths": [
-					"/user/hand/left/input/thumbstick/touch",
-					"/user/hand/right/input/thumbstick/touch"
 				]
 			},
 			{

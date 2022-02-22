@@ -3,7 +3,7 @@ Changes to the Godot OpenXR asset
 
 1.3.0
 -------------------
-- 
+- Removed standard controller
 
 1.2.0
 -------------------

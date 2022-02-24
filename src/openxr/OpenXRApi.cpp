@@ -3171,9 +3171,24 @@ void OpenXRApi::process_openxr() {
 		.type = XR_TYPE_FRAME_WAIT_INFO,
 		.next = nullptr
 	};
+	frameState.type = XR_TYPE_FRAME_STATE;
+	frameState.next = nullptr;
+	frameState.predictedDisplayTime = 0;
+	frameState.predictedDisplayPeriod = 0;
+	frameState.shouldRender = false;
 	result = xrWaitFrame(session, &frameWaitInfo, &frameState);
 	if (!xr_result(result, "xrWaitFrame() was not successful, exiting...")) {
+		// reset just in case
+		frameState.predictedDisplayTime = 0;
+		frameState.predictedDisplayPeriod = 0;
+		frameState.shouldRender = false;
 		return;
+	}
+
+	if (frameState.predictedDisplayPeriod > 500000000) {
+		// display period more then 0.5 seconds? must be wrong data
+		Godot::print("OpenXR resetting invalid display period {0}", frameState.predictedDisplayPeriod);
+		frameState.predictedDisplayPeriod = 0;
 	}
 
 	update_actions();

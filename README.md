@@ -1,8 +1,17 @@
-# GDNative driver for OpenXR
+# Godot OpenXR plugin
+
+![GitHub forks](https://img.shields.io/github/forks/godotvr/godot_openxr?style=plastic)
+![GitHub Repo stars](https://img.shields.io/github/stars/godotvr/godot_openxr?style=plastic)
+![GitHub contributors](https://img.shields.io/github/contributors/godotvr/godot_openxr?style=plastic)
+![GitHub](https://img.shields.io/github/license/godotvr/godot_openxr?style=plastic)
+![GitHub release (latest by date)](https://img.shields.io/github/v/release/godotvr/godot_openxr?style=plastic)
+
+![OpenXR Screenshot](openxr_screenshot.jpg)
 
 ## Versions
 
-Requires Godot 3.4 or later, does not (yet) work with Godot 4.
+Requires Godot 3.4 or later. OpenXR support in Godot 4 is now available in the core without the need of a plugin.
+Only supports Windows (SteamVR, Oculus runtime), Linux (SteamVR, Monado) and Meta Quest.
 
 See [Branches, Tags and versions](https://github.com/GodotVR/godot_openxr/issues/81) for more info on stable and development branches in this repository.
 
@@ -11,10 +20,11 @@ See [Branches, Tags and versions](https://github.com/GodotVR/godot_openxr/issues
 * This plugin supports Linux/X11, Windows and Android (Meta Quest only).
 * VR is tested with SteamVR, Monado and Oculus runtimes.
 * Support for most common controllers, additional controllers can be configured using OpenXRConfig.
+* The WMR OpenXR runtime is not supported as Godot is an OpenGL renderer.
 
 ## Documentation
 
-The official documentation is available at https://docs.godotengine.org/en/stable/tutorials/vr/openxr/index.html.
+The official documentation is available on [the Godot official documentation website](https://docs.godotengine.org/en/stable/tutorials/vr/openxr/index.html).
 
 ## Building this module
 
@@ -86,7 +96,7 @@ gradlew generateSharedLibs
 ```
 
 ## Prebuild libraries
-If you do not want to compile the OpenXR plugin yourself you will find releases with prebuild copies of the plugin.
+If you do not want to compile the OpenXR plugin yourself goto the [releases page](https://github.com/GodotVR/godot_openxr/releases) where you can get prebuild copies of the plugin.
 Simply download and unzip the contents into your Godot project.
 
 ## Debugging

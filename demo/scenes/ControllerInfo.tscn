@@ -1,6 +1,6 @@
 [gd_scene load_steps=3 format=2]
 
-[ext_resource path="res://ControllerInfo.gd" type="Script" id=1]
+[ext_resource path="res://scenes/ControllerInfo.gd" type="Script" id=1]
 [ext_resource path="res://assets/fonts/pt_sans_24pt.tres" type="DynamicFont" id=2]
 
 [node name="ControllerInfo" type="Node2D"]

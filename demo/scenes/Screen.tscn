@@ -1,7 +1,7 @@
 [gd_scene load_steps=3 format=2]
 
 [ext_resource path="res://assets/fonts/pt_sans_24pt.tres" type="DynamicFont" id=1]
-[ext_resource path="res://Screen.gd" type="Script" id=2]
+[ext_resource path="res://scenes/Screen.gd" type="Script" id=2]
 
 [node name="Screen" type="Node2D"]
 script = ExtResource( 2 )

@@ -6,7 +6,7 @@ func _ready():
 		screen_instance.connect("toggle_bounds", self, "_on_toggle_bounds")
 
 func _on_toggle_bounds():
-	$FPSController/ShowBounds.visible = !$FPSController/ShowBounds.visible
+	$FPController/ShowBounds.visible = !$FPController/ShowBounds.visible
 
 func _process(delta):
 	# Test for escape to close application, space to reset our reference frame

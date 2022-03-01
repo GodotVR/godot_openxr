@@ -1,3 +1,16 @@
+# 2.4.0
+- 
+
+# 2.3.0
+- Added vignette
+- Moved player physics into new PlayerBody asset (breaking change)
+- Moved Function_Direct_movement settings for player physics into PlayerBody
+- Added Function_Glide_movement to allow the player to glide
+- Added Function_Jump_movement to allow the player to jump
+- Added Function_Climb_movement to allow the player to climb
+- Redid the setup of the hands to make it easier to extend to other gestures
+- Improved pickup and throwing logic
+
 # 2.2
 - Changed default physics layers to make more sense (minor breaking change)
 - Replaced Center On Node property with PickupCenter node you can place

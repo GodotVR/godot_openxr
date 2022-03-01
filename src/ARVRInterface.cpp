@@ -14,8 +14,6 @@
 
 typedef struct arvr_data_struct {
 	OpenXRApi *openxr_api;
-
-	bool has_external_texture_support;
 } arvr_data_struct;
 
 godot_string godot_arvr_get_name(const void *p_data) {
@@ -282,7 +280,7 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 
 	if (arvr_data->openxr_api != nullptr) {
 		uint32_t texid = godot::arvr_api->godot_arvr_get_texid(p_render_target);
-		arvr_data->openxr_api->render_openxr(p_eye - 1, texid, arvr_data->has_external_texture_support);
+		arvr_data->openxr_api->render_openxr(p_eye - 1, texid);
 	}
 }
 
@@ -316,19 +314,6 @@ void godot_arvr_destructor(void *p_data) {
 	}
 }
 
-int godot_arvr_get_external_texture_for_eye(void *p_data, int p_eye) {
-	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
-
-	// this only gets called from Godot 3.2 and newer, allows us to use
-	// OpenXR swapchain directly.
-
-	if (arvr_data->openxr_api != nullptr) {
-		return arvr_data->openxr_api->get_external_texture_for_eye(p_eye - 1, &arvr_data->has_external_texture_support);
-	} else {
-		return 0;
-	}
-}
-
 void godot_arvr_notification(void *p_data, int p_what) {
 	// nothing to do here for now but we should implement this.
 	auto *arvr_data = (arvr_data_struct *)p_data;
@@ -354,9 +339,30 @@ int godot_arvr_get_camera_feed_id(void *) {
 	return 0;
 }
 
+int godot_arvr_get_external_texture_for_eye(void *p_data, int p_eye) {
+	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
+
+	// this only gets called from Godot 3.2 and newer, allows us to use
+	// OpenXR swapchain directly.
+
+	if (arvr_data->openxr_api != nullptr) {
+		return arvr_data->openxr_api->get_external_texture_for_eye(p_eye - 1);
+	} else {
+		return 0;
+	}
+}
+
 int godot_arvr_get_external_depth_for_eye(void *p_data, int p_eye) {
-	// stub
-	return 0;
+	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
+
+	// this only gets called from Godot 3.2 and newer, allows us to use
+	// OpenXR swapchain directly.
+
+	if (arvr_data->openxr_api != nullptr) {
+		return arvr_data->openxr_api->get_external_depthbuffer_for_eye(p_eye - 1);
+	} else {
+		return 0;
+	}
 }
 
 const godot_arvr_interface_gdnative interface_struct = {

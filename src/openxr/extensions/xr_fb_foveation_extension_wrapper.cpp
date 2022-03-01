@@ -52,8 +52,8 @@ void XRFbFoveationExtensionWrapper::on_instance_destroyed() {
 	cleanup();
 }
 
-void **XRFbFoveationExtensionWrapper::set_swapchain_create_info_and_get_next_pointer(void **swapchain_create_info) {
-	if (is_enabled()) {
+void **XRFbFoveationExtensionWrapper::set_swapchain_create_info_and_get_next_pointer(void **swapchain_create_info, bool p_depth_buffer) {
+	if (is_enabled() && !p_depth_buffer) {
 		*swapchain_create_info = &swapchain_create_info_foveation_fb;
 		return &swapchain_create_info_foveation_fb.next;
 	} else {

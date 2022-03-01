@@ -21,7 +21,7 @@ public:
 
 	virtual void **set_system_properties_and_get_next_pointer(void **property) { return nullptr; }
 
-	virtual void **set_swapchain_create_info_and_get_next_pointer(void **swapchain_create_info) { return nullptr; }
+	virtual void **set_swapchain_create_info_and_get_next_pointer(void **swapchain_create_info, bool p_depth_buffer = false) { return nullptr; }
 
 	virtual void on_session_initialized(const XrSession session) {}
 

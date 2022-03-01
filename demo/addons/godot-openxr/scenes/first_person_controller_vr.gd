@@ -13,6 +13,8 @@ signal pose_recentered
 export var auto_initialise = true
 export var start_passthrough = false
 export (NodePath) var viewport = null
+export var near_z = 0.1
+export var far_z = 1000.0
 
 var interface : ARVRInterface
 
@@ -20,6 +22,9 @@ func get_interface() -> ARVRInterface:
 	return interface
 
 func _ready():
+	$ARVRCamera.near = near_z
+	$ARVRCamera.far = far_z
+
 	if auto_initialise:
 		initialise()
 

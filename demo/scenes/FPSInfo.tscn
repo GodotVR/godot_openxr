@@ -1,0 +1,18 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://scenes/FPSInfo.gd" type="Script" id=1]
+[ext_resource path="res://assets/fonts/pt_sans_24pt.tres" type="DynamicFont" id=2]
+
+[node name="FPSInfo" type="Node2D"]
+script = ExtResource( 1 )
+
+[node name="Label" type="Label" parent="."]
+margin_right = 100.0
+margin_bottom = 50.0
+custom_fonts/font = ExtResource( 2 )
+text = "Fps: 0	"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}

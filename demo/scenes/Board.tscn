@@ -1,0 +1,56 @@
+[gd_scene load_steps=3 format=2]
+
+[ext_resource path="res://assets/fonts/pt_sans_24pt.tres" type="DynamicFont" id=1]
+[ext_resource path="res://scenes/Board.gd" type="Script" id=2]
+
+[node name="Board" type="Node2D"]
+script = ExtResource( 2 )
+
+[node name="BackGround" type="ColorRect" parent="."]
+margin_right = 200.0
+margin_bottom = 200.0
+color = Color( 0.172549, 1, 0, 0.14902 )
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Border01" type="ColorRect" parent="."]
+margin_right = 200.0
+margin_bottom = 10.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Border02" type="ColorRect" parent="."]
+margin_top = 190.0
+margin_right = 200.0
+margin_bottom = 200.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Border03" type="ColorRect" parent="."]
+margin_right = 10.0
+margin_bottom = 200.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Border04" type="ColorRect" parent="."]
+margin_left = 190.0
+margin_right = 200.0
+margin_bottom = 200.0
+__meta__ = {
+"_edit_use_anchors_": false
+}
+
+[node name="Score" type="Label" parent="."]
+margin_right = 200.0
+margin_bottom = 200.0
+custom_fonts/font = ExtResource( 1 )
+text = "Score: 0"
+align = 1
+valign = 1
+__meta__ = {
+"_edit_use_anchors_": false
+}

@@ -9,6 +9,8 @@ script = ExtResource( 1 )
 
 [node name="Configuration" type="Node" parent="."]
 script = ExtResource( 3 )
+color_space = 0
+refresh_rate = 0.0
 
 [node name="ARVRCamera" type="ARVRCamera" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0 )

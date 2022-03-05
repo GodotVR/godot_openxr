@@ -149,7 +149,9 @@ bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
 		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
 	}
 
+#ifdef DEBUG
 	Godot::print("Hand tracking is supported\n");
+#endif
 
 	hand_tracking_supported = true;
 	return true;
@@ -248,8 +250,6 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				locateInfo.next = &motionRangeInfo;
 			}
 
-			// Godot::print("Obtaining hand joint info for {0}", i);
-
 			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
 			if (openxr_api->xr_result(result, "failed to get tracking for hand {0}!", i)) {
 				// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
@@ -257,11 +257,6 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				if (
 						!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
 					hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
-					// printf("Hand %i inactive\n", i);
-				} else {
-					// we have our hand tracking info....
-
-					// Godot::print("Hand {0}: ({1}, {2}, {3})\n", i, palm.position.x, palm.position.y, palm.position.z);
 				}
 			}
 		}

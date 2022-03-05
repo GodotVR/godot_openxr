@@ -18,10 +18,6 @@ ActionSet::ActionSet(OpenXRApi *p_api, const godot::String &p_name, const godot:
 	strcpy(actionSetInfo.actionSetName, name.utf8().get_data());
 	strcpy(actionSetInfo.localizedActionSetName, p_localised_name.utf8().get_data());
 
-#ifdef DEBUG
-	Godot::print("Creating action set {0} - {1} {2}", actionSetInfo.actionSetName, actionSetInfo.localizedActionSetName, actionSetInfo.priority);
-#endif
-
 	XrResult result = xrCreateActionSet(xr_api->instance, &actionSetInfo, &handle);
 	if (!xr_api->xr_result(result, "failed to create actionset {0}", name)) {
 		return;

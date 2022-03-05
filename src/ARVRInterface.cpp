@@ -161,7 +161,6 @@ godot_vector2 godot_arvr_get_render_targetsize(const void *p_data) {
 		uint32_t width, height;
 
 		arvr_data->openxr_api->recommended_rendertarget_size(&width, &height);
-		// printf("Render Target size %dx%d\n", width, height);
 
 		godot::api->godot_vector2_new(&size, width, height);
 	} else {
@@ -200,7 +199,6 @@ godot_transform godot_arvr_get_transform_for_eye(void *p_data, godot_int p_eye, 
 				set_default_pos(&transform_for_eye, world_scale, p_eye);
 			}
 		} else {
-			// printf("Get view matrix for eye %d\n", p_eye);
 			if (p_eye == 1) {
 				if (!arvr_data->openxr_api->get_view_transform(0, world_scale, &transform_for_eye)) {
 					set_default_pos(&transform_for_eye, world_scale, p_eye);
@@ -231,15 +229,11 @@ void godot_arvr_fill_projection_for_eye(void *p_data, godot_real *p_projection, 
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
 
 	if (arvr_data->openxr_api != nullptr) {
-		// printf("fill projection for eye %d\n", p_eye);
 		if (p_eye == 1) {
 			arvr_data->openxr_api->fill_projection_matrix(0, p_z_near, p_z_far, p_projection);
 		} else {
 			arvr_data->openxr_api->fill_projection_matrix(1, p_z_near, p_z_far, p_projection);
 		}
-		// ???
-
-		// printf("\n");
 	} else {
 		// uhm, should do something here really..
 	}
@@ -247,7 +241,6 @@ void godot_arvr_fill_projection_for_eye(void *p_data, godot_real *p_projection, 
 
 void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_render_target, godot_rect2 *p_screen_rect) {
 	arvr_data_struct *arvr_data = (arvr_data_struct *)p_data;
-	// printf("Commit eye %d\n", p_eye);
 
 	// This function is responsible for outputting the final render buffer
 	// for each eye. p_screen_rect will only have a value when we're
@@ -270,7 +263,6 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 		// render buffer
 		godot_vector2 rs = godot_arvr_get_render_targetsize(p_data);
 		godot::Vector2 *render_size = (godot::Vector2 *)&rs;
-		// printf("Rendersize = %fx%f\n", render_size.x, render_size.y);
 
 		float new_height = screen_rect.size.x * (render_size->y / render_size->x);
 		if (new_height > screen_rect.size.y) {
@@ -282,10 +274,6 @@ void godot_arvr_commit_for_eye(void *p_data, godot_int p_eye, godot_rid *p_rende
 			screen_rect.position.x = (0.5 * screen_rect.size.x) - (0.5 * new_width);
 			screen_rect.size.x = new_width;
 		}
-
-		// printf("Blit: %0.2f, %0.2f - %0.2f,
-		// %0.2f\n",screen_rect.position.x, screen_rect.position.y,
-		// screen_rect.size.x, screen_rect.size.y);
 
 		// From Godot 3.4 onwards this should now correctly apply a linear->sRGB conversion if our render buffer remains in linear color space.
 		godot::arvr_api->godot_arvr_blit(0, p_render_target, (godot_rect2 *)&screen_rect);

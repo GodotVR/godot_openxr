@@ -29,10 +29,6 @@ Action::Action(OpenXRApi *p_api, XrActionSet p_action_set, XrActionType p_type, 
 	strcpy(actionInfo.actionName, name.utf8().get_data());
 	strcpy(actionInfo.localizedActionName, p_localised_name.utf8().get_data());
 
-#ifdef DEBUG
-	Godot::print("Created action {0} {1} {2}", actionInfo.actionName, actionInfo.localizedActionName, actionInfo.countSubactionPaths);
-#endif
-
 	XrResult result = xrCreateAction(p_action_set, &actionInfo, &handle);
 	if (!p_api->xr_result(result, "failed to create {0} action", name)) {
 		return;
@@ -246,10 +242,6 @@ TrackingConfidence Action::get_as_pose(XrPath p_path, float p_world_scale, Trans
 			if (!xr_api->xr_result(result, "failed to create pose space")) {
 				return TRACKING_CONFIDENCE_NONE;
 			}
-
-#ifdef DEBUG
-			Godot::print("Created space for {0}/{1}", name, index);
-#endif
 		}
 
 		XrSpaceLocation location;

@@ -1323,16 +1323,8 @@ void OpenXRApi::openxr_release_api() {
 	} else if (singleton->use_count > 1) {
 		// decrease use count
 		singleton->use_count--;
-
-#ifdef DEBUG
-		Godot::print("OpenXR: decreased use count to {0}", singleton->use_count);
-#endif
 	} else {
 		// cleanup openxr
-#ifdef DEBUG
-		Godot::print("OpenXR releasing OpenXR context");
-#endif
-
 		delete singleton;
 		singleton = nullptr;
 	};
@@ -1342,18 +1334,10 @@ OpenXRApi *OpenXRApi::openxr_get_api() {
 	if (singleton != nullptr) {
 		// increase use count
 		singleton->use_count++;
-
-#ifdef DEBUG
-		Godot::print("OpenXR increased use count to {0}", singleton->use_count);
-#endif
 	} else {
 		singleton = new OpenXRApi();
 		if (singleton == nullptr) {
 			Godot::print_error("OpenXR interface creation failed", __FUNCTION__, __FILE__, __LINE__);
-#ifdef DEBUG
-		} else {
-			Godot::print("OpenXR interface creation successful");
-#endif
 		}
 	}
 
@@ -1501,9 +1485,20 @@ bool OpenXRApi::initialiseInstance() {
 		return false;
 	}
 
-	for (uint32_t i = 0; i < num_output_layers; i++) {
-		Godot::print("Found layer {0}", layer_properties[i].layerName);
+#ifdef DEBUG
+	if (num_output_layers > 0) {
+		String layer_names;
+		for (uint32_t i = 0; i < num_output_layers; i++) {
+			if (i != 0) {
+				layer_names = layer_names + ", ";
+			}
+			layer_names = layer_names + layer_properties[i].layerName;
+		}
+		Godot::print("OpenXR: Found layer(s) {0}", layer_names);
+	} else {
+		Godot::print("OpenXR: No layers found");
 	}
+#endif
 
 	free(layer_properties);
 
@@ -1943,9 +1938,14 @@ bool OpenXRApi::initialiseSwapChains() {
 #ifdef DEBUG
 	// lets report on what we found...
 	Godot::print("OpenXR Supported Swapchain Formats");
+	String swapchain_formats;
 	for (uint64_t i = 0; i < swapchainFormatCount; i++) {
-		Godot::print("Found {0}", get_swapchain_format_name(swapchainFormats[i]));
+		if (i != 0) {
+			swapchain_formats = swapchain_formats + ", ";
+		}
+		swapchain_formats = swapchain_formats + get_swapchain_format_name(swapchainFormats[i]);
 	}
+	Godot::print("OpenXR: Found(s) {0}", swapchain_formats);
 #endif
 
 	// With the GLES2 driver we're rendering directly into this buffer with a pipeline that assumes a 32bit uniform buffer (i.e 0.0 - 1.0 = 0 - 255).
@@ -2200,8 +2200,6 @@ bool OpenXRApi::bindActionSets() {
 		if (!action_set->attach()) {
 			// Just report this
 			Godot::print("Couldn't attach action set {0}", action_set->get_name());
-		} else {
-			Godot::print("Attached action set {0}", action_set->get_name());
 		}
 	}
 
@@ -2217,9 +2215,7 @@ bool OpenXRApi::bindActionSets() {
 	// find our default actions
 	for (uint64_t i = 0; i < ACTION_MAX; i++) {
 		default_actions[i].action = get_action(default_actions[i].name);
-		if (default_actions[i].action != NULL) {
-			Godot::print("OpenXR found internal action {0}", default_actions[i].name);
-		} else {
+		if (default_actions[i].action == NULL) {
 			Godot::print("OpenXR didn't find internal action {0}", default_actions[i].name);
 		}
 	}
@@ -2393,7 +2389,9 @@ void OpenXRApi::on_pause() {
 }
 
 bool OpenXRApi::on_state_idle() {
+#ifdef DEBUG
 	Godot::print("On state idle");
+#endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_idle();
 	}
@@ -2401,7 +2399,9 @@ bool OpenXRApi::on_state_idle() {
 }
 
 bool OpenXRApi::on_state_ready() {
+#ifdef DEBUG
 	Godot::print("On state ready");
+#endif
 	XrSessionBeginInfo sessionBeginInfo = {
 		.type = XR_TYPE_SESSION_BEGIN_INFO,
 		.next = NULL,
@@ -2436,7 +2436,9 @@ bool OpenXRApi::on_state_ready() {
 }
 
 bool OpenXRApi::on_state_synchronized() {
+#ifdef DEBUG
 	Godot::print("On state synchronized");
+#endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_synchronized();
 	}
@@ -2444,7 +2446,9 @@ bool OpenXRApi::on_state_synchronized() {
 }
 
 bool OpenXRApi::on_state_visible() {
+#ifdef DEBUG
 	Godot::print("On state visible");
+#endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_visible();
 	}
@@ -2458,7 +2462,9 @@ bool OpenXRApi::on_state_visible() {
 }
 
 bool OpenXRApi::on_state_focused() {
+#ifdef DEBUG
 	Godot::print("On state focused");
+#endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_focused();
 	}
@@ -2472,7 +2478,9 @@ bool OpenXRApi::on_state_focused() {
 }
 
 bool OpenXRApi::on_state_stopping() {
+#ifdef DEBUG
 	Godot::print("On state stopping");
+#endif
 
 	emit_plugin_signal(SIGNAL_SESSION_ENDING);
 
@@ -2500,7 +2508,9 @@ bool OpenXRApi::on_state_stopping() {
 }
 
 bool OpenXRApi::on_state_loss_pending() {
+#ifdef DEBUG
 	Godot::print("On state loss pending");
+#endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_loss_pending();
 	}
@@ -2510,7 +2520,9 @@ bool OpenXRApi::on_state_loss_pending() {
 
 bool OpenXRApi::on_state_exiting() {
 	// we may want to trigger a signal back to the application to tell it, it should quit.
+#ifdef DEBUG
 	Godot::print("On state exiting");
+#endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_exiting();
 	}
@@ -2558,7 +2570,6 @@ Size2 OpenXRApi::get_play_space_bounds() {
 		if (!xr_result(result, "Couldn't obtain play space bounds!")) {
 			return ret;
 		}
-		// Godot::print("OpenXR obtained extends {0} {1}.", extends.width, extends.height);
 
 		ret.width = extends.width;
 		ret.height = extends.height;
@@ -2674,8 +2685,6 @@ bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
 		String localised_name = action_set["localised_name"];
 		int priority = action_set["priority"];
 
-		// Godot::print("New action set {0} - {1} ({2})", action_set_name, localised_name, priority);
-
 		ActionSet *new_action_set = get_action_set(action_set_name);
 		if (new_action_set == NULL) {
 			new_action_set = new ActionSet(this, action_set_name, localised_name, priority);
@@ -2708,8 +2717,6 @@ bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
 				Godot::print("Unknown action type {0} for action {1}", type, name);
 				continue;
 			}
-
-			// Godot::print("New action {0} - {1} ({2}: {3})", name, localised_name, action_type, type);
 
 			Array paths = action["paths"];
 			std::vector<XrPath> toplevel_paths;
@@ -2765,8 +2772,6 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 		Dictionary profile = interaction_profiles[i];
 		String path_string = profile["path"];
 
-		// Godot::print("Interaction profile {0}", path_string);
-
 		XrPath interaction_profile_path;
 		XrResult res = xrStringToPath(instance, path_string.utf8().get_data(), &interaction_profile_path);
 		if (!xr_result(res, "OpenXR couldn't create path for {0}", path_string)) {
@@ -2807,8 +2812,6 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 
 				XrActionSuggestedBinding bind = { xr_action, io_path };
 				xr_bindings.push_back(bind);
-
-				// Godot::print(" - Binding {0}/{1} - {2}", action_set_name, action_name, io_path_str);
 			}
 		}
 
@@ -2823,7 +2826,7 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 
 		XrResult result = xrSuggestInteractionProfileBindings(instance, &suggestedBindings);
 		if (result == XR_ERROR_PATH_UNSUPPORTED) {
-			Godot::print("OpenXR Interaction profile {0} is not supported on this runtime", path_string);
+			Godot::print_warning(String("OpenXR Interaction profile ") + path_string + String(" is not supported on this runtime"), __FUNCTION__, __FILE__, __LINE__);
 		} else if (!xr_result(result, "failed to suggest bindings for {0}", path_string)) {
 			// reporting is enough...
 		}
@@ -2923,7 +2926,6 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		return;
 	}
 
-	// printf("Render eye %d texture %d\n", eye, texid);
 	XrResult result;
 
 	// TODO: save resources don't react on rendering if we're not running (session hasn't begun or has ended)
@@ -3126,8 +3128,6 @@ void OpenXRApi::update_actions() {
 		return;
 	}
 
-	// Godot::print("Synching {0} active action sets", active_sets.size());
-
 	XrActionsSyncInfo syncInfo = {
 		.type = XR_TYPE_ACTIONS_SYNC_INFO,
 		.countActiveActionSets = (uint32_t)active_sets.size(),
@@ -3136,8 +3136,6 @@ void OpenXRApi::update_actions() {
 
 	result = xrSyncActions(session, &syncInfo);
 	xr_result(result, "failed to sync actions!");
-
-	// Godot::print("Synched");
 
 	/*
 	// now handle our actions
@@ -3167,11 +3165,8 @@ void OpenXRApi::update_actions() {
 		XrPath input_path = inputmaps[i].toplevel_path;
 		if (input_path == XR_NULL_PATH) {
 			// no path, skip this
-			// Godot::print("Skipping {0}", inputmaps[i].name);
 		} else {
 			bool is_active = false;
-
-			// Godot::print("Checking {0}", inputmaps[i].name);
 
 			// If our aim pose is active, our controller is active
 			// note, if the user has removed this action then our old controller approach becomes defunct
@@ -3184,7 +3179,9 @@ void OpenXRApi::update_actions() {
 					// hate using const_cast here but godot_arvr_add_controller should have it's parameter defined as const, it doesn't change it...
 					inputmaps[i].godot_controller = arvr_api->godot_arvr_add_controller(const_cast<char *>(inputmaps[i].name), (godot_int)i + 1, true, true);
 
+#ifdef DEBUG
 					Godot::print("OpenXR mapped {0} to {1}", inputmaps[i].name, inputmaps[i].godot_controller);
+#endif
 				}
 
 				// copy for readability
@@ -3312,7 +3309,6 @@ void OpenXRApi::transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *mat
 	api->godot_vector3_new(&origin, -m[3][0] * p_world_scale,
 			-m[3][1] * p_world_scale,
 			-m[3][2] * p_world_scale);
-	// printf("Origin %f %f %f\n", origin.x, origin.y, origin.z);
 	api->godot_transform_new(p_dest, &basis, &origin);
 };
 
@@ -3427,7 +3423,6 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 		// make sure we know that we're rendering directly to our
 		// texture chain
 		*has_support = true;
-		// printf("eye %d: get texture %d\n", eye, buffer_index[eye]);
 		return images[eye][buffer_index[eye]].image;
 	}
 
@@ -3450,17 +3445,22 @@ bool OpenXRApi::poll_events() {
 			case XR_TYPE_EVENT_DATA_EVENTS_LOST: {
 				XrEventDataEventsLost *event = (XrEventDataEventsLost *)&runtimeEvent;
 
+#ifdef DEBUG
 				Godot::print("OpenXR EVENT: {0} event data lost!", event->lostEventCount);
+#endif
 				// we probably didn't poll fast enough'
 			} break;
 			case XR_TYPE_EVENT_DATA_VISIBILITY_MASK_CHANGED_KHR: {
 				XrEventDataVisibilityMaskChangedKHR *event = (XrEventDataVisibilityMaskChangedKHR *)&runtimeEvent;
+#ifdef DEBUG
 				Godot::print("OpenXR EVENT: STUB: visibility mask changed");
+#endif
 			} break;
 			case XR_TYPE_EVENT_DATA_INSTANCE_LOSS_PENDING: {
 				XrEventDataInstanceLossPending *event = (XrEventDataInstanceLossPending *)&runtimeEvent;
+#ifdef DEBUG
 				Godot::print("OpenXR EVENT: instance loss pending at {0}!", event->lossTime);
-				// running = false;
+#endif
 				return false;
 			} break;
 			case XR_TYPE_EVENT_DATA_SESSION_STATE_CHANGED: {
@@ -3468,9 +3468,13 @@ bool OpenXRApi::poll_events() {
 
 				state = event->state;
 				if (state >= XR_SESSION_STATE_MAX_ENUM) {
+#ifdef DEBUG
 					Godot::print("OpenXR EVENT: session state changed to UNKNOWN - {0}", state);
+#endif
 				} else {
+#ifdef DEBUG
 					Godot::print("OpenXR EVENT: session state changed to {0}", session_states[state]);
+#endif
 
 					switch (state) {
 						case XR_SESSION_STATE_IDLE:
@@ -3508,13 +3512,17 @@ bool OpenXRApi::poll_events() {
 			} break;
 			case XR_TYPE_EVENT_DATA_REFERENCE_SPACE_CHANGE_PENDING: {
 				XrEventDataReferenceSpaceChangePending *event = (XrEventDataReferenceSpaceChangePending *)&runtimeEvent;
+#ifdef DEBUG
 				Godot::print("OpenXR EVENT: reference space type {0} change pending!", event->referenceSpaceType);
+#endif
 				if (event->poseValid) {
 					emit_plugin_signal(SIGNAL_POSE_RECENTERED);
 				}
 			} break;
 			case XR_TYPE_EVENT_DATA_INTERACTION_PROFILE_CHANGED: {
+#ifdef DEBUG
 				Godot::print("OpenXR EVENT: interaction profile changed!");
+#endif
 
 				XrEventDataInteractionProfileChanged *event = (XrEventDataInteractionProfileChanged *)&runtimeEvent;
 
@@ -3529,8 +3537,6 @@ bool OpenXRApi::poll_events() {
 						// incorrect path
 						continue;
 					}
-
-					// Godot::print("Checking {0} ({1})", inputmaps[i].name, (uint64_t)input_path);
 
 					XrResult res = xrGetCurrentInteractionProfile(event->session, input_path, &profile_state);
 					if (!xr_result(res, "Failed to get interaction profile for {0}", inputmaps[i].name)) {
@@ -3552,7 +3558,9 @@ bool OpenXRApi::poll_events() {
 							continue;
 						}
 
+#ifdef DEBUG
 						Godot::print("OpenXR Event: Interaction profile changed for {0}: {1}", inputmaps[i].name, profile_str);
+#endif
 					}
 				}
 
@@ -3612,7 +3620,9 @@ void OpenXRApi::process_openxr() {
 
 	if (frameState.predictedDisplayPeriod > 500000000) {
 		// display period more then 0.5 seconds? must be wrong data
+#ifdef DEBUG
 		Godot::print("OpenXR resetting invalid display period {0}", frameState.predictedDisplayPeriod);
+#endif
 		frameState.predictedDisplayPeriod = 0;
 	}
 

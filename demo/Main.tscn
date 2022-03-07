@@ -135,6 +135,7 @@ material/0 = null
 motion_range = 1
 
 [node name="Skeleton" parent="FPController/LeftHand/HandModel/Armature001" index="0"]
+bones/9/bound_children = [  ]
 motion_range = 1
 
 [node name="vr_glove_left_slim" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="0"]
@@ -153,6 +154,7 @@ motion_range = 1
 albedo_texture = ExtResource( 5 )
 
 [node name="Skeleton" parent="FPController/RightHand/HandModel/Armature" index="0"]
+bones/9/bound_children = [  ]
 motion_range = 1
 
 [node name="vr_glove_right_slim" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="0"]

@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=2]
+[gd_scene load_steps=30 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://scenes/Ground.tscn" type="PackedScene" id=2]
@@ -24,6 +24,7 @@
 [ext_resource path="res://scenes/BallCourt.tscn" type="PackedScene" id=22]
 [ext_resource path="res://addons/godot-openxr/scenes/controller.gd" type="Script" id=23]
 [ext_resource path="res://scenes/AimPointer.tscn" type="PackedScene" id=24]
+[ext_resource path="res://assets/htc/vr_tracker_vive_3_0/vr_tracker_vive_3_0.obj" type="ArrayMesh" id=25]
 
 [sub_resource type="CapsuleMesh" id=1]
 radius = 0.1
@@ -139,6 +140,12 @@ material/0 = null
 [node name="LeftHand" parent="FPController" instance=ExtResource( 14 )]
 motion_range = 1
 
+[node name="Skeleton" parent="FPController/LeftHand/HandModel/Armature001" index="0"]
+motion_range = 1
+
+[node name="vr_glove_left_slim" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="0"]
+material/0 = null
+
 [node name="IndexTip" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
 transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.076153, 0.0915428, -0.715277, 0.692819, 0.0345973, 0.0355402, -0.164767 )
 
@@ -150,6 +157,12 @@ material/0 = null
 [node name="RightHand" parent="FPController" instance=ExtResource( 15 )]
 motion_range = 1
 albedo_texture = ExtResource( 5 )
+
+[node name="Skeleton" parent="FPController/RightHand/HandModel/Armature" index="0"]
+motion_range = 1
+
+[node name="vr_glove_right_slim" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="0"]
+material/0 = null
 
 [node name="IndexTip" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="1"]
 transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.69282, 0.977075, -0.19881, -0.0761527, -0.0345978, -0.164767, -0.0355401 )
@@ -202,6 +215,24 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0498809, 0 )
 show_target = true
 active_button = 7
 collide_with_areas = true
+
+[node name="HTCTrackerCamera" parent="FPController" instance=ExtResource( 7 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.5, 0 )
+action = "godot/aim_pose"
+path = "/user/vive_tracker_htcx/role/camera"
+
+[node name="MeshInstance" type="MeshInstance" parent="FPController/HTCTrackerCamera"]
+mesh = ExtResource( 25 )
+material/0 = null
+
+[node name="HTCTrackerKeyboard" parent="FPController" instance=ExtResource( 7 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.3, 0 )
+action = "godot/aim_pose"
+path = "/user/vive_tracker_htcx/role/keyboard"
+
+[node name="MeshInstance" type="MeshInstance" parent="FPController/HTCTrackerKeyboard"]
+mesh = ExtResource( 25 )
+material/0 = null
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )

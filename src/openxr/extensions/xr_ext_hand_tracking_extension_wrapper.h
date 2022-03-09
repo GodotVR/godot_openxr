@@ -10,9 +10,15 @@
 #define MAX_TRACKED_HANDS 2
 #define HAND_CONTROLLER_ID_OFFSET 3
 
-class HandTracker {
+class XRExtHandTrackingExtensionWrapper;
+
+class HandTracker : public OpenXRInputBase {
+private:
+	XRExtHandTrackingExtensionWrapper *hand_tracking_api = nullptr;
+
 public:
 	bool is_initialised = false;
+	XrHandEXT hand_ext;
 	XrHandJointsMotionRangeEXT motion_range = XR_HAND_JOINTS_MOTION_RANGE_UNOBSTRUCTED_EXT;
 
 	XrHandTrackerEXT hand_tracker = XR_NULL_HANDLE;
@@ -23,8 +29,10 @@ public:
 	XrHandJointVelocitiesEXT velocities;
 	XrHandJointLocationsEXT locations;
 
-	godot_int aim_state_godot_controller = -1;
-	TrackingConfidence tracking_confidence = TrackingConfidence::TRACKING_CONFIDENCE_NONE;
+	HandTracker(XRExtHandTrackingExtensionWrapper *p_hand_tracking_api, const char *p_name, XrHandEXT p_hand_ext);
+
+	virtual void update(OpenXRApi *p_openxr_api) override;
+	void cleanup();
 };
 
 // Wrapper for the XR hand tracking related extensions.
@@ -37,15 +45,19 @@ public:
 
 	static XRExtHandTrackingExtensionWrapper *get_singleton();
 
+	virtual void add_input_maps() override;
+
 	void on_instance_initialized(const XrInstance instance) override;
 
 	void on_state_ready() override;
 
-	void on_process_openxr() override;
-
 	void on_state_stopping() override;
 
 	void on_session_destroyed() override;
+
+	bool is_supported() { return hand_tracking_supported; }
+	bool tracking_aim_state_supported() { return hand_tracking_aim_state_ext; }
+	bool hand_motion_supported() { return hand_motion_range_ext; }
 
 	const HandTracker *get_hand_tracker(uint32_t p_hand) const;
 
@@ -57,11 +69,6 @@ public:
 
 	TrackingConfidence get_hand_tracker_tracking_confidence(const int p_godot_controller);
 
-protected:
-	XRExtHandTrackingExtensionWrapper();
-	~XRExtHandTrackingExtensionWrapper();
-
-private:
 	static XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
 			XrSession session,
 			const XrHandTrackerCreateInfoEXT *createInfo,
@@ -75,11 +82,14 @@ private:
 			const XrHandJointsLocateInfoEXT *locateInfo,
 			XrHandJointLocationsEXT *locations);
 
+protected:
+	XRExtHandTrackingExtensionWrapper();
+	~XRExtHandTrackingExtensionWrapper();
+
+private:
 	static XrResult initialise_ext_hand_tracking_extension(XrInstance instance);
 
 	bool initialize_hand_tracking();
-
-	void update_handtracking();
 
 	void cleanup_hand_tracking();
 
@@ -93,7 +103,7 @@ private:
 	bool hand_tracking_aim_state_ext = false;
 	bool hand_tracking_supported = false;
 
-	HandTracker hand_trackers[MAX_TRACKED_HANDS]; // Fixed for left and right hand
+	HandTracker *hand_trackers[MAX_TRACKED_HANDS]; // Fixed for left and right hand
 };
 
 #endif // XR_EXT_HAND_TRACKING_EXTENSION_WRAPPER_H

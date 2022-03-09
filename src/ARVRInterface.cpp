@@ -9,6 +9,7 @@
 #include "openxr/extensions/xr_fb_foveation_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_passthrough_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_swapchain_update_state_extension_wrapper.h"
+#include "openxr/extensions/xr_htc_vive_tracker_extension_wrapper.h"
 #include <ARVRInterface.hpp>
 #include <MainLoop.hpp>
 
@@ -128,6 +129,7 @@ godot_bool godot_arvr_initialize(void *p_data) {
 		arvr_data->openxr_api->register_extension_wrapper<XRFbDisplayRefreshRateExtensionWrapper>();
 		arvr_data->openxr_api->register_extension_wrapper<XRExtHandTrackingExtensionWrapper>();
 		arvr_data->openxr_api->register_extension_wrapper<XRFbPassthroughExtensionWrapper>();
+		arvr_data->openxr_api->register_extension_wrapper<XRHTCViveTrackerExtensionWrapper>();
 
 		// not initialise
 		arvr_data->openxr_api->initialize();

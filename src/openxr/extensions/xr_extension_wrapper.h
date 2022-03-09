@@ -25,6 +25,8 @@ public:
 
 	virtual void on_session_initialized(const XrSession session) {}
 
+	virtual void add_input_maps() {}
+
 	virtual void on_state_idle() {}
 
 	virtual void on_state_ready() {}

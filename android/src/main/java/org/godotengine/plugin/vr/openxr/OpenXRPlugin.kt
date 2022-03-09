@@ -47,22 +47,22 @@ class OpenXRPlugin(godot: Godot): GodotPlugin(godot) {
     /**
      * Notifies when the app gains focus.
      */
-    fun onFocusGained();
+    fun onFocusGained()
 
     /**
      * Notifies when the app loses focus.
      */
-    fun onFocusLost();
+    fun onFocusLost()
 
     /**
      * Notifies when the session has started.
      */
-    fun onSessionBegun();
+    fun onSessionBegun()
 
     /**
      * Notifies when the session is about to end.
      */
-    fun onSessionEnding();
+    fun onSessionEnding()
   }
 
   private val eventListeners = ConcurrentLinkedQueue<EventListener>()

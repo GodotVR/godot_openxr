@@ -1544,6 +1544,9 @@ bool OpenXRApi::initialiseInstance() {
 	request_extensions[XR_KHR_OPENGL_ENABLE_EXTENSION_NAME] = nullptr;
 #endif
 
+	// See if we have depth buffer support
+	request_extensions[XR_KHR_COMPOSITION_LAYER_DEPTH_EXTENSION_NAME] = &depth_extension_supported;
+
 	// If we have these, we use them, if not we skip related logic..
 	request_extensions[XR_MND_BALL_ON_STICK_EXTENSION_NAME] = &monado_stick_on_ball_ext;
 
@@ -1641,7 +1644,8 @@ bool OpenXRApi::initialiseInstance() {
 
 	if (strcmp(instanceProps.runtimeName, "SteamVR/OpenXR") == 0) {
 #ifdef WIN32
-		// not applicable
+		// Temporarily disable depth buffer support on steamVR on Windows due to a bug
+		depth_extension_supported = false;
 #elif ANDROID
 		// not applicable
 #elif __linux__
@@ -1736,8 +1740,6 @@ bool OpenXRApi::initialiseSession() {
 
 	free(configuration_views);
 	configuration_views = nullptr;
-
-	buffer_index = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
 
 	if (!check_graphics_requirements_gl(systemId)) {
 		return false;
@@ -1908,6 +1910,48 @@ void OpenXRApi::cleanupSpaces() {
 	}
 }
 
+bool OpenXRApi::createSwapChain(XrSwapchainCreateFlags p_create_flags, XrSwapchainUsageFlags p_usage_flags, int64_t p_format, uint32_t p_swapchain_sample_count, uint32_t p_width, uint32_t p_height, XrSwapchain &r_swapchain, uint32_t &r_swapchain_length) {
+	// again Microsoft wants these in order!
+	XrSwapchainCreateInfo swapchain_create_info = {
+		.type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
+		.next = nullptr,
+		.createFlags = p_create_flags,
+		.usageFlags = p_usage_flags,
+		.format = p_format,
+		.sampleCount = p_swapchain_sample_count,
+		.width = p_width,
+		.height = p_height,
+		.faceCount = 1,
+		.arraySize = 1,
+		.mipCount = 1,
+	};
+
+	bool is_depth_swapchain = (p_usage_flags & XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT) == XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT;
+	void **swapchain_create_info_pointer = const_cast<void **>(&swapchain_create_info.next);
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		void **swapchain_create_info_next_pointer = wrapper->set_swapchain_create_info_and_get_next_pointer(swapchain_create_info_pointer, is_depth_swapchain);
+		if (*swapchain_create_info_pointer && swapchain_create_info_next_pointer && !*swapchain_create_info_next_pointer) {
+			swapchain_create_info_pointer = swapchain_create_info_next_pointer;
+		} else {
+			// Invalid return values.
+			// Reset the value stored by the swapchain_create_info_pointer so it can be reused in the next loop.
+			*swapchain_create_info_pointer = nullptr;
+		}
+	}
+
+	XrResult result = xrCreateSwapchain(session, &swapchain_create_info, &r_swapchain);
+	if (!xr_result(result, "Failed to create swapchain!")) {
+		return false;
+	}
+
+	result = xrEnumerateSwapchainImages(r_swapchain, 0, &r_swapchain_length, nullptr);
+	if (!xr_result(result, "Failed to enumerate swapchains")) {
+		return false;
+	}
+
+	return true;
+}
+
 bool OpenXRApi::initialiseSwapChains() {
 	XrResult result;
 
@@ -1915,37 +1959,35 @@ bool OpenXRApi::initialiseSwapChains() {
 	Godot::print("OpenXR initialiseSwapChains");
 #endif
 
-	uint32_t swapchainFormatCount;
-	result = xrEnumerateSwapchainFormats(session, 0, &swapchainFormatCount, nullptr);
+	uint32_t swapchain_format_count;
+	result = xrEnumerateSwapchainFormats(session, 0, &swapchain_format_count, nullptr);
 	if (!xr_result(result, "Failed to get number of supported swapchain formats")) {
 		return false;
 	}
 
-	// Damn you microsoft for not supporting this!!
-	// int64_t swapchainFormats[swapchainFormatCount];
-	int64_t *swapchainFormats = (int64_t *)malloc(sizeof(int64_t) * swapchainFormatCount);
-	if (swapchainFormats == nullptr) {
+	int64_t *swapchain_formats = (int64_t *)malloc(sizeof(int64_t) * swapchain_format_count);
+	if (swapchain_formats == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain formats", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
-	result = xrEnumerateSwapchainFormats(session, swapchainFormatCount, &swapchainFormatCount, swapchainFormats);
+	result = xrEnumerateSwapchainFormats(session, swapchain_format_count, &swapchain_format_count, swapchain_formats);
 	if (!xr_result(result, "Failed to enumerate swapchain formats")) {
-		free(swapchainFormats);
+		free(swapchain_formats);
 		return false;
 	}
 
 #ifdef DEBUG
 	// lets report on what we found...
 	Godot::print("OpenXR Supported Swapchain Formats");
-	String swapchain_formats;
-	for (uint64_t i = 0; i < swapchainFormatCount; i++) {
+	String swapchain_formats_str;
+	for (uint64_t i = 0; i < swapchain_format_count; i++) {
 		if (i != 0) {
-			swapchain_formats = swapchain_formats + ", ";
+			swapchain_formats_str = swapchain_formats_str + ", ";
 		}
-		swapchain_formats = swapchain_formats + get_swapchain_format_name(swapchainFormats[i]);
+		swapchain_formats_str = swapchain_formats_str + get_swapchain_format_name(swapchain_formats[i]);
 	}
-	Godot::print("OpenXR: Found(s) {0}", swapchain_formats);
+	Godot::print("OpenXR: Found(s) {0}", swapchain_formats_str);
 #endif
 
 	// With the GLES2 driver we're rendering directly into this buffer with a pipeline that assumes a 32bit uniform buffer (i.e 0.0 - 1.0 = 0 - 255).
@@ -1959,39 +2001,71 @@ bool OpenXRApi::initialiseSwapChains() {
 
 	// We start by defining a list of formats we'd like to use from most to least, doesn't help every platform has slightly different names for these...
 
-	std::vector<RequestedSwapchainFormat> requested_swapchain_formats;
+	std::vector<RequestedSwapchainFormat> requested_swapchain_color_formats;
+	std::vector<int64_t> requested_swapchain_depth_formats;
 
 #ifdef WIN32
-	requested_swapchain_formats.push_back({ GL_SRGB8_ALPHA8, false });
-	requested_swapchain_formats.push_back({ GL_RGBA8, true });
+	requested_swapchain_color_formats.push_back({ GL_SRGB8_ALPHA8, false });
+	requested_swapchain_color_formats.push_back({ GL_RGBA8, true });
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT32);
+	requested_swapchain_depth_formats.push_back(GL_DEPTH24_STENCIL8); // needed for Oculus runtime
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT24);
+	// requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT16); // does not seem to work with how Godot is setup internally
 #elif ANDROID
-	requested_swapchain_formats.push_back({ GL_SRGB8_ALPHA8, false });
-	requested_swapchain_formats.push_back({ GL_RGBA8, true });
+	requested_swapchain_color_formats.push_back({ GL_SRGB8_ALPHA8, false });
+	requested_swapchain_color_formats.push_back({ GL_RGBA8, true });
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT24);
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT16);
 #else
-	requested_swapchain_formats.push_back({ GL_SRGB8_ALPHA8_EXT, false });
-	requested_swapchain_formats.push_back({ GL_RGBA8_EXT, true });
+	requested_swapchain_color_formats.push_back({ GL_SRGB8_ALPHA8_EXT, false });
+	requested_swapchain_color_formats.push_back({ GL_RGBA8_EXT, true });
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT32);
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT24);
+	requested_swapchain_depth_formats.push_back(GL_DEPTH_COMPONENT16);
 #endif
 
-	int64_t swapchain_format_to_use = 0;
+	// figure out our color swapchain format
+	int64_t swapchain_color_format_to_use = 0;
 
-	for (uint64_t i = 0; i < requested_swapchain_formats.size() && swapchain_format_to_use == 0; i++) {
-		for (uint64_t s = 0; s < swapchainFormatCount && swapchain_format_to_use == 0; s++) {
-			if (swapchainFormats[s] == requested_swapchain_formats[i].swapchain_format) {
-				swapchain_format_to_use = requested_swapchain_formats[i].swapchain_format;
-				keep_3d_linear = requested_swapchain_formats[i].is_linear;
+	for (uint64_t i = 0; i < requested_swapchain_color_formats.size() && swapchain_color_format_to_use == 0; i++) {
+		for (uint64_t s = 0; s < swapchain_format_count && swapchain_color_format_to_use == 0; s++) {
+			if (swapchain_formats[s] == requested_swapchain_color_formats[i].swapchain_format) {
+				swapchain_color_format_to_use = requested_swapchain_color_formats[i].swapchain_format;
+				keep_3d_linear = requested_swapchain_color_formats[i].is_linear;
 			}
 		}
 	}
 
 	// Couldn't find any we want? Use the first one. We assume this is in linear color space.
-	if (swapchain_format_to_use == 0) {
-		swapchain_format_to_use = swapchainFormats[0];
+	if (swapchain_color_format_to_use == 0) {
+		swapchain_color_format_to_use = swapchain_formats[0];
 		keep_3d_linear = true;
-		Godot::print("OpenXR Couldn't find prefered swapchain format, using {0} in linear color space", get_swapchain_format_name(swapchain_format_to_use));
+		Godot::print("OpenXR Couldn't find prefered color swapchain format, using {0} in linear color space", get_swapchain_format_name(swapchain_color_format_to_use));
 #ifdef DEBUG
 	} else {
-		Godot::print("OpenXR Using swapchain format {0} in {1} color space", get_swapchain_format_name(swapchain_format_to_use), keep_3d_linear ? "linear" : "sRGB");
+		Godot::print("OpenXR Using color swapchain format {0} in {1} color space", get_swapchain_format_name(swapchain_color_format_to_use), keep_3d_linear ? "linear" : "sRGB");
 #endif
+	}
+
+	int64_t swapchain_depth_format_to_use = 0;
+	if (depth_extension_supported) {
+		for (uint64_t i = 0; i < requested_swapchain_depth_formats.size() && swapchain_depth_format_to_use == 0; i++) {
+			for (uint64_t s = 0; s < swapchain_format_count && swapchain_depth_format_to_use == 0; s++) {
+				if (swapchain_formats[s] == requested_swapchain_depth_formats[i]) {
+					swapchain_depth_format_to_use = requested_swapchain_depth_formats[i];
+				}
+			}
+		}
+
+		if (swapchain_depth_format_to_use == 0) {
+			free(swapchain_formats);
+			Godot::print("OpenXR Couldn't find prefered depth buffer swapchain format");
+			return false;
+#ifdef DEBUG
+		} else {
+			Godot::print("OpenXR Using depth buffer swapchain format {0}", get_swapchain_format_name(swapchain_depth_format_to_use));
+#endif
+		}
 	}
 
 	if (!keep_3d_linear) {
@@ -1999,90 +2073,106 @@ bool OpenXRApi::initialiseSwapChains() {
 		glDisable(GL_FRAMEBUFFER_SRGB_EXT);
 	}
 
-	free(swapchainFormats);
+	free(swapchain_formats);
 
-	swapchains = (XrSwapchain *)malloc(sizeof(XrSwapchain) * view_count);
+	swapchain_count = view_count;
+	if (depth_extension_supported) {
+		swapchain_count += view_count;
+	}
+	swapchains = (XrSwapchain *)malloc(sizeof(XrSwapchain) * swapchain_count);
 	if (swapchains == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chains", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
+	color_swapchains = swapchains;
+	for (uint32_t i = 0; i < swapchain_count; i++) {
+		swapchains[i] = XR_NULL_HANDLE;
+	}
 
-	// Damn you microsoft for not supporting this!!
-	// uint32_t swapchainLength[view_count];
-	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
-	if (swapchainLength == nullptr) {
+	buffer_index = (uint32_t *)malloc(sizeof(uint32_t) * swapchain_count);
+	if (buffer_index == nullptr) {
+		Godot::print_error("OpenXR Couldn't allocate memory for buffer indexes", __FUNCTION__, __FILE__, __LINE__);
+		return false;
+	}
+	color_buffer_index = buffer_index;
+
+	uint32_t *swapchain_length = (uint32_t *)malloc(sizeof(uint32_t) * swapchain_count);
+	if (swapchain_length == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain lengths", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
+	uint32_t *color_swapchain_length = swapchain_length;
+	uint32_t *depth_swapchain_length = nullptr;
+
+	if (depth_extension_supported) {
+		depth_swapchains = swapchains + view_count;
+		depth_buffer_index = buffer_index + view_count;
+		depth_swapchain_length = swapchain_length + view_count;
+	}
 
 	for (uint32_t i = 0; i < view_count; i++) {
-		// again Microsoft wants these in order!
-		XrSwapchainCreateInfo swapchainCreateInfo = {
-			.type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
-			.next = nullptr,
-			.createFlags = 0,
-			.usageFlags = XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
-			.format = swapchain_format_to_use,
-			.sampleCount = swapchain_sample_count, // 1,
-			.width = render_target_width,
-			.height = render_target_height,
-			.faceCount = 1,
-			.arraySize = 1,
-			.mipCount = 1,
-		};
+		// Create our color swapchain for our view first
+		if (!createSwapChain(
+					0,
+					XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_COLOR_ATTACHMENT_BIT,
+					swapchain_color_format_to_use,
+					swapchain_sample_count,
+					render_target_width,
+					render_target_height,
+					color_swapchains[i],
+					color_swapchain_length[i])) {
+			free(swapchain_length);
+			return false;
+		}
 
-		void **swapchain_create_info_pointer = const_cast<void **>(&swapchainCreateInfo.next);
-		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
-			void **swapchain_create_info_next_pointer = wrapper->set_swapchain_create_info_and_get_next_pointer(swapchain_create_info_pointer);
-			if (*swapchain_create_info_pointer && swapchain_create_info_next_pointer && !*swapchain_create_info_next_pointer) {
-				swapchain_create_info_pointer = swapchain_create_info_next_pointer;
-			} else {
-				// Invalid return values.
-				// Reset the value stored by the swapchain_create_info_pointer so it can be reused in the next loop.
-				*swapchain_create_info_pointer = nullptr;
+		if (depth_extension_supported) {
+			// now create our depth buffer for our view
+			if (!createSwapChain(
+						0,
+						XR_SWAPCHAIN_USAGE_SAMPLED_BIT | XR_SWAPCHAIN_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+						swapchain_depth_format_to_use,
+						1,
+						render_target_width,
+						render_target_height,
+						depth_swapchains[i],
+						depth_swapchain_length[i])) {
+				free(swapchain_length);
+				return false;
 			}
-		}
-
-		result = xrCreateSwapchain(session, &swapchainCreateInfo, &swapchains[i]);
-		if (!xr_result(result, "Failed to create swapchain {0}!", i)) {
-			free(swapchainLength);
-			return false;
-		}
-
-		result = xrEnumerateSwapchainImages(swapchains[i], 0, &swapchainLength[i], nullptr);
-		if (!xr_result(result, "Failed to enumerate swapchains")) {
-			free(swapchainLength);
-			return false;
 		}
 	}
 
 #ifdef ANDROID
-	images = (XrSwapchainImageOpenGLESKHR **)malloc(sizeof(XrSwapchainImageOpenGLESKHR **) * view_count);
+	images = (XrSwapchainImageOpenGLESKHR **)malloc(sizeof(XrSwapchainImageOpenGLESKHR **) * swapchain_count);
 #else
-	images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * view_count);
+	images = (XrSwapchainImageOpenGLKHR **)malloc(sizeof(XrSwapchainImageOpenGLKHR **) * swapchain_count);
 #endif
 	if (images == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for swap chain images", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
+	color_images = images;
+	if (depth_extension_supported) {
+		depth_images = images + view_count;
+	}
 
 	// reset so if we fail we don't try to free memory we never allocated
-	for (uint32_t i = 0; i < view_count; i++) {
+	for (uint32_t i = 0; i < swapchain_count; i++) {
 		images[i] = nullptr;
 	}
 
-	for (uint32_t i = 0; i < view_count; i++) {
+	for (uint32_t i = 0; i < swapchain_count; i++) {
 #ifdef ANDROID
-		images[i] = (XrSwapchainImageOpenGLESKHR *)malloc(sizeof(XrSwapchainImageOpenGLESKHR) * swapchainLength[i]);
+		images[i] = (XrSwapchainImageOpenGLESKHR *)malloc(sizeof(XrSwapchainImageOpenGLESKHR) * swapchain_length[i]);
 #else
-		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchainLength[i]);
+		images[i] = (XrSwapchainImageOpenGLKHR *)malloc(sizeof(XrSwapchainImageOpenGLKHR) * swapchain_length[i]);
 #endif
 		if (images[i] == nullptr) {
 			Godot::print_error("OpenXR Couldn't allocate memory for swap chain image", __FUNCTION__, __FILE__, __LINE__);
 			return false;
 		}
 
-		for (uint64_t j = 0; j < swapchainLength[i]; j++) {
+		for (uint64_t j = 0; j < swapchain_length[i]; j++) {
 #ifdef ANDROID
 			images[i][j].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
 #else
@@ -2092,24 +2182,14 @@ bool OpenXRApi::initialiseSwapChains() {
 		}
 	}
 
-	for (uint32_t i = 0; i < view_count; i++) {
-		result = xrEnumerateSwapchainImages(swapchains[i], swapchainLength[i], &swapchainLength[i], (XrSwapchainImageBaseHeader *)images[i]);
+	for (uint32_t i = 0; i < swapchain_count; i++) {
+		result = xrEnumerateSwapchainImages(swapchains[i], swapchain_length[i], &swapchain_length[i], (XrSwapchainImageBaseHeader *)images[i]);
 		if (!xr_result(result, "Failed to enumerate swapchain images")) {
 			return false;
 		}
 	}
 
-	free(swapchainLength);
-
-	// only used for OpenGL depth testing
-	/*
-	glGenTextures(1, &depthbuffer);
-	glBindTexture(GL_TEXTURE_2D, depthbuffer);
-	glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24,
-		configuration_views[0].recommendedImageRectWidth,
-		configuration_views[0].recommendedImageRectHeight, 0,
-		GL_DEPTH_COMPONENT, GL_UNSIGNED_INT, 0);
-	*/
+	free(swapchain_length);
 
 	projectionLayer = (XrCompositionLayerProjection *)malloc(sizeof(XrCompositionLayerProjection));
 	projectionLayer->type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;
@@ -2134,46 +2214,80 @@ bool OpenXRApi::initialiseSwapChains() {
 		return false;
 	}
 
+	if (depth_extension_supported) {
+		depth_views = (XrCompositionLayerDepthInfoKHR *)malloc(sizeof(XrCompositionLayerDepthInfoKHR) * view_count);
+		if (depth_views == NULL) {
+			Godot::print_error("OpenXR Couldn't allocate memory for depth views", __FUNCTION__, __FILE__, __LINE__);
+			return false;
+		}
+	}
+
 	for (uint32_t i = 0; i < view_count; i++) {
 		views[i].type = XR_TYPE_VIEW;
-		views[i].next = NULL;
+		views[i].next = nullptr;
 
 		projection_views[i].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
-		projection_views[i].next = NULL;
-		projection_views[i].subImage.swapchain = swapchains[i];
+		projection_views[i].next = nullptr;
+		projection_views[i].subImage.swapchain = color_swapchains[i];
 		projection_views[i].subImage.imageArrayIndex = 0;
 		projection_views[i].subImage.imageRect.offset.x = 0;
 		projection_views[i].subImage.imageRect.offset.y = 0;
 		projection_views[i].subImage.imageRect.extent.width = render_target_width;
 		projection_views[i].subImage.imageRect.extent.height = render_target_height;
+
+		if (depth_extension_supported) {
+			projection_views[i].next = &depth_views[i];
+
+			depth_views[i].type = XR_TYPE_COMPOSITION_LAYER_DEPTH_INFO_KHR;
+			depth_views[i].next = nullptr;
+			depth_views[i].subImage.swapchain = depth_swapchains[i];
+			depth_views[i].subImage.imageArrayIndex = 0;
+			depth_views[i].subImage.imageRect.offset.x = 0;
+			depth_views[i].subImage.imageRect.offset.y = 0;
+			depth_views[i].subImage.imageRect.extent.width = render_target_width;
+			depth_views[i].subImage.imageRect.extent.height = render_target_height;
+			depth_views[i].minDepth = 0.0;
+			depth_views[i].maxDepth = 1.0;
+			depth_views[i].nearZ = 0.01; // Near and far Z will be set to the correct values in fill_projection_matrix
+			depth_views[i].farZ = 100.0;
+		}
 	};
 
 	return true;
 }
 
 void OpenXRApi::cleanupSwapChains() {
-	if (swapchains != NULL) {
+	if (swapchains != nullptr) {
+		for (uint32_t i = 0; i < swapchain_count; i++) {
+			if (swapchains[i] != XR_NULL_HANDLE) {
+				xrDestroySwapchain(swapchains[i]);
+			}
+		}
 		free(swapchains);
-		swapchains = NULL;
+		swapchains = nullptr;
+		color_swapchains = nullptr;
+		depth_swapchains = nullptr;
 	}
-	if (projection_views != NULL) {
+	if (projection_views != nullptr) {
 		free(projection_views);
-		projection_views = NULL;
+		projection_views = nullptr;
 	}
-	if (images != NULL) {
-		for (uint32_t i = 0; i < view_count; i++) {
+	if (images != nullptr) {
+		for (uint32_t i = 0; i < swapchain_count; i++) {
 			free(images[i]);
 		}
 		free(images);
-		images = NULL;
+		images = nullptr;
+		color_images = nullptr;
+		depth_images = nullptr;
 	}
-	if (projectionLayer != NULL) {
+	if (projectionLayer != nullptr) {
 		free(projectionLayer);
-		projectionLayer = NULL;
+		projectionLayer = nullptr;
 	}
-	if (views != NULL) {
+	if (views != nullptr) {
 		free(views);
-		views = NULL;
+		views = nullptr;
 	}
 }
 
@@ -2339,9 +2453,9 @@ void OpenXRApi::uninitialize() {
 	cleanupSpaces();
 
 	// cleanup our session and instance
-	if (buffer_index != NULL) {
+	if (buffer_index != nullptr) {
 		free(buffer_index);
-		buffer_index = NULL;
+		buffer_index = nullptr;
 	}
 	if (session != XR_NULL_HANDLE) {
 		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
@@ -2901,27 +3015,77 @@ XrTime OpenXRApi::get_next_frame_time() const {
 
 XrResult OpenXRApi::acquire_image(int eye) {
 	XrResult result;
-	XrSwapchainImageAcquireInfo swapchainImageAcquireInfo = {
-		.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO, .next = nullptr
+
+	if (acquired_image) {
+		Godot::print_error(
+				String("OpenXR called acquire image before release"),
+				__FUNCTION__,
+				__FILE__,
+				__LINE__);
+		return XR_ERROR_CALL_ORDER_INVALID;
+	}
+
+	// Acquire our color image
+
+	XrSwapchainImageAcquireInfo swapchain_image_acquire_info = {
+		.type = XR_TYPE_SWAPCHAIN_IMAGE_ACQUIRE_INFO,
+		.next = nullptr
 	};
-	result = xrAcquireSwapchainImage(swapchains[eye], &swapchainImageAcquireInfo, &buffer_index[eye]);
-	if (!xr_result(result, "failed to acquire swapchain image!")) {
+	result = xrAcquireSwapchainImage(color_swapchains[eye], &swapchain_image_acquire_info, &color_buffer_index[eye]);
+	if (!xr_result(result, "failed to acquire swapchain color image!")) {
 		return result;
 	}
 
-	XrSwapchainImageWaitInfo swapchainImageWaitInfo = {
+	XrSwapchainImageWaitInfo swapchain_image_wait_info = {
 		.type = XR_TYPE_SWAPCHAIN_IMAGE_WAIT_INFO,
 		.next = nullptr,
 		.timeout = 17000000, /* timeout in nanoseconds */
 	};
-	result = xrWaitSwapchainImage(swapchains[eye], &swapchainImageWaitInfo);
-	if (!xr_result(result, "failed to wait for swapchain image!")) {
+	result = xrWaitSwapchainImage(color_swapchains[eye], &swapchain_image_wait_info);
+	if (!xr_result(result, "failed to wait for swapchain color image!")) {
 		return result;
 	}
+
+	if (depth_extension_supported) {
+		// Acquire our depth image
+		result = xrAcquireSwapchainImage(depth_swapchains[eye], &swapchain_image_acquire_info, &depth_buffer_index[eye]);
+		if (!xr_result(result, "failed to acquire swapchain depth image!")) {
+			return result;
+		}
+
+		result = xrWaitSwapchainImage(depth_swapchains[eye], &swapchain_image_wait_info);
+		if (!xr_result(result, "failed to wait for swapchain depth image!")) {
+			return result;
+		}
+	}
+
+	acquired_image = true;
 	return XR_SUCCESS;
 }
 
-void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture_support) {
+void OpenXRApi::release_image(int eye) {
+	if (acquired_image) {
+		XrSwapchainImageReleaseInfo swapchain_image_release_info = {
+			.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
+			.next = nullptr
+		};
+		XrResult result = xrReleaseSwapchainImage(color_swapchains[eye], &swapchain_image_release_info);
+		if (!xr_result(result, "failed to release swapchain color image!")) {
+			return;
+		}
+
+		if (depth_extension_supported) {
+			result = xrReleaseSwapchainImage(depth_swapchains[eye], &swapchain_image_release_info);
+			if (!xr_result(result, "failed to release swapchain depth image!")) {
+				return;
+			}
+		}
+
+		acquired_image = false;
+	}
+}
+
+void OpenXRApi::render_openxr(int eye, uint32_t texid) {
 	if (!initialised) {
 		return;
 	}
@@ -2932,25 +3096,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 	if (!running)
 		return;
 
+	// Release our images if required, we've finished rendering
+	release_image(eye);
+
 	// must have valid view pose for projection_views[eye].pose to submit layer
 	if (!frameState.shouldRender || !view_pose_valid) {
-		/* Godot 3.1: we acquire and release the image below in this function.
-		 * Godot 3.2+: get_external_texture_for_eye() on acquires the image,
-		 * therefore we have to release it here.
-		 * TODO: Tell godot not to call get_external_texture_for_eye() when
-		 * frameState.shouldRender is false, then remove the image release here
-		 */
-		if (has_external_texture_support) {
-			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-				.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-				.next = nullptr
-			};
-			result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
-			if (!xr_result(result, "failed to release swapchain image!")) {
-				return;
-			}
-		}
-
 		if (eye == 1) {
 			// MS wants these in order..
 			// submit 0 layers when we shouldn't render
@@ -2970,40 +3120,6 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		return;
 	}
 
-	if (!has_external_texture_support) {
-		result = acquire_image(eye);
-		if (!xr_result(result, "failed to acquire swapchain image!")) {
-			return;
-		}
-
-		glBindTexture(GL_TEXTURE_2D, texid);
-#ifdef WIN32
-		glCopyTexSubImage2D(
-#elif ANDROID
-		glCopyTexSubImage2D(
-#else
-		glCopyTextureSubImage2D(
-#endif
-				images[eye][buffer_index[eye]].image, 0, 0, 0,
-				0, 0,
-				render_target_width,
-				render_target_height);
-		glBindTexture(GL_TEXTURE_2D, 0);
-		// printf("Copy godot texture %d into XR texture %d\n", texid,
-		// images[eye][bufferIndex].image);
-	} else {
-		// printf("Godot already rendered into our textures\n");
-	}
-
-	XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-		.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-		.next = nullptr
-	};
-	result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
-	if (!xr_result(result, "failed to release swapchain image!")) {
-		return;
-	}
-
 	projection_views[eye].fov = views[eye].fov;
 	projection_views[eye].pose = views[eye].pose;
 
@@ -3020,6 +3136,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 			}
 		}
 
+		// add projection layer
 		layers_list.push_back((const XrCompositionLayerBaseHeader *)projectionLayer);
 
 		projectionLayer->layerFlags = layers_list.size() > 1 ? XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT : XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
@@ -3052,6 +3169,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 
 void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection) {
 	XrMatrix4x4f matrix;
+
+	if (depth_views != nullptr) {
+		depth_views[eye].nearZ = p_z_near;
+		depth_views[eye].farZ = p_z_far;
+	}
 
 	if (!initialised || !running) {
 		CameraMatrix *cm = (CameraMatrix *)p_projection;
@@ -3390,21 +3512,25 @@ bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
 	return true;
 }
 
-int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
+int OpenXRApi::get_external_texture_for_eye(int eye) {
 	if (!initialised) {
 		return 0;
 	}
 
 	// this won't prevent us from rendering but we won't output to OpenXR
-	if (!running || state >= XR_SESSION_STATE_STOPPING)
+	if (!running || state >= XR_SESSION_STATE_STOPPING) {
 		return 0;
+	}
 
 	// this only gets called from Godot 3.2 and newer, allows us to use
 	// OpenXR swapchain directly.
 
-	XrResult result = acquire_image(eye);
-	if (!xr_result(result, "failed to acquire swapchain image!")) {
-		return 0;
+	if (!acquired_image) {
+		// whether get_external_texture_for_eye or get_external_depthbuffer_for_eye gets called first, we acquire our image
+		XrResult result = acquire_image(eye);
+		if (!xr_result(result, "failed to acquire swapchain image!")) {
+			return 0;
+		}
 	}
 
 #ifdef WIN32
@@ -3419,11 +3545,40 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 #endif
 
 	// process should be called by now but just in case...
-	if (state > XR_SESSION_STATE_UNKNOWN && buffer_index != NULL) {
-		// make sure we know that we're rendering directly to our
-		// texture chain
-		*has_support = true;
-		return images[eye][buffer_index[eye]].image;
+	if (state > XR_SESSION_STATE_UNKNOWN && color_buffer_index != nullptr) {
+		// printf("eye %d: get texture %d\n", eye, color_buffer_index[eye]);
+		return color_images[eye][color_buffer_index[eye]].image;
+	}
+
+	return 0;
+}
+
+int OpenXRApi::get_external_depthbuffer_for_eye(int eye) {
+	if (!initialised) {
+		return 0;
+	}
+
+	// this won't prevent us from rendering but we won't output to OpenXR
+	if (!running || state >= XR_SESSION_STATE_STOPPING) {
+		return 0;
+	}
+
+	if (!depth_extension_supported) {
+		return 0;
+	}
+
+	if (!acquired_image) {
+		// whether get_external_texture_for_eye or get_external_depthbuffer_for_eye gets called first, we acquire our image
+		XrResult result = acquire_image(eye);
+		if (!xr_result(result, "failed to acquire swapchain image!")) {
+			return 0;
+		}
+	}
+
+	// process should be called by now but just in case...
+	if (state > XR_SESSION_STATE_UNKNOWN && depth_buffer_index != nullptr) {
+		// printf("eye %d: get texture %d\n", eye, buffer_index[eye]);
+		return depth_images[eye][depth_buffer_index[eye]].image;
 	}
 
 	return 0;

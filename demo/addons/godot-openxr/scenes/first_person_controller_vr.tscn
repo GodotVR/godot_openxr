@@ -16,7 +16,8 @@ refresh_rate = 0.0
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 1.8, 0 )
 cull_mask = 524287
 fov = 65.0
-near = 0.1
+near = 0.01
+far = 1000.0
 
 [node name="LeftHandController" type="ARVRController" parent="."]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )

@@ -4,6 +4,7 @@ Changes to the Godot OpenXR asset
 1.3.0
 -------------------
 - Added default interaction profiles for Samsung Odyssey, HTC Cosmos, HTC Focus and Huawei controllers.
+- Depth buffers are now created by OpenXR and used by Godot enabling advanced reprojection features in OpenXR.
 
 1.2.0
 -------------------

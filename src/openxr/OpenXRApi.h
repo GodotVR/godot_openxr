@@ -171,6 +171,7 @@ private:
 	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
 
 	// extensions
+	bool depth_extension_supported = false;
 	bool monado_stick_on_ball_ext = false;
 
 	std::vector<const char *> enabled_extensions;
@@ -191,29 +192,42 @@ private:
 	bool keep_3d_linear = false;
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchainImageOpenGLKHR **images = nullptr; // pointer to our images buffer
+	XrSwapchainImageOpenGLKHR **color_images = nullptr; // pointer to the start of our color images in our images buffer
+	XrSwapchainImageOpenGLKHR **depth_images = nullptr; // pointer to the start of our depth images in our images buffer
 #elif ANDROID
 	XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLESKHR **images = NULL;
+	XrSwapchainImageOpenGLESKHR **images = nullptr; // pointer to our images buffer
+	XrSwapchainImageOpenGLESKHR **color_images = nullptr; // pointer to the start of our color images in our images buffer
+	XrSwapchainImageOpenGLESKHR **depth_images = nullptr; // pointer to the start of our depth images in our images buffer
 #else
 	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchainImageOpenGLKHR **images = nullptr; // pointer to our images buffer
+	XrSwapchainImageOpenGLKHR **color_images = nullptr; // pointer to the start of our color images in our images buffer
+	XrSwapchainImageOpenGLKHR **depth_images = nullptr; // pointer to the start of our depth images in our images buffer
 #endif
 	float render_target_size_multiplier = 1.0f;
 	uint32_t render_target_width = 1024;
 	uint32_t render_target_height = 1024;
 	uint32_t swapchain_sample_count = 1;
 
-	XrSwapchain *swapchains = NULL;
+	XrSwapchain *swapchains = nullptr; // pointer to our swapchain buffer
+	XrSwapchain *color_swapchains = nullptr; // pointer to the start of our color swapchains in our swapchain buffer
+	XrSwapchain *depth_swapchains = nullptr; // pointer to the start of our depth swapchains in our swapchain buffer
 	uint32_t view_count;
+	uint32_t swapchain_count;
 
 	XrCompositionLayerProjection *projectionLayer = NULL;
 	XrFrameState frameState = {};
 
-	uint32_t *buffer_index = NULL;
+	bool acquired_image = false;
+	uint32_t *buffer_index = nullptr; // pointer to our index buffer
+	uint32_t *color_buffer_index = nullptr; // pointer to the start of our color indices in our index buffer
+	uint32_t *depth_buffer_index = nullptr; // pointer to the start of our depth indices in our index buffer
 
-	XrView *views = NULL;
-	XrCompositionLayerProjectionView *projection_views = NULL;
+	XrView *views = nullptr;
+	XrCompositionLayerProjectionView *projection_views = nullptr;
+	XrCompositionLayerDepthInfoKHR *depth_views = nullptr;
 	XrSpace play_space = XR_NULL_HANDLE;
 	XrSpace view_space = XR_NULL_HANDLE;
 	bool view_pose_valid = false;
@@ -247,6 +261,7 @@ private:
 	bool initialiseSession();
 	bool initialiseSpaces();
 	void cleanupSpaces();
+	bool createSwapChain(XrSwapchainCreateFlags p_create_flags, XrSwapchainUsageFlags p_usage_flags, int64_t p_format, uint32_t p_swapchain_sample_count, uint32_t p_width, uint32_t p_height, XrSwapchain &r_swapchain, uint32_t &r_swapchain_length);
 	bool initialiseSwapChains();
 	void cleanupSwapChains();
 
@@ -267,6 +282,7 @@ private:
 
 	bool check_graphics_requirements_gl(XrSystemId system_id);
 	XrResult acquire_image(int eye);
+	void release_image(int eye);
 	void update_actions();
 	void transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *matrix, float p_world_scale);
 
@@ -371,13 +387,9 @@ public:
 	Action *get_action(const char *p_name);
 
 	/* render_openxr() should be called once per eye.
-	 *
-	 * If has_external_texture_support it assumes godot has finished rendering into
-	 * the external texture and ignores texid. If false, it copies content from
-	 * texid to the OpenXR swapchain. Then the image is released.
 	 * If eye == 1, ends the frame.
 	 */
-	void render_openxr(int eye, uint32_t texid, bool has_external_texture_support);
+	void render_openxr(int eye, uint32_t texid);
 
 	// fill_projection_matrix() should be called after process_openxr()
 	void fill_projection_matrix(int eye, godot_real p_z_near, godot_real p_z_far, godot_real *p_projection);
@@ -391,8 +403,11 @@ public:
 	// get_head_center() can be called at any time after init
 	bool get_head_center(float world_scale, godot_transform *transform);
 
-	// get_external_texture_for_eye() acquires images and sets has_support to true
-	int get_external_texture_for_eye(int eye, bool *has_support);
+	// get_external_texture_for_eye() acquires color images and sets has_support to true
+	int get_external_texture_for_eye(int eye);
+
+	// get_external_depthbuffer_for_eye() acquires depth buffer images and sets has_support_to_true
+	int get_external_depthbuffer_for_eye(int eye);
 
 	// process_openxr() should be called FIRST in the frame loop
 	void process_openxr();

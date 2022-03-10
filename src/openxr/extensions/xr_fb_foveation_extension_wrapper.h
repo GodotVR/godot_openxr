@@ -17,7 +17,7 @@ public:
 
 	void set_foveation_level(XrFoveationLevelFB level, XrFoveationDynamicFB dynamic);
 
-	void **set_swapchain_create_info_and_get_next_pointer(void **swapchain_create_info) override;
+	void **set_swapchain_create_info_and_get_next_pointer(void **swapchain_create_info, bool p_depth_buffer = false) override;
 
 protected:
 	XRFbFoveationExtensionWrapper();

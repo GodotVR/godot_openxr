@@ -56,7 +56,7 @@ android {
 
 dependencies {
     implementation project(":GodotOpenXR")
-    implementation(fileTree(dir: "../../android/libs", include: ["godot-lib*.aar"]))
+    implementation "io.github.m4gr3d:godot:${versions.godotVersion}"
     implementation "org.jetbrains.kotlin:kotlin-stdlib:${versions.kotlinVersion}"
     implementation 'androidx.appcompat:appcompat:1.3.1'
 }

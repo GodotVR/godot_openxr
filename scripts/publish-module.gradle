@@ -1,0 +1,118 @@
+apply plugin: 'maven-publish'
+apply plugin: 'signing'
+
+group = ossrhGroupId
+version = versions.versionName
+
+afterEvaluate {
+    publishing {
+        publications {
+            fullRelease(MavenPublication) {
+                from components.fullRelease
+
+                // The coordinates of the library, being set from variables that
+                // we'll set up later
+                groupId ossrhGroupId
+                artifactId PUBLISH_ARTIFACT_ID
+                version versions.versionName
+
+                // Mostly self-explanatory metadata
+                pom {
+                    name = PUBLISH_ARTIFACT_ID
+                    description = 'Godot OpenXR Android Library'
+                    url = 'https://docs.godotengine.org/en/stable/tutorials/vr/openxr/index.html'
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://github.com/GodotVR/godot_openxr/blob/master/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'm4gr3d'
+                            name = 'Fredia Huya-Kouadio'
+                            email = 'fhuyakou@gmail.com'
+                        }
+                        developer {
+                            id = 'BastiaanOlij'
+                            name = 'Bastiaan Olij'
+                            email = 'mux213@gmail.com'
+                        }
+                        developer {
+                            id = 'ChristophHaag'
+                            name = 'Christoph Haag'
+                            email = 'haagch@frickel.club'
+                        }
+                        // Add all other devs here...
+                    }
+
+                    // Version control info - if you're using GitHub, follow the
+                    // format as seen here
+                    scm {
+                        connection = 'scm:git:github.com/GodotVR/godot_openxr.git'
+                        developerConnection = 'scm:git:ssh://github.com/GodotVR/godot_openxr.git'
+                        url = 'https://github.com/GodotVR/godot_openxr/tree/master'
+                    }
+                }
+            }
+
+            stubRelease(MavenPublication) {
+                from components.stubRelease
+
+                // The coordinates of the library, being set from variables that
+                // we'll set up later
+                groupId ossrhGroupId
+                artifactId STUB_PUBLISH_ARTIFACT_ID
+                version versions.versionName
+
+                // Mostly self-explanatory metadata
+                pom {
+                    name = STUB_PUBLISH_ARTIFACT_ID
+                    description = 'Godot OpenXR Android (Stub) Library'
+                    url = 'https://docs.godotengine.org/en/stable/tutorials/vr/openxr/index.html'
+                    licenses {
+                        license {
+                            name = 'MIT License'
+                            url = 'https://github.com/GodotVR/godot_openxr/blob/master/LICENSE'
+                        }
+                    }
+                    developers {
+                        developer {
+                            id = 'm4gr3d'
+                            name = 'Fredia Huya-Kouadio'
+                            email = 'fhuyakou@gmail.com'
+                        }
+                        developer {
+                            id = 'BastiaanOlij'
+                            name = 'Bastiaan Olij'
+                            email = 'mux213@gmail.com'
+                        }
+                        developer {
+                            id = 'ChristophHaag'
+                            name = 'Christoph Haag'
+                            email = 'haagch@frickel.club'
+                        }
+                        // Add all other devs here...
+                    }
+
+                    // Version control info - if you're using GitHub, follow the
+                    // format as seen here
+                    scm {
+                        connection = 'scm:git:github.com/GodotVR/godot_openxr.git'
+                        developerConnection = 'scm:git:ssh://github.com/GodotVR/godot_openxr.git'
+                        url = 'https://github.com/GodotVR/godot_openxr/tree/master'
+                    }
+                }
+            }
+        }
+    }
+}
+
+signing {
+    useInMemoryPgpKeys(
+        rootProject.ext["signing.keyId"],
+        rootProject.ext["signing.key"],
+        rootProject.ext["signing.password"],
+    )
+    sign publishing.publications
+}

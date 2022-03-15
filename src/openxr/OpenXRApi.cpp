@@ -2153,6 +2153,11 @@ bool OpenXRApi::initialiseSwapChains() {
 
 void OpenXRApi::cleanupSwapChains() {
 	if (swapchains != NULL) {
+		for (uint32_t i = 0; i < view_count; i++) {
+			if (swapchains[i] != XR_NULL_HANDLE) {
+				xrDestroySwapchain(swapchains[i]);
+			}
+		}
 		free(swapchains);
 		swapchains = NULL;
 	}

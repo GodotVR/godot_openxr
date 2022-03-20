@@ -3,7 +3,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         package="org.godotengine.plugin.vr.openxr"
         android:versionCode="10300"
-        android:versionName="1.3.0.beta">
+        android:versionName="1.3.0.beta2">
 
     <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="30" />
 

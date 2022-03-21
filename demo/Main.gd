@@ -41,6 +41,13 @@ func _on_FPController_initialised():
 	print("Supported color spaces: " + str($FPController/Configuration.get_available_color_spaces()))
 	print("Current color space: " + str($FPController/Configuration.get_color_space()))
 
+	# Add demo controller models
+	var left_controller_model = preload("res://scenes/left_quest2_controller.tscn").instance()
+	$FPController/LeftHandController.add_child(left_controller_model)
+
+	var right_controller_model = preload("res://scenes/right_quest2_contoller.tscn").instance()
+	$FPController/RightHandController.add_child(right_controller_model)
+
 func _on_FPController_failed_initialisation():
 	# exit our app
 	get_tree().quit()

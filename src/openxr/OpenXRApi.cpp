@@ -3197,7 +3197,9 @@ void OpenXRApi::update_actions() {
 				Transform *t = (Transform *)&controller_transform;
 				inputmaps[i].tracking_confidence = default_actions[ACTION_AIM_POSE].action->get_as_pose(input_path, ws, *t);
 
-				arvr_api->godot_arvr_set_controller_transform(godot_controller, &controller_transform, true, true);
+				if (inputmaps[i].tracking_confidence != TRACKING_CONFIDENCE_NONE) {
+					arvr_api->godot_arvr_set_controller_transform(godot_controller, &controller_transform, true, true);
+				}
 
 				// OK, so OpenXR will tell us if the value has changed and we could skip sending our value
 				// but Godot also checks it so... just let Godot do it

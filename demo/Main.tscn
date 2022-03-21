@@ -134,12 +134,6 @@ material/0 = null
 [node name="LeftHand" parent="FPController" instance=ExtResource( 14 )]
 motion_range = 1
 
-[node name="Skeleton" parent="FPController/LeftHand/HandModel/Armature001" index="0"]
-motion_range = 1
-
-[node name="vr_glove_left_slim" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="0"]
-material/0 = null
-
 [node name="IndexTip" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
 transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.076153, 0.0915428, -0.715277, 0.692819, 0.0345973, 0.0355402, -0.164767 )
 
@@ -151,12 +145,6 @@ material/0 = null
 [node name="RightHand" parent="FPController" instance=ExtResource( 15 )]
 motion_range = 1
 albedo_texture = ExtResource( 5 )
-
-[node name="Skeleton" parent="FPController/RightHand/HandModel/Armature" index="0"]
-motion_range = 1
-
-[node name="vr_glove_right_slim" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="0"]
-material/0 = null
 
 [node name="IndexTip" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="1"]
 transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.69282, 0.977075, -0.19881, -0.0761527, -0.0345978, -0.164767, -0.0355401 )

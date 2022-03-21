@@ -5,6 +5,8 @@ Changes to the Godot OpenXR asset
 -------------------
 - Added default interaction profiles for Samsung Odyssey, HTC Cosmos, HTC Focus and Huawei controllers.
 - Added logic to enable publishing of the Godot OpenXR Android library to MavenCentral.
+- Fixed invalid pose data when controllers are becoming inactive.
+- Added Quest 2 controller models to the demo.
 
 1.2.0
 -------------------

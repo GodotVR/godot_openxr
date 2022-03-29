@@ -1,0 +1,14 @@
+[gd_scene load_steps=3 format=2]
+
+[sub_resource type="CylinderMesh" id=5]
+top_radius = 0.0
+bottom_radius = 0.01
+height = 0.03
+
+[sub_resource type="SpatialMaterial" id=6]
+flags_unshaded = true
+
+[node name="AimPointer" type="MeshInstance"]
+transform = Transform( 1, 0, 0, 0, -4.37114e-08, 1, 0, -1, -4.37114e-08, 0, 0, -0.01 )
+mesh = SubResource( 5 )
+material/0 = SubResource( 6 )

@@ -7,6 +7,7 @@ Changes to the Godot OpenXR asset
 - Added logic to enable publishing of the Godot OpenXR Android library to MavenCentral.
 - Fixed invalid pose data when controllers are becoming inactive.
 - Added Quest 2 controller models to the demo.
+- Add support for the hand tracking aim state extension.
 
 1.2.0
 -------------------

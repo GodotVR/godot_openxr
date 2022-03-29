@@ -75,4 +75,8 @@ static Viewport *get_main_viewport() {
 	return viewport;
 }
 
+static inline bool check_bit(uint64_t in, uint64_t bits) {
+	return (in & bits) != 0;
+}
+
 #endif // UTIL_H

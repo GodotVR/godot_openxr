@@ -1,9 +1,14 @@
+#include <ARVRServer.hpp>
+
 #include "xr_ext_hand_tracking_extension_wrapper.h"
+
+#include "openxr/include/util.h"
 
 XRExtHandTrackingExtensionWrapper::XRExtHandTrackingExtensionWrapper() {
 	openxr_api = OpenXRApi::openxr_get_api();
 	request_extensions[XR_EXT_HAND_TRACKING_EXTENSION_NAME] = &hand_tracking_ext;
 	request_extensions[XR_EXT_HAND_JOINTS_MOTION_RANGE_EXTENSION_NAME] = &hand_motion_range_ext;
+	request_extensions[XR_FB_HAND_TRACKING_AIM_EXTENSION_NAME] = &hand_tracking_aim_state_ext;
 }
 
 XRExtHandTrackingExtensionWrapper::~XRExtHandTrackingExtensionWrapper() {
@@ -16,6 +21,7 @@ void XRExtHandTrackingExtensionWrapper::cleanup() {
 
 	hand_tracking_ext = false;
 	hand_motion_range_ext = false;
+	hand_tracking_aim_state_ext = false;
 	hand_tracking_supported = false;
 }
 
@@ -147,6 +153,7 @@ bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
 		// we'll do this later
 		hand_trackers[i].is_initialised = false;
 		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
+		hand_trackers[i].aim_state_godot_controller = -1;
 	}
 
 #ifdef DEBUG
@@ -164,6 +171,7 @@ void XRExtHandTrackingExtensionWrapper::cleanup_hand_tracking() {
 
 			hand_trackers[i].is_initialised = false;
 			hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
+			hand_trackers[i].aim_state_godot_controller = -1;
 		}
 	}
 }
@@ -220,6 +228,15 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 					.jointVelocities = hand_trackers[i].joint_velocities,
 				};
 
+				if (hand_tracking_aim_state_ext) {
+					hand_trackers[i].aimState = {
+						.type = XR_TYPE_HAND_TRACKING_AIM_STATE_FB,
+						.next = nullptr,
+					};
+
+					hand_trackers[i].velocities.next = &hand_trackers[i].aimState;
+				}
+
 				hand_trackers[i].locations = {
 					.type = XR_TYPE_HAND_JOINT_LOCATIONS_EXT,
 					.next = &hand_trackers[i].velocities,
@@ -233,31 +250,117 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 		}
 
 		if (hand_trackers[i].is_initialised) {
-			XrHandJointsLocateInfoEXT locateInfo = {
-				.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
-				.next = nullptr,
-				.baseSpace = openxr_api->get_play_space(),
-				.time = time,
-			};
+			void *next_pointer = nullptr;
+
 			XrHandJointsMotionRangeInfoEXT motionRangeInfo;
 
 			if (hand_motion_range_ext) {
 				motionRangeInfo = {
 					.type = XR_TYPE_HAND_JOINTS_MOTION_RANGE_INFO_EXT,
+					.next = next_pointer,
 					.handJointsMotionRange = hand_trackers[i].motion_range,
 				};
 
-				locateInfo.next = &motionRangeInfo;
+				next_pointer = &motionRangeInfo;
 			}
 
+			XrHandJointsLocateInfoEXT locateInfo = {
+				.type = XR_TYPE_HAND_JOINTS_LOCATE_INFO_EXT,
+				.next = next_pointer,
+				.baseSpace = openxr_api->get_play_space(),
+				.time = time,
+			};
+
 			result = xrLocateHandJointsEXT(hand_trackers[i].hand_tracker, &locateInfo, &hand_trackers[i].locations);
-			if (openxr_api->xr_result(result, "failed to get tracking for hand {0}!", i)) {
-				// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
-				const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
-				if (
-						!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
-					hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
+			if (!openxr_api->xr_result(result, "failed to get tracking for hand {0}!", i)) {
+				continue;
+			}
+
+			// For some reason an inactive controller isn't coming back as inactive but has coordinates either as NAN or very large
+			const XrPosef &palm = hand_trackers[i].joint_locations[XR_HAND_JOINT_PALM_EXT].pose;
+			if (
+					!hand_trackers[i].locations.isActive || isnan(palm.position.x) || palm.position.x < -1000000.00 || palm.position.x > 1000000.00) {
+				hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
+			}
+
+			if (hand_tracking_aim_state_ext && hand_trackers[i].locations.isActive && check_bit(XR_HAND_TRACKING_AIM_VALID_BIT_FB, hand_trackers[i].aimState.status)) {
+				// Controllers are updated based on the aim state's pose and pinches' strength
+				if (hand_trackers[i].aim_state_godot_controller == -1) {
+					hand_trackers[i].aim_state_godot_controller =
+							arvr_api->godot_arvr_add_controller(
+									const_cast<char *>(hand_controller_names[i]),
+									i + HAND_CONTROLLER_ID_OFFSET,
+									true,
+									true);
 				}
+
+				int controller = hand_trackers[i].aim_state_godot_controller;
+
+				const float ws = ARVRServer::get_singleton()->get_world_scale();
+				godot_transform controller_transform;
+				auto *t = (Transform *)&controller_transform;
+
+				*t = openxr_api->transform_from_pose(hand_trackers[i].aimState.aimPose, ws);
+				arvr_api->godot_arvr_set_controller_transform(
+						controller,
+						&controller_transform,
+						true,
+						true);
+
+				// Index pinch is mapped to the A/X button
+				arvr_api->godot_arvr_set_controller_button(
+						controller,
+						7,
+						check_bit(XR_HAND_TRACKING_AIM_INDEX_PINCHING_BIT_FB, hand_trackers[i].aimState.status));
+				// Middle pinch is mapped to the B/Y button
+				arvr_api->godot_arvr_set_controller_button(
+						controller,
+						1,
+						check_bit(XR_HAND_TRACKING_AIM_MIDDLE_PINCHING_BIT_FB, hand_trackers[i].aimState.status));
+				// Ring pinch is mapped to the front trigger
+				arvr_api->godot_arvr_set_controller_button(
+						controller,
+						15,
+						check_bit(XR_HAND_TRACKING_AIM_RING_PINCHING_BIT_FB, hand_trackers[i].aimState.status));
+				// Little finger pinch is mapped to the side trigger / grip button
+				arvr_api->godot_arvr_set_controller_button(
+						controller,
+						2,
+						check_bit(XR_HAND_TRACKING_AIM_LITTLE_PINCHING_BIT_FB, hand_trackers[i].aimState.status));
+				// Menu button
+				arvr_api->godot_arvr_set_controller_button(
+						controller,
+						3,
+						check_bit(XR_HAND_TRACKING_AIM_MENU_PRESSED_BIT_FB, hand_trackers[i].aimState.status));
+
+				// To allow accessing the pinch state as provided by the API we map them here to
+				// the joystick axis of the controller. This will give the ability to access the
+				// basic hand tracking gestures without the need to query specific APIs.
+				arvr_api->godot_arvr_set_controller_axis(
+						controller,
+						7,
+						hand_trackers[i].aimState.pinchStrengthIndex,
+						false);
+				arvr_api->godot_arvr_set_controller_axis(
+						controller,
+						6,
+						hand_trackers[i].aimState.pinchStrengthMiddle,
+						false);
+				arvr_api->godot_arvr_set_controller_axis(
+						controller,
+						2,
+						hand_trackers[i].aimState.pinchStrengthRing,
+						false);
+				arvr_api->godot_arvr_set_controller_axis(
+						controller,
+						4,
+						hand_trackers[i].aimState.pinchStrengthLittle,
+						false);
+
+			} else if (hand_trackers[i].aim_state_godot_controller != -1) {
+				// Remove the controller, it's no longer active
+				arvr_api->godot_arvr_remove_controller(hand_trackers[i].aim_state_godot_controller);
+				hand_trackers[i].aim_state_godot_controller = -1;
 			}
 		}
 	}

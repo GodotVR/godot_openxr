@@ -1,4 +1,4 @@
-[gd_scene load_steps=27 format=2]
+[gd_scene load_steps=29 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://scenes/Ground.tscn" type="PackedScene" id=2]
@@ -22,6 +22,8 @@
 [ext_resource path="res://addons/godot-xr-tools/functions/Function_Pickup.tscn" type="PackedScene" id=20]
 [ext_resource path="res://addons/godot-xr-tools/functions/Function_Climb_movement.tscn" type="PackedScene" id=21]
 [ext_resource path="res://scenes/BallCourt.tscn" type="PackedScene" id=22]
+[ext_resource path="res://addons/godot-openxr/scenes/controller.gd" type="Script" id=23]
+[ext_resource path="res://scenes/AimPointer.tscn" type="PackedScene" id=24]
 
 [sub_resource type="CapsuleMesh" id=1]
 radius = 0.1
@@ -168,6 +170,36 @@ right_pickup = NodePath("../RightHandController/Function_Pickup")
 [node name="PlayerBody" parent="FPController" instance=ExtResource( 17 )]
 origin = NodePath("..")
 camera = NodePath("../ARVRCamera")
+
+[node name="LeftHandAim" type="ARVRController" parent="FPController"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.109138, 0 )
+controller_id = 3
+script = ExtResource( 23 )
+
+[node name="AimPointer" parent="FPController/LeftHandAim" instance=ExtResource( 24 )]
+
+[node name="Function_pointer" parent="FPController/LeftHandAim" instance=ExtResource( 13 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0504931, 0 )
+show_target = true
+active_button = 7
+collide_with_areas = true
+
+[node name="Function_Teleport" parent="FPController/LeftHandAim" instance=ExtResource( 10 )]
+teleport_button = 1
+camera = NodePath("../../ARVRCamera")
+
+[node name="RightHandAim" type="ARVRController" parent="FPController"]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.165836, 0.103508, 0 )
+controller_id = 4
+script = ExtResource( 23 )
+
+[node name="AimPointer" parent="FPController/RightHandAim" instance=ExtResource( 24 )]
+
+[node name="Function_pointer" parent="FPController/RightHandAim" instance=ExtResource( 13 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0498809, 0 )
+show_target = true
+active_button = 7
+collide_with_areas = true
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )

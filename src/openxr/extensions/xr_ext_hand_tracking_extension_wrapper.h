@@ -8,6 +8,7 @@
 #include <map>
 
 #define MAX_TRACKED_HANDS 2
+#define HAND_CONTROLLER_ID_OFFSET 3
 
 class HandTracker {
 public:
@@ -18,13 +19,21 @@ public:
 	XrHandJointLocationEXT joint_locations[XR_HAND_JOINT_COUNT_EXT];
 	XrHandJointVelocityEXT joint_velocities[XR_HAND_JOINT_COUNT_EXT];
 
+	XrHandTrackingAimStateFB aimState;
 	XrHandJointVelocitiesEXT velocities;
 	XrHandJointLocationsEXT locations;
+
+	godot_int aim_state_godot_controller = -1;
 };
 
 // Wrapper for the XR hand tracking related extensions.
 class XRExtHandTrackingExtensionWrapper : public XRExtensionWrapper {
 public:
+	const char *hand_controller_names[MAX_TRACKED_HANDS] = {
+		"Tracked Left Hand",
+		"Tracked Right Hand"
+	};
+
 	static XRExtHandTrackingExtensionWrapper *get_singleton();
 
 	void on_instance_initialized(const XrInstance instance) override;
@@ -76,6 +85,7 @@ private:
 	OpenXRApi *openxr_api = nullptr;
 	bool hand_tracking_ext = false;
 	bool hand_motion_range_ext = false;
+	bool hand_tracking_aim_state_ext = false;
 	bool hand_tracking_supported = false;
 
 	HandTracker hand_trackers[MAX_TRACKED_HANDS]; // Fixed for left and right hand

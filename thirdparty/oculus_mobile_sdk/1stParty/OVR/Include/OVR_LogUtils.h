@@ -282,4 +282,14 @@ inline void LogWithFileTag(const int prio, const char* fileTag, const char* fmt,
 #error "unknown platform"
 #endif
 
+// logs only the first time to avoid spam
+#define OVR_LOG_ONCE(...)                  \
+    {                                      \
+        static bool alreadyLogged = false; \
+        if (!alreadyLogged) {              \
+            OVR_LOG(__VA_ARGS__);          \
+            alreadyLogged = true;          \
+        }                                  \
+    }
+
 #endif // OVRLib_Log_h

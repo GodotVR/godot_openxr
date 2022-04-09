@@ -13,6 +13,8 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #if !defined(OVR_BitFlags_h)
 #define OVR_BitFlags_h
 
+#include <cstddef>
+
 namespace OVR {
 
 //==============================================================

@@ -44,6 +44,7 @@ Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include <openxr/fb_spatial_entity_storage.h>
 #endif
 
+
 using namespace OVR;
 
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
@@ -414,7 +415,7 @@ struct ovrExtensionFunctionPointers {
     PFN_xrQuerySpatialEntityFB xrQuerySpatialEntityFB = nullptr;
     PFN_xrSpatialEntitySaveSpaceFB xrSpatialEntitySaveSpaceFB = nullptr;
     PFN_xrSpatialEntityEraseSpaceFB xrSpatialEntityEraseSpaceFB = nullptr;
-};
+    };
 
 struct ovrEnableComponentEvent {
     XrComponentTypeFB componentType;
@@ -457,6 +458,7 @@ struct ovrApp {
 
     bool ShouldQueryAnchors;
 
+    
     XrSwapchain ColorSwapChain;
     uint32_t SwapChainLength;
     Vector3f StageBounds;
@@ -587,8 +589,9 @@ void ovrApp::HandleSessionStateChanges(XrSessionState state) {
 bool ovrApp::IsComponentSupported(XrSpace space, XrComponentTypeFB type) {
     uint32_t numComponents = 0;
     OXR(FunPtrs.xrEnumerateSupportedComponentsFB(space, 0, &numComponents, nullptr));
-    XrComponentTypeFB components[numComponents];
-    OXR(FunPtrs.xrEnumerateSupportedComponentsFB(space, numComponents, &numComponents, components));
+    std::vector<XrComponentTypeFB> components(numComponents);
+    OXR(FunPtrs.xrEnumerateSupportedComponentsFB(
+        space, numComponents, &numComponents, components.data()));
 
     bool supported = false;
     for (uint32_t c = 0; c < numComponents; ++c) {
@@ -726,7 +729,8 @@ void ovrApp::HandleXrEvents() {
                                 uuidToHexString(result.uuid).c_str());
                         }
                     }
-                }
+
+                                    }
 
                 ALOGV(
                     "Number of anchors after receiving XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB: %zu",
@@ -768,7 +772,7 @@ void ovrApp::HandleXrEvents() {
                     ALOGV("xrPollEvent: Erase Space failed!");
                 }
             } break;
-            default:
+                        default:
                 ALOGV("xrPollEvent: Unknown event");
                 break;
         }
@@ -884,6 +888,7 @@ static void QueryAnchors(ovrApp& app) {
         app.Session, (XrSpatialEntityQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
 }
 
+
 void UpdateStageBounds(ovrApp& app) {
     XrExtent2Df stageBounds = {};
 
@@ -980,6 +985,7 @@ void PlaceAnchor(ovrApp& app, SimpleXrInput* input, const XrFrameState& frameSta
         }
     }
 
+    
     ALOGV(
         "Number of anchors after calling PlaceAnchor: %zu", app.AppRenderer.Scene.SpaceList.size());
 }
@@ -1059,7 +1065,7 @@ void android_main(struct android_app* androidApp) {
         XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME,
         XR_FB_SPATIAL_ENTITY_EXTENSION_NAME,
         XR_FB_SPATIAL_ENTITY_QUERY_EXTENSION_NAME,
-        XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME};
+                XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME};
     const uint32_t numRequiredExtensions =
         sizeof(requiredExtensionNames) / sizeof(requiredExtensionNames[0]);
 
@@ -1448,7 +1454,7 @@ void android_main(struct android_app* androidApp) {
         instance,
         "xrSpatialEntityEraseSpaceFB",
         (PFN_xrVoidFunction*)(&app.FunPtrs.xrSpatialEntityEraseSpaceFB)));
-
+    
     // Controller button states
     bool aButtonVal = false;
     bool aPrevButtonVal = false;
@@ -1456,7 +1462,7 @@ void android_main(struct android_app* androidApp) {
     bool bPrevButtonVal = false;
     bool xButtonVal = false;
     bool xPrevButtonVal = false;
-
+    
     while (androidApp->destroyRequested == 0) {
         frameCount++;
 
@@ -1507,6 +1513,7 @@ void android_main(struct android_app* androidApp) {
             app.ShouldQueryAnchors = false;
         }
 
+        
         // NOTE: OpenXR does not use the concept of frame indices. Instead,
         // XrWaitFrame returns the predicted display time.
         XrFrameWaitInfo waitFrameInfo = {};
@@ -1584,7 +1591,7 @@ void android_main(struct android_app* androidApp) {
         // A Button: Place a world locked anchor.
         // B Button: Destroy the last-placed anchor.
         // X Button: Refresh anchors by querying them.
-        if (input != nullptr) {
+                if (input != nullptr) {
             aPrevButtonVal = aButtonVal;
             aButtonVal = input->A();
             if (aPrevButtonVal != aButtonVal && aPrevButtonVal) {
@@ -1602,7 +1609,8 @@ void android_main(struct android_app* androidApp) {
             if (xPrevButtonVal != xButtonVal && xPrevButtonVal) {
                 app.ShouldQueryAnchors = true;
             }
-        }
+
+                    }
 
         // Simple animation
         double timeInSeconds = FromXrTime(frameState.predictedDisplayTime);

@@ -49,7 +49,7 @@ ModelFile::~ModelFile() {
     }
 
     for (int i = 0; i < static_cast<int>(Buffers.size()); i++) {
-        delete Buffers[i].bufferData;
+        Buffers[i].bufferData.clear();
     }
 }
 
@@ -449,10 +449,10 @@ ModelFile* LoadModelFile(
 
 uint8_t* ModelAccessor::BufferData() const {
     if (bufferView == nullptr || bufferView->buffer == nullptr ||
-        bufferView->buffer->bufferData == nullptr) {
+        bufferView->buffer->bufferData.empty()) {
         return nullptr;
     }
-    return bufferView->buffer->bufferData + bufferView->byteOffset + byteOffset;
+    return (uint8_t*)bufferView->buffer->bufferData.data() + bufferView->byteOffset + byteOffset;
 }
 
 void ModelNode::SetLocalTransform(const Matrix4f matrix) {

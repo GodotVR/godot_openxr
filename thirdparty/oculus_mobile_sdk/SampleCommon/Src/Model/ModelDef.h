@@ -64,12 +64,23 @@ struct ModelTag {
     OVR::Vector4f jointWeights;
 };
 
+enum ModelComponentType {
+    MODEL_COMPONENT_TYPE_BYTE = 0X1400, // GL_BYTE
+    MODEL_COMPONENT_TYPE_UNSIGNED_BYTE = 0X1401, // GL_UNSIGNED_BYTE
+    MODEL_COMPONENT_TYPE_SHORT = 0x1402, // GL_SHORT
+    MODEL_COMPONENT_TYPE_UNSIGNED_SHORT = 0x1403, // GL_UNSIGNED_SHORT
+    MODEL_COMPONENT_TYPE_UNSIGNED_INT = 0x1405, // GL_UNSIGNED_INT
+    MODEL_COMPONENT_TYPE_FLOAT = 0x1406, // GL_FLOAT
+};
+
 struct ModelBuffer {
-    ModelBuffer() : byteLength(0), bufferData(nullptr) {}
+    ModelBuffer() : byteLength(0) {}
 
     std::string name;
+    std::vector<uint8_t> bufferData;
     size_t byteLength;
-    uint8_t* bufferData;
+    ModelComponentType componentType = MODEL_COMPONENT_TYPE_UNSIGNED_BYTE;
+    int componentCount;
 };
 
 struct ModelBufferView {

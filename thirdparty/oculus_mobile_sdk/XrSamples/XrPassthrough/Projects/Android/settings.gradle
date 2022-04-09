@@ -1,0 +1,6 @@
+
+rootProject.projectDir = new File(settingsDir, '../../../..')
+rootProject.name = "XrPassthrough"
+
+include ':', \
+	'XrSamples:XrPassthrough:Projects:Android'

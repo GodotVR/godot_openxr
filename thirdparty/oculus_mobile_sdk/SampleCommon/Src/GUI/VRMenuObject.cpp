@@ -1652,7 +1652,7 @@ void VRMenuObject::AddComponent(VRMenuComponent* component) {
 // VRMenuObject::DeleteComponent
 void VRMenuObject::DeleteComponent(OvrGuiSys& guiSys, VRMenuComponent* component) {
 #if defined(OVR_BUILD_DEBUG)
-    int componentIndex = GetComponentIndex(component);
+    [[maybe_unused]] int componentIndex = GetComponentIndex(component);
     assert(componentIndex >= 0);
 #endif
     // stop the component from getting any events between now and the time it's freed.

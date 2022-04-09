@@ -9,7 +9,7 @@ ext {
             ndkVersion         : "21.4.7075529",
             javaVersion        : JavaVersion.VERSION_1_8,
             versionCode        : 10300, // Also update 'src/main/AndroidManifest.xml#versionCode' value
-            versionName        : '1.3.0.beta5', // Also update 'src/main/AndroidManifest.xml#versionName' value
+            versionName        : '1.3.0.beta6', // Also update 'src/main/AndroidManifest.xml#versionName' value
             godotVersion       : '3.4.4.stable',
     ]
 

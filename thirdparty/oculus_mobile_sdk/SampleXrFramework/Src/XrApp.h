@@ -197,7 +197,7 @@ class XrApp {
           RenderThreadTid(renderThreadTid),
           NumFramebuffers(MAX_NUM_EYES) {}
     XrApp() : XrApp(0, 0, CPU_LEVEL, GPU_LEVEL) {}
-    ~XrApp() = default;
+    virtual ~XrApp() = default;
 
     // App entry point
     void Run(struct android_app* app);
@@ -282,6 +282,7 @@ class XrApp {
         XrCompositionLayerCylinderKHR Cylinder;
         XrCompositionLayerCubeKHR Cube;
         XrCompositionLayerEquirectKHR Equirect;
+        XrCompositionLayerPassthroughFB Passthrough;
     };
     virtual void PreProjectionAddLayer(xrCompositorLayerUnion* layers, int& layerCount) {
         /// do nothing
@@ -411,6 +412,7 @@ class XrApp {
     XrAction ButtonBAction = XR_NULL_HANDLE;
     XrAction ButtonXAction = XR_NULL_HANDLE;
     XrAction ButtonYAction = XR_NULL_HANDLE;
+    XrAction ButtonMenuAction = XR_NULL_HANDLE;
     /// common touch actions
     XrAction ThumbStickTouchAction = XR_NULL_HANDLE;
     XrAction ThumbRestTouchAction = XR_NULL_HANDLE;

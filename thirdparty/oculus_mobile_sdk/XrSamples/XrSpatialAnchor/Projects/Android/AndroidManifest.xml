@@ -29,7 +29,7 @@
 
   <!-- Grants access to Spatial Anchors. -->
   <uses-permission android:name="com.oculus.permission.USE_ANCHOR_API" />
-  <application
+    <application
       android:allowBackup="false"
       android:label="spatialanchor"
       >

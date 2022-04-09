@@ -9,6 +9,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 *************************************************************************************/
 
+#include "Model/ModelDef.h"
 #include "ModelFileLoading.h"
 
 #include "OVR_Std.h"
@@ -115,6 +116,44 @@ static void ParseFloatArray(float* elements, const int count, OVR::JsonReader ar
     }
 }
 
+static size_t getComponentCount(ModelAccessorType type) {
+    switch (type) {
+        case ACCESSOR_SCALAR:
+            return 1;
+        case ACCESSOR_VEC2:
+            return 2;
+        case ACCESSOR_VEC3:
+            return 3;
+        case ACCESSOR_VEC4:
+            return 4;
+        case ACCESSOR_MAT2:
+            return 4;
+        case ACCESSOR_MAT3:
+            return 9;
+        case ACCESSOR_MAT4:
+            return 16;
+        case ACCESSOR_UNKNOWN:
+        default:
+            return 0;
+    }
+}
+
+static size_t getComponentSize(int componentType) {
+    switch (componentType) {
+        case MODEL_COMPONENT_TYPE_UNSIGNED_BYTE:
+        case MODEL_COMPONENT_TYPE_BYTE:
+            return 1;
+        case MODEL_COMPONENT_TYPE_SHORT:
+        case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
+            return 2;
+        case MODEL_COMPONENT_TYPE_UNSIGNED_INT:
+        case MODEL_COMPONENT_TYPE_FLOAT:
+            return 4;
+        default:
+            return 0;
+    }
+}
+
 template <typename _type_>
 bool ReadSurfaceDataFromAccessor(
     std::vector<_type_>& out,
@@ -122,10 +161,11 @@ bool ReadSurfaceDataFromAccessor(
     const int index,
     const ModelAccessorType type,
     const int componentType,
-    const int count) {
+    const int count,
+    const bool append) {
     bool loaded = true;
     if (index >= 0) {
-        if (index >= static_cast<int>(modelFile.Accessors.size())) {
+        if (index >= int(modelFile.Accessors.size())) {
             ALOGW(
                 "Error: Invalid index on gltfPrimitive accessor %d %d",
                 index,
@@ -134,6 +174,8 @@ bool ReadSurfaceDataFromAccessor(
         }
 
         const ModelAccessor* accessor = &(modelFile.Accessors[index]);
+        const ModelBufferView* bufferView = accessor->bufferView;
+        const ModelBuffer* buffer = bufferView->buffer;
 
         if (count >= 0 && accessor->count != count) {
             ALOGW(
@@ -152,56 +194,214 @@ bool ReadSurfaceDataFromAccessor(
             loaded = false;
         }
 
-        if (accessor->componentType != componentType) {
-            ALOGW(
-                "Error: Invalid componentType on gltfPrimitive accessor %d %d %d",
-                index,
-                componentType,
-                accessor->componentType);
-            loaded = false;
+        int srcComponentSize = getComponentSize(accessor->componentType);
+        int srcComponentCount = getComponentCount(accessor->type);
+        int srcValueSize = srcComponentSize * srcComponentCount;
+
+        int readStride = srcValueSize;
+        if (bufferView->byteStride > 0) {
+            readStride = bufferView->byteStride;
         }
 
-        int readStride = 0;
-        if (accessor->bufferView->byteStride > 0) {
-            if (accessor->bufferView->byteStride != (int)sizeof(out[0])) {
-                if ((int)sizeof(out[0]) > accessor->bufferView->byteStride) {
-                    ALOGW(
-                        "Error: bytestride is %d, thats smaller thn %d",
-                        accessor->bufferView->byteStride,
-                        (int)sizeof(out[0]));
-                    loaded = false;
-                } else {
-                    readStride = accessor->bufferView->byteStride;
-                }
-            }
-        }
+        size_t dstComponentSize = getComponentSize(componentType);
+        size_t dstComponentCount = getComponentCount(type);
+        size_t dstValueSize = dstComponentSize * dstComponentCount;
 
-        const size_t offset = accessor->byteOffset + accessor->bufferView->byteOffset;
-        const size_t copySize = accessor->count * sizeof(out[0]);
+        const size_t offset = accessor->byteOffset + bufferView->byteOffset;
 
-        if (accessor->bufferView->buffer->byteLength < (offset + copySize) ||
-            accessor->bufferView->byteLength < (copySize)) {
+        const size_t srcRequiredSize = accessor->count * readStride;
+
+        if ((offset + srcRequiredSize) > buffer->byteLength) {
             ALOGW(
                 "Error: accessor requesting too much data in gltfPrimitive %d %d %d",
                 index,
                 (int)accessor->bufferView->byteLength,
-                (int)(offset + copySize));
+                (int)(offset + srcRequiredSize));
             loaded = false;
         }
 
         if (loaded) {
-            out.resize(accessor->count);
-
-            // #TODO this doesn't seem to be working, figure out why.
-            if (false && readStride > 0) {
-                for (int i = 0; i < count; i++) {
-                    memcpy(
-                        &out[i],
-                        accessor->bufferView->buffer->bufferData + offset + (readStride * i),
-                        sizeof(out[0]));
+            const size_t startIndex = append ? out.size() : 0;
+            out.resize(startIndex + accessor->count);
+            int valueCount = (int)(accessor->count);
+            const char* src = (char*)buffer->bufferData.data() + offset;
+            if (accessor->componentType != componentType) {
+                if (componentType == MODEL_COMPONENT_TYPE_FLOAT) {
+                    float* dst = (float*)&out[0];
+                    // for normalized signed integers, we need them to map to whole [-1.0f, 1.0f]
+                    // while having the 0 exactly at 0.0f for byte:
+                    //-128 -> - 1.0f
+                    // 0 ->  0.0f
+                    // 127 ->  1.0f
+                    // to achieve that we do std::max((float)value / MaxValue, -1.0f);
+                    switch (accessor->componentType) {
+                        case MODEL_COMPONENT_TYPE_BYTE:
+                            for (int i = 0; i < valueCount; i++) {
+                                const int8_t* valueSrc = (int8_t*)(src + i * readStride);
+                                float* valueDst = (float*)(dst + i * srcComponentCount);
+                                for (int j = 0; j < srcComponentCount; j++) {
+                                    valueDst[j] = std::max(((float)valueSrc[j]) / 127.0f, -1.0f);
+                                }
+                            }
+                            break;
+                        case MODEL_COMPONENT_TYPE_UNSIGNED_BYTE:
+                        default:
+                            for (int i = 0; i < valueCount; i++) {
+                                const uint8_t* valueSrc = (uint8_t*)(src + i * readStride);
+                                float* valueDst = (float*)(dst + i * srcComponentCount);
+                                for (int j = 0; j < srcComponentCount; j++) {
+                                    valueDst[j] = ((float)valueSrc[j]) / 255.0f;
+                                }
+                            }
+                            break;
+                        case MODEL_COMPONENT_TYPE_SHORT:
+                            for (int i = 0; i < valueCount; i++) {
+                                const int16_t* valueSrc = (int16_t*)(src + i * readStride);
+                                float* valueDst = (float*)(dst + i * srcComponentCount);
+                                for (int j = 0; j < srcComponentCount; j++) {
+                                    valueDst[j] = std::max(((float)valueSrc[j]) / 32767.0f, -1.0f);
+                                }
+                            }
+                        case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
+                            for (int i = 0; i < valueCount; i++) {
+                                const uint16_t* valueSrc = (uint16_t*)(src + i * readStride);
+                                float* valueDst = (float*)(dst + i * srcComponentCount);
+                                for (int j = 0; j < srcComponentCount; j++) {
+                                    valueDst[j] = ((float)valueSrc[j]) / 65535.0f;
+                                }
+                            }
+                            break;
+                        case MODEL_COMPONENT_TYPE_UNSIGNED_INT:
+                            for (int i = 0; i < valueCount; i++) {
+                                const uint32_t* valueSrc = (uint32_t*)(src + i * readStride);
+                                float* valueDst = (float*)(dst + i * srcComponentCount);
+                                for (int j = 0; j < srcComponentCount; j++) {
+                                    valueDst[j] = (float)(((double)valueSrc[j]) / 4294967295.0);
+                                }
+                            }
+                            break;
+                    }
+                } else {
+                    // slow path for rare cases
+                    if (accessor->componentType == MODEL_COMPONENT_TYPE_FLOAT ||
+                        componentType == MODEL_COMPONENT_TYPE_FLOAT) {
+                        char* dst = (char*)&out[0];
+                        for (int i = 0; i < valueCount; i++) {
+                            for (int j = 0; j < srcComponentCount; j++) {
+                                float value;
+                                const char* valueSrc = src + i * readStride + j * srcComponentSize;
+                                switch (accessor->componentType) {
+                                    case MODEL_COMPONENT_TYPE_BYTE:
+                                        value =
+                                            std::max(((float)(*(int8_t*)valueSrc)) / 127.0f, -1.0f);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_BYTE:
+                                    default:
+                                        value = ((float)(*(uint8_t*)valueSrc)) / 255.0f;
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_SHORT:
+                                        value = std::max(
+                                            ((float)(*(int16_t*)valueSrc)) / 32767.0f, -1.0f);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
+                                        value = ((float)(*(uint16_t*)valueSrc)) / 65535.0f;
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_INT:
+                                        value =
+                                            (float)(((double)(*(uint32_t*)valueSrc)) / 4294967295.0);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_FLOAT:
+                                        value = (*(float*)valueSrc);
+                                        break;
+                                }
+                                char* valueDst = dst + i * dstValueSize + j * dstComponentSize;
+                                switch (componentType) {
+                                    case MODEL_COMPONENT_TYPE_BYTE:
+                                        // -1.0f -> -128, 1.0f -> +127, 0.0f -> 0
+                                        *(int8_t*)valueDst = (int8_t)(value * 128.0f);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_BYTE:
+                                    default:
+                                        *(uint8_t*)valueDst = (uint8_t)(value * 255.0f);
+                                        break;
+                                        // SPECIAL CASES, we don't know if the float is normalized
+                                        // or not normalized we assume that the float was not a
+                                        // normalized value when someone asks for an uint16 or
+                                        // uint32
+                                    case MODEL_COMPONENT_TYPE_SHORT:
+                                        *(int16_t*)valueDst = (int16_t)(value);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
+                                        *(uint16_t*)valueDst = (uint16_t)(value);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_INT:
+                                        *(uint32_t*)valueDst = (uint32_t)(value);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_FLOAT:
+                                        *(float*)valueDst = value;
+                                        break;
+                                }
+                            }
+                        }
+                    } else {
+                        // integer to integer, no "proportional" conversion, just change of storage
+                        char* dst = (char*)&out[0];
+                        for (int i = 0; i < valueCount; i++) {
+                            for (int j = 0; j < srcComponentCount; j++) {
+                                int64_t value;
+                                const char* valueSrc = src + i * readStride + j * srcComponentSize;
+                                switch (accessor->componentType) {
+                                    case MODEL_COMPONENT_TYPE_BYTE:
+                                        value = (int64_t)(*(int8_t*)valueSrc);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_BYTE:
+                                    default:
+                                        value = (int64_t)(*(uint8_t*)valueSrc);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_SHORT:
+                                        value = (int64_t)(*(int16_t*)valueSrc);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
+                                        value = (int64_t)(*(uint16_t*)valueSrc);
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_INT:
+                                        value = (int64_t)(*(uint32_t*)valueSrc);
+                                        break;
+                                }
+                                char* valueDst = dst + i * dstValueSize + j * dstComponentSize;
+                                switch (componentType) {
+                                    case MODEL_COMPONENT_TYPE_BYTE:
+                                        *(int8_t*)valueDst = (int8_t)value;
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_BYTE:
+                                    default:
+                                        *(uint8_t*)valueDst = (uint8_t)value;
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_SHORT:
+                                        *(int16_t*)valueDst = (int16_t)value;
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
+                                        *(uint8_t*)valueDst = (uint16_t)value;
+                                        break;
+                                    case MODEL_COMPONENT_TYPE_UNSIGNED_INT:
+                                        *(uint32_t*)valueDst = (uint32_t)value;
+                                        break;
+                                }
+                            }
+                        }
+                    }
                 }
             } else {
-                memcpy(&out[0], accessor->bufferView->buffer->bufferData + offset, copySize);
+                if (readStride == srcValueSize) {
+                    memcpy(&out[startIndex], buffer->bufferData.data() + offset, srcRequiredSize);
+                } else {
+                    char* dst = (char*)&out[0];
+                    for (int i = 0; i < valueCount; i++) {
+                        const char* valueSrc = src + i * readStride;
+                        char* valueDst = dst + i * srcValueSize;
+                        memcpy(valueDst, valueSrc, srcValueSize);
+                    }
+                }
             }
         }
     }
@@ -217,7 +417,6 @@ bool LoadModelFile_glTF_Json(
     const MaterialParms& materialParms,
     ModelGeo* outModelGeo) {
     ALOG("LoadModelFile_glTF_Json parsing %s", modelFile.FileName.c_str());
-
     // LOGCPUTIME( "LoadModelFile_glTF_Json" );
 
     bool loaded = true;
@@ -225,7 +424,7 @@ bool LoadModelFile_glTF_Json(
     const char* error = nullptr;
     auto json = OVR::JSON::Parse(modelsJson, &error);
     if (json == nullptr) {
-        ALOGW("LoadModelFile_glTF_Json: Error loading %s : %s", modelFile.FileName.c_str(), error);
+        ALOG("LoadModelFile_glTF_Json: Error loading %s : %s", modelFile.FileName.c_str(), error);
         loaded = false;
     } else {
         const OVR::JsonReader models(json);
@@ -398,7 +597,16 @@ bool LoadModelFile_glTF_Json(
 
                             newGltfTexture.name = texture.GetChildStringByName("name");
                             const int sampler = texture.GetChildInt32ByName("sampler", -1);
-                            const int image = texture.GetChildInt32ByName("source", -1);
+                            int image = texture.GetChildInt32ByName("source", -1);
+                            const OVR::JsonReader textureExtensions =
+                                texture.GetChildByName("extensions");
+                            if (textureExtensions.IsObject()) {
+                                const OVR::JsonReader basisuExtension =
+                                    textureExtensions.GetChildByName("KHR_texture_basisu");
+                                if (basisuExtension.IsObject()) {
+                                    image = basisuExtension.GetChildInt32ByName("source", image);
+                                }
+                            }
 
                             if (sampler < -1 ||
                                 sampler >= static_cast<int>(modelFile.Samplers.size())) {
@@ -691,7 +899,8 @@ bool LoadModelFile_glTF_Json(
                                             positionIndex,
                                             ACCESSOR_VEC3,
                                             GL_FLOAT,
-                                            -1);
+                                            -1,
+                                            false);
 
                                         const ModelAccessor* positionAccessor =
                                             &modelFile.Accessors[positionIndex];
@@ -729,19 +938,21 @@ bool LoadModelFile_glTF_Json(
                                             attributes.GetChildInt32ByName("NORMAL", -1),
                                             ACCESSOR_VEC3,
                                             GL_FLOAT,
-                                            numVertices);
+                                            numVertices,
+                                            false);
                                     }
                                     // #TODO:  we have tangent as a vec3, the spec has it as a vec4.
                                     // so we will have to one off the loading of it.
-                                    if (loaded) {
-                                        loaded = ReadSurfaceDataFromAccessor(
-                                            attribs.tangent,
-                                            modelFile,
-                                            attributes.GetChildInt32ByName("TANGENT", -1),
-                                            ACCESSOR_VEC3,
-                                            GL_FLOAT,
-                                            numVertices);
-                                    }
+                                    // if (loaded) {
+                                    //     // loaded = ReadSurfaceDataFromAccessor(
+                                    //     //     attribs.tangent,
+                                    //     //     modelFile,
+                                    //     //     attributes.GetChildInt32ByName("TANGENT", -1),
+                                    //     //     ACCESSOR_VEC4,
+                                    //     //     GL_FLOAT,
+                                    //     //     numVertices,
+                                    //     //     false);
+                                    // }
                                     if (loaded) {
                                         loaded = ReadSurfaceDataFromAccessor(
                                             attribs.binormal,
@@ -749,7 +960,8 @@ bool LoadModelFile_glTF_Json(
                                             attributes.GetChildInt32ByName("BINORMAL", -1),
                                             ACCESSOR_VEC3,
                                             GL_FLOAT,
-                                            numVertices);
+                                            numVertices,
+                                            false);
                                     }
                                     if (loaded) {
                                         loaded = ReadSurfaceDataFromAccessor(
@@ -758,7 +970,8 @@ bool LoadModelFile_glTF_Json(
                                             attributes.GetChildInt32ByName("COLOR", -1),
                                             ACCESSOR_VEC4,
                                             GL_FLOAT,
-                                            numVertices);
+                                            numVertices,
+                                            false);
                                     }
                                     if (loaded) {
                                         loaded = ReadSurfaceDataFromAccessor(
@@ -767,7 +980,8 @@ bool LoadModelFile_glTF_Json(
                                             attributes.GetChildInt32ByName("TEXCOORD_0", -1),
                                             ACCESSOR_VEC2,
                                             GL_FLOAT,
-                                            numVertices);
+                                            numVertices,
+                                            false);
                                     }
                                     if (loaded) {
                                         loaded = ReadSurfaceDataFromAccessor(
@@ -776,7 +990,8 @@ bool LoadModelFile_glTF_Json(
                                             attributes.GetChildInt32ByName("TEXCOORD_1", -1),
                                             ACCESSOR_VEC2,
                                             GL_FLOAT,
-                                            numVertices);
+                                            numVertices,
+                                            false);
                                     }
                                     // #TODO:  TEXCOORD_2 is in the gltf spec, but we only support 2
                                     // uv sets. support more uv coordinates, skipping for now.
@@ -793,7 +1008,8 @@ bool LoadModelFile_glTF_Json(
                                             attributes.GetChildInt32ByName("WEIGHTS_0", -1),
                                             ACCESSOR_VEC4,
                                             GL_FLOAT,
-                                            numVertices);
+                                            numVertices,
+                                            false);
                                     }
                                     // WEIGHT_0 can be either GL_UNSIGNED_SHORT or GL_BYTE
                                     if (loaded) {
@@ -917,11 +1133,11 @@ bool LoadModelFile_glTF_Json(
                                             primitive.GetChildInt32ByName("indices", -1),
                                             ACCESSOR_SCALAR,
                                             GL_UNSIGNED_SHORT,
-                                            -1);
+                                            -1,
+                                            false);
                                     }
 
                                     newGltfSurface.surfaceDef.geo.Create(attribs, indices);
-
                                     bool skinned =
                                         (attribs.jointIndices.size() == attribs.position.size() &&
                                          attribs.jointWeights.size() == attribs.position.size());
@@ -990,7 +1206,6 @@ bool LoadModelFile_glTF_Json(
                                         newGltfSurface.surfaceDef.graphicsCommand.Textures[0] =
                                             newGltfSurface.material->baseColorTextureWrapper->image
                                                 ->texid;
-
                                         if (newGltfSurface.material->emissiveTextureWrapper !=
                                             nullptr) {
                                             if (programs.ProgBaseColorEmissivePBR == nullptr) {
@@ -999,7 +1214,6 @@ bool LoadModelFile_glTF_Json(
                                             newGltfSurface.surfaceDef.graphicsCommand.Textures[1] =
                                                 newGltfSurface.material->emissiveTextureWrapper
                                                     ->image->texid;
-
                                             if (skinned) {
                                                 if (programs.ProgSkinnedBaseColorEmissivePBR ==
                                                     nullptr) {
@@ -1800,7 +2014,6 @@ bool LoadModelFile_glTF_Json(
             loaded = false;
         }
     }
-
     return loaded;
 }
 
@@ -1899,14 +2112,12 @@ bool LoadModelFile_glTF_OvrScene(
                                 zfp, uri.c_str(), bufferLength, (const uint8_t*)fileData);
                             if (tempbuffer == nullptr) {
                                 ALOGW("could not load buffer for gltfBuffer");
-                                newGltfBuffer.bufferData = nullptr;
                                 loaded = false;
                             } else {
                                 // ensure the buffer is aligned.
-                                newGltfBuffer.bufferData =
-                                    (uint8_t*)(new float[bufferLength / 4 + 1]);
-                                memcpy(newGltfBuffer.bufferData, tempbuffer, bufferLength);
-                                newGltfBuffer.bufferData[bufferLength] = '\0';
+                                size_t alignedBufferSize = (bufferLength / 4 + 1) * 4;
+                                newGltfBuffer.bufferData.resize(alignedBufferSize);
+                                memcpy(newGltfBuffer.bufferData.data(), tempbuffer, bufferLength);
                             }
 
                             if (newGltfBuffer.byteLength > (size_t)bufferLength) {
@@ -2197,10 +2408,12 @@ ModelFile* LoadModelFile_glB(
                                 }
 
                                 // ensure the buffer is aligned.
-                                newGltfBuffer.bufferData =
-                                    (uint8_t*)(new float[newGltfBuffer.byteLength / 4 + 1]);
-                                memcpy(newGltfBuffer.bufferData, buffer, newGltfBuffer.byteLength);
-                                newGltfBuffer.bufferData[newGltfBuffer.byteLength] = '\0';
+                                size_t alignedBufferSize = (bufferLength / 4 + 1) * 4;
+                                newGltfBuffer.bufferData.resize(alignedBufferSize);
+                                memcpy(
+                                    newGltfBuffer.bufferData.data(),
+                                    buffer,
+                                    newGltfBuffer.byteLength);
 
                                 const char* bufferName;
                                 if (name.length() > 0) {
@@ -2268,6 +2481,7 @@ ModelFile* LoadModelFile_glB(
                             if (image.IsObject()) {
                                 const std::string name = image.GetChildStringByName("name");
                                 const std::string uri = image.GetChildStringByName("uri");
+                                const std::string mimeType = image.GetChildStringByName("mimeType");
                                 int bufferView = image.GetChildInt32ByName("bufferView", -1);
                                 LOGV(
                                     "LoadModelFile_glB: %s, %s, %d",
@@ -2280,15 +2494,19 @@ ModelFile* LoadModelFile_glB(
                                         &modelFile.BufferViews[bufferView];
                                     int imageBufferLength = (int)pBufferView->byteLength;
                                     uint8_t* imageBuffer =
-                                        (pBufferView->buffer->bufferData + pBufferView->byteOffset);
+                                        (uint8_t*)pBufferView->buffer->bufferData.data() +
+                                        pBufferView->byteOffset;
 
-                                    // passing in .png since currently these are only ever jpg or
-                                    // png, and that is the same path for our texture loader. #TODO:
-                                    // get this supporting ktx.  Our loader should be looking at the
-                                    // buffer not the name for determining format.
+                                    std::string path = name;
+                                    const char* ext = strrchr(mimeType.c_str(), '/');
+                                    if (ext) {
+                                        path += ".";
+                                        path += ext + 1;
+                                    }
+
                                     LoadModelFileTexture(
                                         modelFile,
-                                        "DefualtImage.png",
+                                        path.c_str(),
                                         (const char*)imageBuffer,
                                         imageBufferLength,
                                         materialParms);

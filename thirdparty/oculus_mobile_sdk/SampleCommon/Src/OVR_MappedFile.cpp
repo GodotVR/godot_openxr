@@ -75,7 +75,7 @@ bool MappedFile::OpenRead(const char* path, bool read_ahead, bool no_cache) {
     ReadOnly = true;
 
     // Don't allow private files to be read by other applications.
-    File = open(path, O_RDONLY | O_CREAT, (mode_t)0440);
+    File = open(path, O_RDONLY);
 
     if (File == -1) {
         return false;

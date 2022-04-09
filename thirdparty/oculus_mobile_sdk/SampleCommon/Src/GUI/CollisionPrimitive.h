@@ -117,7 +117,7 @@ class OvrTriCollisionPrimitive : public OvrCollisionPrimitive {
         std::vector<OVR::Vector2f> const& uvs,
         ContentFlags_t const contents);
 
-    virtual ~OvrTriCollisionPrimitive();
+    ~OvrTriCollisionPrimitive() override;
 
     void Init(
         std::vector<OVR::Vector3f> const& vertices,

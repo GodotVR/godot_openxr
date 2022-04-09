@@ -17,6 +17,8 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <pthread.h>
 #include <sys/prctl.h> // for prctl( PR_SET_NAME )
 
+// #define USE_SIMPLE_CONTROLLER_PROFILE
+
 using OVR::Bounds3f;
 using OVR::Matrix4f;
 using OVR::Posef;
@@ -419,13 +421,37 @@ std::vector<const char*> XrApp::GetExtensions() {
 
 XrPath XrApp::GetRequestedInteractionProfilePath(XrInstance instance) {
     XrPath interactionProfilePath = XR_NULL_PATH;
+
+#if defined(USE_SIMPLE_CONTROLLER_PROFILE)
+    OXR(xrStringToPath(
+        instance, "/interaction_profiles/khr/simple_controller", &interactionProfilePath));
+#else
     OXR(xrStringToPath(
         instance, "/interaction_profiles/oculus/touch_controller", &interactionProfilePath));
+#endif
     return interactionProfilePath;
 }
 
 std::vector<XrActionSuggestedBinding> XrApp::GetSuggestedBindings() {
     std::vector<XrActionSuggestedBinding> bindings;
+#if defined(USE_SIMPLE_CONTROLLER_PROFILE)
+    bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/left/input/aim/pose"));
+    bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/right/input/aim/pose"));
+    bindings.emplace_back(
+        ActionSuggestedBinding(GripPoseAction, "/user/hand/right/input/grip/pose"));
+    bindings.emplace_back(
+        ActionSuggestedBinding(GripPoseAction, "/user/hand/left/input/grip/pose"));
+
+    bindings.emplace_back(
+        ActionSuggestedBinding(ButtonAAction, "/user/hand/right/input/select/click"));
+    bindings.emplace_back(
+        ActionSuggestedBinding(ButtonXAction, "/user/hand/left/input/select/click"));
+
+    bindings.emplace_back(
+        ActionSuggestedBinding(ButtonBAction, "/user/hand/right/input/menu/click"));
+    bindings.emplace_back(
+        ActionSuggestedBinding(ButtonMenuAction, "/user/hand/left/input/menu/click"));
+#else
     bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/left/input/aim/pose"));
     bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/right/input/aim/pose"));
     bindings.emplace_back(
@@ -449,6 +475,8 @@ std::vector<XrActionSuggestedBinding> XrApp::GetSuggestedBindings() {
     bindings.emplace_back(ActionSuggestedBinding(ButtonXAction, "/user/hand/left/input/x/click"));
     bindings.emplace_back(ActionSuggestedBinding(ButtonYAction, "/user/hand/left/input/y/click"));
     bindings.emplace_back(
+        ActionSuggestedBinding(ButtonMenuAction, "/user/hand/left/input/menu/click"));
+    bindings.emplace_back(
         ActionSuggestedBinding(ThumbStickTouchAction, "/user/hand/left/input/thumbstick/touch"));
     bindings.emplace_back(
         ActionSuggestedBinding(ThumbStickTouchAction, "/user/hand/right/input/thumbstick/touch"));
@@ -460,6 +488,7 @@ std::vector<XrActionSuggestedBinding> XrApp::GetSuggestedBindings() {
         ActionSuggestedBinding(TriggerTouchAction, "/user/hand/left/input/trigger/touch"));
     bindings.emplace_back(
         ActionSuggestedBinding(TriggerTouchAction, "/user/hand/right/input/trigger/touch"));
+#endif
     return bindings;
 }
 
@@ -709,6 +738,8 @@ bool XrApp::Init(const xrJava* context) {
     ButtonBAction = CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_b", NULL);
     ButtonXAction = CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_x", NULL);
     ButtonYAction = CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_y", NULL);
+    ButtonMenuAction =
+        CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_menu", NULL);
     ThumbStickTouchAction =
         CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "thumb_stick_touch", NULL);
     ThumbRestTouchAction =
@@ -975,6 +1006,17 @@ void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
         }
     }
 
+#if 0 // Enable for debugging current interaction profile issues
+    XrPath topLevelUserPath = XR_NULL_PATH;
+    OXR(xrStringToPath(Instance, "/user/hand/left", &topLevelUserPath));
+    XrInteractionProfileState ipState{XR_TYPE_INTERACTION_PROFILE_STATE};
+    xrGetCurrentInteractionProfile(Session, topLevelUserPath, &ipState);
+    uint32_t ipPathOutSize = 0;
+    char ipPath[256];
+    xrPathToString(Instance, ipState.interactionProfile, sizeof(ipPath), &ipPathOutSize, ipPath);
+    ALOG( "Current interaction profile is: '%s'", ipPath);
+#endif
+
     /// accounting
     in.PredictedDisplayTime = FromXrTime(frameState.predictedDisplayTime);
     /// Update pose
@@ -1004,6 +1046,7 @@ void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
     bool bPressed = GetActionStateBoolean(ButtonBAction).currentState;
     bool xPressed = GetActionStateBoolean(ButtonXAction).currentState;
     bool yPressed = GetActionStateBoolean(ButtonYAction).currentState;
+    bool menuPressed = GetActionStateBoolean(ButtonMenuAction).currentState;
 
     in.LastFrameAllButtons = LastFrameAllButtons;
     in.AllButtons = 0u;
@@ -1019,6 +1062,9 @@ void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
     }
     if (yPressed) {
         in.AllButtons |= ovrApplFrameIn::kButtonY;
+    }
+    if (menuPressed) {
+        in.AllButtons |= ovrApplFrameIn::kButtonMenu;
     }
     if (in.LeftRemoteIndexTrigger > 0.1f) {
         in.AllButtons |= ovrApplFrameIn::kTrigger;

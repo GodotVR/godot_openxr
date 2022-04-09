@@ -86,17 +86,18 @@ struct ovrApplFrameIn {
     std::vector<ovrTouchEvent> TouchEvents;
 
     /// Convenience APIs
-    static const int kButtonA = 0x00000001;
-    static const int kButtonB = 0x00000002;
-    static const int kButtonX = 0x00000100;
-    static const int kButtonY = 0x00000200;
-    static const int kGripTrigger = 0x04000000;
-    static const int kTrigger = 0x20000000;
-    static const int kJoystick = 0x80000000;
+    static const int kButtonA = 1 << 0;
+    static const int kButtonB = 1 << 1;
+    static const int kButtonX = 1 << 2;
+    static const int kButtonY = 1 << 3;
+    static const int kButtonMenu = 1 << 4;
+    static const int kGripTrigger = 1 << 5;
+    static const int kTrigger = 1 << 6;
+    static const int kJoystick = 1 << 7;
     /// touch
-    static const int kTouchJoystick = 0x00000020;
-    static const int kTouchTrigger = 0x00000040;
-    static const int kTouchThumbrest = 0x00001000;
+    static const int kTouchJoystick = 1 << 8;
+    static const int kTouchTrigger = 1 << 9;
+    static const int kTouchThumbrest = 1 << 10;
 
     inline bool Clicked(const uint32_t& b) const {
         const bool isDown = (b & AllButtons) != 0;

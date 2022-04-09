@@ -239,9 +239,6 @@ typedef XrResult(XRAPI_PTR* PFN_xrQuerySpatialEntityFB)(
     const XrSpatialEntityQueryInfoBaseHeaderFB* info,
     XrAsyncRequestIdFB* request);
 
-typedef XrResult(XRAPI_PTR* PFN_xrTerminateSpatialEntityQueryFB)(
-    XrSession session,
-    const XrAsyncRequestIdFB* request);
 
 #ifndef XR_NO_PROTOTYPES
 #ifdef XR_EXTENSION_PROTOTYPES
@@ -251,8 +248,6 @@ XRAPI_ATTR XrResult XRAPI_CALL xrQuerySpatialEntityFB(
     const XrSpatialEntityQueryInfoBaseHeaderFB* info,
     XrAsyncRequestIdFB* request);
 
-XRAPI_ATTR XrResult XRAPI_CALL
-xrTerminateSpatialEntityQueryFB(XrSession session, const XrAsyncRequestIdFB* request);
 
 #endif /* XR_EXTENSION_PROTOTYPES */
 #endif /* !XR_NO_PROTOTYPES */

@@ -3471,7 +3471,15 @@ void android_main(struct android_app* app) {
         // AppSpaceWarp : Hold controller to disable spacewarp for the frame
         // Holding trigger : normal 72 fps
         // Releasing trigger: SpaceWarp 36 fps mode
+
         bool enableSpaceWarpForTheFrame = EnableSpaceWarp && (!toggleState.currentState);
+
+        // Make it toggleable by setprop
+        int enableSpaceWarpDebugProp = -1;
+        GetSystemPropertyInt("debug.oculus.enableSpaceWarp", &enableSpaceWarpDebugProp);
+        if (enableSpaceWarpDebugProp >= 0) {
+            EnableSpaceWarp = enableSpaceWarpDebugProp > 0;
+        }
 
         // CubeAnimation
         {

@@ -34,6 +34,10 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <locale>
 #include <cmath>
 
+#ifdef SUPPORTS_KTX2
+#include <ktx.h>
+#endif
+
 #define GL_COMPRESSED_RGBA_ASTC_4x4_KHR 0x93B0
 #define GL_COMPRESSED_RGBA_ASTC_5x4_KHR 0x93B1
 #define GL_COMPRESSED_RGBA_ASTC_5x5_KHR 0x93B2
@@ -1406,6 +1410,92 @@ GlTexture LoadTextureKTX(
     return GlTexture(0, 0, 0);
 }
 
+#ifdef SUPPORTS_KTX2
+struct OVR_KTX2_HEADER {
+    std::uint8_t identifier[12];
+    std::uint32_t glFormat;
+    std::uint32_t glTypeSize;
+    std::uint32_t pixelWidth;
+    std::uint32_t pixelHeight;
+    std::uint32_t pixelDepth;
+    std::uint32_t numberOfArrayElements;
+    std::uint32_t numberOfFaces;
+    std::uint32_t numberOfMipmapLevels;
+    std::uint32_t supercompressionScheme;
+};
+
+GlTexture LoadTextureKTX2(
+    const char* fileName,
+    const unsigned char* buffer,
+    const int bufferLength,
+    bool useSrgbFormat,
+    bool noMipMaps,
+    int& width,
+    int& height) {
+    width = 0;
+    height = 0;
+
+    if (bufferLength < (int)(sizeof(OVR_KTX2_HEADER))) {
+        ALOG("%s: Invalid KTX2 file", fileName);
+        return GlTexture(0, 0, 0);
+    }
+
+    const char fileIdentifier[12] = {
+        '\xAB', 'K', 'T', 'X', ' ', '2', '0', '\xBB', '\r', '\n', '\x1A', '\n'};
+
+    const OVR_KTX2_HEADER& header = *(OVR_KTX2_HEADER*)buffer;
+    if (memcmp(header.identifier, fileIdentifier, sizeof(fileIdentifier)) != 0) {
+        ALOG("%s: Invalid KTX2 file", fileName);
+        return GlTexture(0, 0, 0);
+    }
+    // no support for texture arrays
+    if (header.numberOfArrayElements != 0) {
+        ALOG(
+            "%s: KTX2 file has unsupported number of array elements %d",
+            fileName,
+            header.numberOfArrayElements);
+        return GlTexture(0, 0, 0);
+    }
+
+    width = header.pixelWidth;
+    height = header.pixelHeight;
+
+    // read ktx2 and transcode if necessary
+    ktxTexture* kTexture;
+    KTX_error_code result = ktxTexture_CreateFromMemory(
+        (const uint8_t*)buffer, bufferLength, KTX_TEXTURE_CREATE_LOAD_IMAGE_DATA_BIT, &kTexture);
+    if (result != KTX_SUCCESS) {
+        ALOG("%s: KTX2 CreateFromMemory failed. result is %d", fileName, result);
+        return GlTexture(0, 0, 0);
+    }
+
+    eTextureFormat format = Texture_None;
+    if (ktxTexture_NeedsTranscoding(kTexture)) {
+        result = ktxTexture2_TranscodeBasis(
+            (ktxTexture2*)kTexture, ktx_transcode_fmt_e::KTX_TTF_ASTC_4x4_RGBA, 0);
+        if (result != KTX_SUCCESS) {
+            ALOG("%s: Coudln't transcode ktx2 file to ASTC, ETC files not supported", fileName);
+            return GlTexture(0, 0, 0);
+        }
+        format = Texture_ASTC_4x4;
+    }
+
+    GLuint texid;
+    GLenum target, glerror;
+    result = ktxTexture_GLUpload(kTexture, &texid, &target, &glerror);
+    if (result != KTX_SUCCESS) {
+        ALOG("%s: GLUpload result failed. result is %d", fileName, result);
+        return GlTexture(0, 0, 0);
+    } else {
+        return GlTexture(texid, target, width, height);
+    }
+
+    width = 0;
+    height = 0;
+    return GlTexture(0, 0, 0);
+}
+#endif // SUPPORTS_KTX2
+
 unsigned char* LoadImageToRGBABuffer(
     const char* fileName,
     const unsigned char* inBuffer,
@@ -1528,6 +1618,17 @@ GlTexture LoadTextureFromBuffer(
             (flags & TEXTUREFLAG_NO_MIPMAPS),
             width,
             height);
+#ifdef SUPPORTS_KTX2
+    } else if (ext == ".ktx2") {
+        texId = LoadTextureKTX2(
+            fileName,
+            buffer,
+            bufferSize,
+            (flags & TEXTUREFLAG_USE_SRGB),
+            (flags & TEXTUREFLAG_NO_MIPMAPS),
+            width,
+            height);
+#endif // SUPPORTS_KTX2
     } else if (ext == ".astc") {
         texId = LoadASTCTextureFromMemory(buffer, bufferSize, 4, flags & TEXTUREFLAG_USE_SRGB);
     } else if (ext == ".pkm") {

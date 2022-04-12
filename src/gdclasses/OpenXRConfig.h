@@ -5,6 +5,7 @@
 #define OPENXR_CONFIG_H
 
 #include "openxr/OpenXRApi.h"
+#include "openxr/extensions/xr_ext_hand_tracking_extension_wrapper.h"
 #include "openxr/extensions/xr_ext_performance_settings_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_color_space_extension_wrapper.h"
 #include "openxr/extensions/xr_fb_display_refresh_rate_extension_wrapper.h"
@@ -23,6 +24,7 @@ private:
 	XRFbFoveationExtensionWrapper *foveation_wrapper = nullptr;
 	XRExtPerformanceSettingsExtensionWrapper *performance_settings_wrapper = nullptr;
 	XRFbPassthroughExtensionWrapper *passthrough_wrapper = nullptr;
+	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 
 public:
 	static void _register_methods();

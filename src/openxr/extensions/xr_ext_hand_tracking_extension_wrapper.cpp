@@ -154,6 +154,7 @@ bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
 		hand_trackers[i].is_initialised = false;
 		hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
 		hand_trackers[i].aim_state_godot_controller = -1;
+		hand_trackers[i].tracking_confidence = TrackingConfidence::TRACKING_CONFIDENCE_NONE;
 	}
 
 #ifdef DEBUG
@@ -172,6 +173,7 @@ void XRExtHandTrackingExtensionWrapper::cleanup_hand_tracking() {
 			hand_trackers[i].is_initialised = false;
 			hand_trackers[i].hand_tracker = XR_NULL_HANDLE;
 			hand_trackers[i].aim_state_godot_controller = -1;
+			hand_trackers[i].tracking_confidence = TrackingConfidence::TRACKING_CONFIDENCE_NONE;
 		}
 	}
 }
@@ -197,6 +199,24 @@ void XRExtHandTrackingExtensionWrapper::set_motion_range(uint32_t p_hand, XrHand
 	if (p_hand < MAX_TRACKED_HANDS) {
 		hand_trackers[p_hand].motion_range = p_motion_range;
 	}
+}
+
+bool XRExtHandTrackingExtensionWrapper::is_hand_tracker_controller(const int p_godot_controller) {
+	for (const auto &hand_tracker : hand_trackers) {
+		if (hand_tracker.aim_state_godot_controller == p_godot_controller) {
+			return true;
+		}
+	}
+	return false;
+}
+
+TrackingConfidence XRExtHandTrackingExtensionWrapper::get_hand_tracker_tracking_confidence(const int p_godot_controller) {
+	for (const auto &hand_tracker : hand_trackers) {
+		if (hand_tracker.aim_state_godot_controller == p_godot_controller) {
+			return hand_tracker.tracking_confidence;
+		}
+	}
+	return TRACKING_CONFIDENCE_NONE;
 }
 
 void XRExtHandTrackingExtensionWrapper::update_handtracking() {
@@ -283,7 +303,7 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				hand_trackers[i].locations.isActive = false; // workaround, make sure its inactive
 			}
 
-			if (hand_tracking_aim_state_ext && hand_trackers[i].locations.isActive && check_bit(XR_HAND_TRACKING_AIM_VALID_BIT_FB, hand_trackers[i].aimState.status)) {
+			if (hand_tracking_aim_state_ext && hand_trackers[i].locations.isActive) {
 				// Controllers are updated based on the aim state's pose and pinches' strength
 				if (hand_trackers[i].aim_state_godot_controller == -1) {
 					hand_trackers[i].aim_state_godot_controller =
@@ -293,6 +313,8 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 									true,
 									true);
 				}
+
+				hand_trackers[i].tracking_confidence = check_bit(XR_HAND_TRACKING_AIM_VALID_BIT_FB, hand_trackers[i].aimState.status) ? TrackingConfidence::TRACKING_CONFIDENCE_HIGH : TrackingConfidence::TRACKING_CONFIDENCE_NONE;
 
 				int controller = hand_trackers[i].aim_state_godot_controller;
 
@@ -361,6 +383,7 @@ void XRExtHandTrackingExtensionWrapper::update_handtracking() {
 				// Remove the controller, it's no longer active
 				arvr_api->godot_arvr_remove_controller(hand_trackers[i].aim_state_godot_controller);
 				hand_trackers[i].aim_state_godot_controller = -1;
+				hand_trackers[i].tracking_confidence = TrackingConfidence::TRACKING_CONFIDENCE_NONE;
 			}
 		}
 	}

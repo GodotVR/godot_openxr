@@ -2593,10 +2593,19 @@ godot::Array OpenXRApi::get_enabled_extensions() const {
 	return arr;
 }
 
+bool OpenXRApi::is_input_map_controller(int p_godot_controller) {
+	for (const auto &inputmap : inputmaps) {
+		if (inputmap.godot_controller == p_godot_controller) {
+			return true;
+		}
+	}
+	return false;
+}
+
 TrackingConfidence OpenXRApi::get_controller_tracking_confidence(const int p_godot_controller) const {
-	for (int i = 0; i < USER_INPUT_MAX; i++) {
-		if (inputmaps[i].godot_controller == p_godot_controller) {
-			return inputmaps[i].tracking_confidence;
+	for (const auto &inputmap : inputmaps) {
+		if (inputmap.godot_controller == p_godot_controller) {
+			return inputmap.tracking_confidence;
 		}
 	}
 

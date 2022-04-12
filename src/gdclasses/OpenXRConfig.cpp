@@ -75,6 +75,7 @@ OpenXRConfig::OpenXRConfig() {
 	foveation_wrapper = XRFbFoveationExtensionWrapper::get_singleton();
 	performance_settings_wrapper = XRExtPerformanceSettingsExtensionWrapper::get_singleton();
 	passthrough_wrapper = XRFbPassthroughExtensionWrapper::get_singleton();
+	hand_tracking_wrapper = XRExtHandTrackingExtensionWrapper::get_singleton();
 }
 
 OpenXRConfig::~OpenXRConfig() {
@@ -83,6 +84,10 @@ OpenXRConfig::~OpenXRConfig() {
 	}
 	color_space_wrapper = nullptr;
 	display_refresh_rate_wrapper = nullptr;
+	foveation_wrapper = nullptr;
+	performance_settings_wrapper = nullptr;
+	passthrough_wrapper = nullptr;
+	hand_tracking_wrapper = nullptr;
 }
 
 void OpenXRConfig::_init() {
@@ -218,8 +223,10 @@ godot::Array OpenXRConfig::get_enabled_extensions() const {
 
 int OpenXRConfig::get_tracking_confidence(const int p_godot_controller) const {
 	int confidence = 0;
-	if (openxr_api) {
+	if (openxr_api && openxr_api->is_input_map_controller(p_godot_controller)) {
 		confidence = int(openxr_api->get_controller_tracking_confidence(p_godot_controller));
+	} else if (hand_tracking_wrapper && hand_tracking_wrapper->is_hand_tracker_controller(p_godot_controller)) {
+		confidence = int(hand_tracking_wrapper->get_hand_tracker_tracking_confidence(p_godot_controller));
 	}
 	return confidence;
 }

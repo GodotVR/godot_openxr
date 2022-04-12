@@ -356,6 +356,8 @@ public:
 
 	godot::Array get_enabled_extensions() const;
 
+	bool is_input_map_controller(int p_godot_controller);
+
 	TrackingConfidence get_controller_tracking_confidence(const int p_godot_controller) const;
 
 	static const char *default_action_sets_json;

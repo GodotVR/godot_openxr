@@ -24,6 +24,7 @@ public:
 	XrHandJointLocationsEXT locations;
 
 	godot_int aim_state_godot_controller = -1;
+	TrackingConfidence tracking_confidence = TrackingConfidence::TRACKING_CONFIDENCE_NONE;
 };
 
 // Wrapper for the XR hand tracking related extensions.
@@ -51,6 +52,10 @@ public:
 	XrHandJointsMotionRangeEXT get_motion_range(uint32_t p_hand) const;
 
 	void set_motion_range(uint32_t p_hand, XrHandJointsMotionRangeEXT p_motion_range);
+
+	bool is_hand_tracker_controller(const int p_godot_controller);
+
+	TrackingConfidence get_hand_tracker_tracking_confidence(const int p_godot_controller);
 
 protected:
 	XRExtHandTrackingExtensionWrapper();

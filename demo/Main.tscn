@@ -175,6 +175,7 @@ camera = NodePath("../ARVRCamera")
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.109138, 0 )
 controller_id = 3
 script = ExtResource( 23 )
+hide_for_no_tracking_confidence = true
 
 [node name="AimPointer" parent="FPController/LeftHandAim" instance=ExtResource( 24 )]
 
@@ -192,6 +193,7 @@ camera = NodePath("../../ARVRCamera")
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0.165836, 0.103508, 0 )
 controller_id = 4
 script = ExtResource( 23 )
+hide_for_no_tracking_confidence = true
 
 [node name="AimPointer" parent="FPController/RightHandAim" instance=ExtResource( 24 )]
 

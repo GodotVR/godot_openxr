@@ -205,6 +205,7 @@ private:
 	uint32_t swapchain_sample_count = 1;
 
 	XrSwapchain *swapchains = NULL;
+	bool *swapchain_acquired = NULL;
 	uint32_t view_count;
 
 	XrCompositionLayerProjection *projectionLayer = NULL;
@@ -269,6 +270,9 @@ private:
 	XrResult acquire_image(int eye);
 	void update_actions();
 	void transform_from_matrix(godot_transform *p_dest, XrMatrix4x4f *matrix, float p_world_scale);
+
+	bool release_swapchain(int eye);
+	void end_frame(uint32_t p_layer_count, const XrCompositionLayerBaseHeader *const *p_layers);
 
 	bool parse_action_sets(const godot::String &p_json);
 	bool parse_interaction_profiles(const godot::String &p_json);

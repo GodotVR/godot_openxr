@@ -1,0 +1,20 @@
+# Summary
+
+This is a pre-built KTX library built from a version (refer: ktx.gitversion) of the Khronos KTX Repo
+
+- The original is hosted at https://github.com/KhronosGroup/KTX-Software
+
+# Updating
+
+### How to update
+
+1. Check out the source repo from the URL above
+2. Make sure you have your local ANDROID_NDK path setup.
+3. Your local machine needs to have Cmake, Ninja, and clang. (If you do not have Ninja or it does not work, you can remove this from the following build script)
+4. Run ci_tools/build_android.sh - You may need to modify this script to manually input your ANDROID_NDK path
+5. Move the newly built libktx.so, libktx_read.so, and libobjUtil.a files into lib/android/arm64-v8a
+6. Replace include/ktx.h with the latest from github (if necessary)
+
+### When to update
+
+- Ideally we do not need to update this library, but if there are some crucial fixes or changes that are necessary, we can run these steps to update.

@@ -12,6 +12,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "OVR_Math.h"
 #include "BeamRenderer.h"
 #include "ParticleSystem.h"
+#include "Input/TinyUI.h"
 
 namespace OVRFW {
 

@@ -37,7 +37,7 @@ class ovrPanelRenderer {
         UniformChannelColor[2] = OVR::Vector4f(0.0f, 0.0f, 0.75f, 0.5f);
         UniformChannelColor[3] = OVR::Vector4f(0.5f, 0.0f, 0.5f, 0.5f);
     }
-    ~ovrPanelRenderer() = default;
+    virtual ~ovrPanelRenderer() = default;
 
     virtual void Init();
     virtual void Shutdown();

@@ -877,15 +877,15 @@ class JSON {
                             case 4:
                                 *--ptr2 = static_cast<char>((uc | 0x80) & 0xBF);
                                 uc >>= 6;
-                                // no break, fall through
+                                [[fallthrough]];
                             case 3:
                                 *--ptr2 = static_cast<char>((uc | 0x80) & 0xBF);
                                 uc >>= 6;
-                                // no break
+                                [[fallthrough]];
                             case 2:
                                 *--ptr2 = static_cast<char>((uc | 0x80) & 0xBF);
                                 uc >>= 6;
-                                // no break
+                                [[fallthrough]];
                             case 1:
                                 *--ptr2 = (char)(uc | firstByteMark[len]);
                                 // no break

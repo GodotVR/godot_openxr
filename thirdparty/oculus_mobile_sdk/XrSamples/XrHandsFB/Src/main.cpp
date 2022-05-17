@@ -46,7 +46,6 @@ class XrHandsApp : public OVRFW::XrApp {
     XrHandsApp() : OVRFW::XrApp() {
         BackgroundColor = OVR::Vector4f(0.60f, 0.95f, 0.4f, 1.0f);
     }
-    virtual ~XrHandsApp() = default;
 
     // Returns a list of OpenXr extensions needed for this app
     virtual std::vector<const char*> GetExtensions() override {

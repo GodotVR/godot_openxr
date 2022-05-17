@@ -849,7 +849,7 @@ void ovrScene::Create() {
     CreatedScene = true;
 
     CreateVAOs();
-    float c[] = {0.0, 0.0, 0.0, 1.0};
+    float c[] = {0.0, 0.0, 0.0, 0.0};
     SetClearColor(c);
 }
 

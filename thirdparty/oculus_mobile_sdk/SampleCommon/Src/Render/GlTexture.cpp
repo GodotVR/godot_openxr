@@ -34,9 +34,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <locale>
 #include <cmath>
 
-#ifdef SUPPORTS_KTX2
 #include <ktx.h>
-#endif
 
 #define GL_COMPRESSED_RGBA_ASTC_4x4_KHR 0x93B0
 #define GL_COMPRESSED_RGBA_ASTC_5x4_KHR 0x93B1
@@ -1410,7 +1408,6 @@ GlTexture LoadTextureKTX(
     return GlTexture(0, 0, 0);
 }
 
-#ifdef SUPPORTS_KTX2
 struct OVR_KTX2_HEADER {
     std::uint8_t identifier[12];
     std::uint32_t glFormat;
@@ -1489,12 +1486,7 @@ GlTexture LoadTextureKTX2(
     } else {
         return GlTexture(texid, target, width, height);
     }
-
-    width = 0;
-    height = 0;
-    return GlTexture(0, 0, 0);
 }
-#endif // SUPPORTS_KTX2
 
 unsigned char* LoadImageToRGBABuffer(
     const char* fileName,
@@ -1618,7 +1610,6 @@ GlTexture LoadTextureFromBuffer(
             (flags & TEXTUREFLAG_NO_MIPMAPS),
             width,
             height);
-#ifdef SUPPORTS_KTX2
     } else if (ext == ".ktx2") {
         texId = LoadTextureKTX2(
             fileName,
@@ -1628,7 +1619,6 @@ GlTexture LoadTextureFromBuffer(
             (flags & TEXTUREFLAG_NO_MIPMAPS),
             width,
             height);
-#endif // SUPPORTS_KTX2
     } else if (ext == ".astc") {
         texId = LoadASTCTextureFromMemory(buffer, bufferSize, 4, flags & TEXTUREFLAG_USE_SRGB);
     } else if (ext == ".pkm") {

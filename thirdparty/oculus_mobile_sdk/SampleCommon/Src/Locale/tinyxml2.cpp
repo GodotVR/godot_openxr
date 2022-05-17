@@ -31,6 +31,11 @@ distribution.
 #   include <cstddef>
 #endif
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wimplicit-fallthrough"
+#endif // __clang__
+
 static const char LINE_FEED				= (char)0x0a;			// all line endings are normalized to LF
 static const char LF = LINE_FEED;
 static const char CARRIAGE_RETURN		= (char)0x0d;			// CR gets filtered out
@@ -2100,3 +2105,6 @@ bool XMLPrinter::Visit( const XMLUnknown& unknown )
 
 }   // namespace tinyxml2
 
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif // __clang__

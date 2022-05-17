@@ -262,6 +262,7 @@ bool ReadSurfaceDataFromAccessor(
                                     valueDst[j] = std::max(((float)valueSrc[j]) / 32767.0f, -1.0f);
                                 }
                             }
+                            break;
                         case MODEL_COMPONENT_TYPE_UNSIGNED_SHORT:
                             for (int i = 0; i < valueCount; i++) {
                                 const uint16_t* valueSrc = (uint16_t*)(src + i * readStride);

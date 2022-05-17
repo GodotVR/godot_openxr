@@ -43,7 +43,6 @@ class ovrPointList {
 class ovrPointList_Vector : public ovrPointList {
    public:
     ovrPointList_Vector(const int maxPoints);
-    virtual ~ovrPointList_Vector() {}
 
     virtual bool IsEmpty() const override {
         return Points.size() == 0;
@@ -87,7 +86,6 @@ class ovrPointList_Vector : public ovrPointList {
 class ovrPointList_Circular : public ovrPointList {
    public:
     ovrPointList_Circular(const int bufferSize);
-    virtual ~ovrPointList_Circular() {}
 
     virtual bool IsEmpty() const override {
         return HeadIndex == TailIndex;

@@ -75,7 +75,7 @@ struct SimpleXrInputImpl : public SimpleXrInput {
         InitializeInput();
     }
 
-    virtual ~SimpleXrInputImpl() {
+    ~SimpleXrInputImpl() override {
         if (actionSet != XR_NULL_HANDLE) {
             OXR(xrDestroyActionSet(actionSet));
         }

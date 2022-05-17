@@ -89,12 +89,6 @@ extern "C" {
 //        app.Session, (XrSpatialEntityQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
 //
 
-// Type of query being performed.
-typedef enum XrSpatialEntityQueryPredicateFB {
-    XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB = 0, // returns XrSpaces
-        XR_SPATIAL_ENTITY_QUERY_PREDICATE_MAX_ENUM_FB = 0x7FFFFFFF
-} XrSpatialEntityQueryPredicateFB;
-
 // Query Info Structs
 static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FB =
     (XrStructureType)1000156000;
@@ -105,27 +99,17 @@ static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FBX1
 static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX1 =
     (XrStructureType)1000156051;
 
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FB \
-    XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FBX1
-#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX1
-#else
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB =
-    (XrStructureType)1000156053;
-#endif
-
 // Events
 static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1 =
     (XrStructureType)1000156100;
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB =
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX1 =
     (XrStructureType)1000156101;
 
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FB XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1
-#else
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB =
-    (XrStructureType)1000156102;
-#endif
+// Type of query being performed.
+typedef enum XrSpatialEntityQueryPredicateFB {
+    XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB = 0, // returns XrSpaces
+        XR_SPATIAL_ENTITY_QUERY_PREDICATE_MAX_ENUM_FB = 0x7FFFFFFF
+} XrSpatialEntityQueryPredicateFB;
 
 // Query Filters
 typedef struct XR_MAY_ALIAS XrSpatialEntityQueryFilterBaseHeaderFB {
@@ -140,10 +124,6 @@ typedef struct XrSpatialEntityQueryFilterSpaceTypeFBX1 {
     XrSpatialEntityTypeFBX1 spaceType;
 } XrSpatialEntityQueryFilterSpaceTypeFBX1;
 
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XrSpatialEntityQueryFilterSpaceTypeFB XrSpatialEntityQueryFilterSpaceTypeFBX1
-#endif
-
 // May be used to query the system to find all spaces that match the uuids provided
 // in the filter info
 typedef struct XrSpatialEntityQueryFilterIdsFBX1 {
@@ -152,18 +132,6 @@ typedef struct XrSpatialEntityQueryFilterIdsFBX1 {
     XrSpatialEntityUuidFBX1* uuids;
     uint32_t numIds;
 } XrSpatialEntityQueryFilterIdsFBX1;
-
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XrSpatialEntityQueryFilterIdsFB XrSpatialEntityQueryFilterIdsFBX1
-#else
-typedef struct XrSpatialEntityQueryFilterIdsFB {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB
-    const void* XR_MAY_ALIAS next;
-    XrSpatialEntityUuidFB* uuids;
-    uint32_t numIds;
-} XrSpatialEntityQueryFilterIdsFB;
-#endif
-
 
 // Query Info
 typedef struct XR_MAY_ALIAS XrSpatialEntityQueryInfoBaseHeaderFB {
@@ -189,7 +157,7 @@ typedef struct XrSpatialEntityQueryInfoActionQueryFB {
         excludeFilter; // exclude specific results from query
 } XrSpatialEntityQueryInfoActionQueryFB;
 
-// Returned via XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FB when a XrSpace is found matching the
+// Returned via XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1 when a XrSpace is found matching the
 // data provided by the filter info of the query
 typedef struct XrEventSpatialEntityQueryResultFBX1 {
     XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1
@@ -198,32 +166,6 @@ typedef struct XrEventSpatialEntityQueryResultFBX1 {
     XrSpace space;
     XrSpatialEntityUuidFBX1 uuid;
 } XrEventSpatialEntityQueryResultFBX1;
-
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XrEventSpatialEntityQueryResultFB XrEventSpatialEntityQueryResultFBX1
-#else
-
-// Query result to be returned in the results array of XrEventSpatialEntityQueryResultsFB. No type
-// or next pointer included to save space in the results array of
-// XrEventSpatialEntityQueryResultsFB.
-typedef struct XrSpatialEntityQueryResultFB {
-    XrSpace space;
-    XrSpatialEntityUuidFB uuid;
-} XrSpatialEntityQueryResultFB;
-
-// Maximum number of results that a single XrEventSpatialEntityQueryResultsFB can hold.
-#define XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT 128
-
-// Returned when some number of query results are available.
-typedef struct XrEventSpatialEntityQueryResultsFB {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB
-    const void* XR_MAY_ALIAS next;
-    XrAsyncRequestIdFB request;
-    uint32_t numResults;
-    XrSpatialEntityQueryResultFB results[XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT];
-} XrEventSpatialEntityQueryResultsFB;
-
-#endif
 
 // When a query has completely finished this event will be returned
 typedef struct XrEventSpatialEntityQueryCompleteFB {
@@ -251,6 +193,65 @@ XRAPI_ATTR XrResult XRAPI_CALL xrQuerySpatialEntityFB(
 
 #endif /* XR_EXTENSION_PROTOTYPES */
 #endif /* !XR_NO_PROTOTYPES */
+
+// Functionality introduced in FBX2
+#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION >= 2
+
+// Query Filters Structs
+static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB =
+    (XrStructureType)1000156053;
+
+// Events
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB =
+    (XrStructureType)1000156102;
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB =
+    XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX1;
+
+// May be used to query the system to find all spaces that match the uuids provided
+// in the filter info
+typedef struct XrSpatialEntityQueryFilterIdsFB {
+    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB
+    const void* XR_MAY_ALIAS next;
+    XrSpatialEntityUuidFB* uuids;
+    uint32_t numIds;
+} XrSpatialEntityQueryFilterIdsFB;
+
+
+// Query result to be returned in the results array of XrEventSpatialEntityQueryResultsFB or as
+// output from xrEnumerateSpatialEntityQueryResultsFB(). No type or next pointer included to save
+// space in the results array.
+typedef struct XrSpatialEntityQueryResultFB {
+    XrSpace space;
+    XrSpatialEntityUuidFB uuid;
+} XrSpatialEntityQueryResultFB;
+
+// Maximum number of results that a single XrEventSpatialEntityQueryResultsFB can hold.
+#define XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT 128
+
+// Returned when some number of query results are available.
+typedef struct XrEventSpatialEntityQueryResultsFB {
+    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB
+    const void* XR_MAY_ALIAS next;
+    XrAsyncRequestIdFB request;
+    uint32_t numResults;
+    XrSpatialEntityQueryResultFB results[XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT];
+} XrEventSpatialEntityQueryResultsFB;
+
+#endif // XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION >= 2
+
+// FBX1 Backwards compatibility
+#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
+#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FB \
+    XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FBX1
+#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX1
+#define XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FB XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1
+#define XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB \
+    XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX1
+#define XrSpatialEntityQueryFilterSpaceTypeFB XrSpatialEntityQueryFilterSpaceTypeFBX1
+#define XrSpatialEntityQueryFilterIdsFB XrSpatialEntityQueryFilterIdsFBX1
+#define XrEventSpatialEntityQueryResultFB XrEventSpatialEntityQueryResultFBX1
+
+#endif // Backwards compatibility
 
 #endif // defined(XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION)
 

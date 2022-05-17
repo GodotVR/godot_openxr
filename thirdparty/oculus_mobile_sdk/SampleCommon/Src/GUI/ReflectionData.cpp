@@ -10,9 +10,18 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 *************************************************************************************/
 
 // this is necessary so that offsetof() can work for private class members
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wkeyword-macro"
+#endif // __clang__
+
 #define _ALLOW_KEYWORD_MACROS
 #undef private
 #define private public
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif // __clang__
 
 #include "ReflectionData.h"
 #include "VRMenuObject.h"

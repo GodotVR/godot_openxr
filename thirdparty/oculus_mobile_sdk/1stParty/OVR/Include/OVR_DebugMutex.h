@@ -71,6 +71,11 @@ inline const char* GetCurrentThreadName(char threadName[MAX_THREAD_NAME_LEN]) {
     return &threadName[0];
 }
 
+#ifdef __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wvla-extension"
+#endif // __clang__
+
 inline bool
 Error(const char* mutexName, const char* fileName, const int32_t lineNumber, const char* fmt, ...) {
     va_list argPtr;
@@ -90,6 +95,10 @@ Error(const char* mutexName, const char* fileName, const int32_t lineNumber, con
     OVR_FAIL("Mutex error: '%s' - %s(%i): %s", mutexName, fileName, abs(lineNumber), msg);
     return false;
 }
+
+#ifdef __clang__
+#pragma clang diagnostic pop
+#endif // __clang__
 
 // DJB2 string hash function to generate a continuous hash from a string and an a value type
 template <typename type_>

@@ -2007,6 +2007,12 @@ bool OpenXRApi::initialiseSwapChains() {
 		return false;
 	}
 
+	swapchain_acquired = (bool *)malloc(sizeof(bool) * view_count);
+	if (swapchain_acquired == nullptr) {
+		Godot::print_error("OpenXR Couldn't allocate memory for swap chains", __FUNCTION__, __FILE__, __LINE__);
+		return false;
+	}
+
 	// Damn you microsoft for not supporting this!!
 	// uint32_t swapchainLength[view_count];
 	uint32_t *swapchainLength = (uint32_t *)malloc(sizeof(uint32_t) * view_count);
@@ -2016,6 +2022,8 @@ bool OpenXRApi::initialiseSwapChains() {
 	}
 
 	for (uint32_t i = 0; i < view_count; i++) {
+		swapchain_acquired[i] = false;
+
 		// again Microsoft wants these in order!
 		XrSwapchainCreateInfo swapchainCreateInfo = {
 			.type = XR_TYPE_SWAPCHAIN_CREATE_INFO,
@@ -2152,6 +2160,10 @@ bool OpenXRApi::initialiseSwapChains() {
 }
 
 void OpenXRApi::cleanupSwapChains() {
+	if (swapchain_acquired != nullptr) {
+		free(swapchain_acquired);
+		swapchain_acquired = nullptr;
+	}
 	if (swapchains != NULL) {
 		for (uint32_t i = 0; i < view_count; i++) {
 			if (swapchains[i] != XR_NULL_HANDLE) {
@@ -2932,7 +2944,40 @@ XrResult OpenXRApi::acquire_image(int eye) {
 	if (!xr_result(result, "failed to wait for swapchain image!")) {
 		return result;
 	}
+
+	swapchain_acquired[eye] = true;
+
 	return XR_SUCCESS;
+}
+
+bool OpenXRApi::release_swapchain(int eye) {
+	if (swapchain_acquired[eye]) {
+		swapchain_acquired[eye] = false; // mark as false whether we succeed or not...
+
+		XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
+			.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
+			.next = nullptr
+		};
+		XrResult result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
+		return xr_result(result, "failed to release swapchain image!");
+	} else {
+		return XR_SUCCESS;
+	}
+}
+
+void OpenXRApi::end_frame(uint32_t p_layer_count, const XrCompositionLayerBaseHeader *const *p_layers) {
+	// MS wants these in order..
+	// submit 0 layers when we shouldn't render
+	XrFrameEndInfo frameEndInfo = {
+		.type = XR_TYPE_FRAME_END_INFO,
+		.next = nullptr,
+		.displayTime = frameState.predictedDisplayTime,
+		.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
+		.layerCount = p_layer_count,
+		.layers = p_layers,
+	};
+	XrResult result = xrEndFrame(session, &frameEndInfo);
+	xr_result(result, "failed to end frame!"); // just report the error
 }
 
 void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture_support) {
@@ -2954,30 +2999,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		 * TODO: Tell godot not to call get_external_texture_for_eye() when
 		 * frameState.shouldRender is false, then remove the image release here
 		 */
-		if (has_external_texture_support) {
-			XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-				.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-				.next = nullptr
-			};
-			result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
-			if (!xr_result(result, "failed to release swapchain image!")) {
-				return;
-			}
-		}
+		release_swapchain(eye); // just report the error and ignore
 
 		if (eye == 1) {
-			// MS wants these in order..
-			// submit 0 layers when we shouldn't render
-			XrFrameEndInfo frameEndInfo = {
-				.type = XR_TYPE_FRAME_END_INFO,
-				.next = nullptr,
-				.displayTime = frameState.predictedDisplayTime,
-				.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-				.layerCount = 0,
-				.layers = nullptr,
-			};
-			result = xrEndFrame(session, &frameEndInfo);
-			xr_result(result, "failed to end frame!");
+			// we must always end our frame, even if we don't have an image to submit...
+			end_frame(0, nullptr);
 		}
 
 		// neither eye is rendered
@@ -2987,6 +3013,11 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 	if (!has_external_texture_support) {
 		result = acquire_image(eye);
 		if (!xr_result(result, "failed to acquire swapchain image!")) {
+			if (eye == 1) {
+				// we must always end our frame, even if we don't have an image to submit...
+				end_frame(0, nullptr);
+			}
+
 			return;
 		}
 
@@ -3009,12 +3040,12 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 		// printf("Godot already rendered into our textures\n");
 	}
 
-	XrSwapchainImageReleaseInfo swapchainImageReleaseInfo = {
-		.type = XR_TYPE_SWAPCHAIN_IMAGE_RELEASE_INFO,
-		.next = nullptr
-	};
-	result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
-	if (!xr_result(result, "failed to release swapchain image!")) {
+	if (!release_swapchain(eye)) {
+		if (eye == 1) {
+			// we must always end our frame, even if we don't have an image to submit...
+			end_frame(0, nullptr);
+		}
+
 		return;
 	}
 
@@ -3038,18 +3069,7 @@ void OpenXRApi::render_openxr(int eye, uint32_t texid, bool has_external_texture
 
 		projectionLayer->layerFlags = layers_list.size() > 1 ? XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT | XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT : XR_COMPOSITION_LAYER_CORRECT_CHROMATIC_ABERRATION_BIT;
 
-		XrFrameEndInfo frameEndInfo = {
-			.type = XR_TYPE_FRAME_END_INFO,
-			.next = nullptr,
-			.displayTime = frameState.predictedDisplayTime,
-			.environmentBlendMode = XR_ENVIRONMENT_BLEND_MODE_OPAQUE,
-			.layerCount = static_cast<uint32_t>(layers_list.size()),
-			.layers = layers_list.data(),
-		};
-		result = xrEndFrame(session, &frameEndInfo);
-		if (!xr_result(result, "failed to end frame!")) {
-			return;
-		}
+		end_frame(static_cast<uint32_t>(layers_list.size()), layers_list.data());
 	}
 
 #ifdef WIN32
@@ -3414,6 +3434,14 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 	// this won't prevent us from rendering but we won't output to OpenXR
 	if (!running || state >= XR_SESSION_STATE_STOPPING)
 		return 0;
+
+	if (!frameState.shouldRender) {
+		// We shouldn't be rendering at all but this prevents acquiring and rendering to our swap chain (Quest doesn't seem to like this)
+		// instead we render to Godots internal buffers. Also good for desktop as we still get our preview.
+
+		// We really should make it possible to return say -1 and have Godot skip rendering this frame. That would need to be a change upstream.
+		return 0;
+	}
 
 	// this only gets called from Godot 3.2 and newer, allows us to use
 	// OpenXR swapchain directly.

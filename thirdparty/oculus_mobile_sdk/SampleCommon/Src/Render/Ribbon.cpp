@@ -9,9 +9,6 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 ************************************************************************************/
 
-/// Ignore static asserts on types from OVR_Math
-#define OVR_MATH_STATIC_ASSERT(xx, yy) ;
-
 #include "Ribbon.h"
 #include "OVR_Math.h"
 #include "Render/GlTexture.h"

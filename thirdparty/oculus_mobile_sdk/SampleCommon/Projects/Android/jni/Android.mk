@@ -16,6 +16,7 @@ LOCAL_C_INCLUDES := \
   $(LOCAL_PATH)/../../../../1stParty/OVR/Include \
   $(LOCAL_PATH)/../../../../1stParty/utilities/include \
   $(LOCAL_PATH)/../../../../3rdParty/stb/src \
+  $(LOCAL_PATH)/../../../../3rdParty/khronos/ktx/include \
 
 LOCAL_CFLAGS += -Wno-invalid-offsetof
 
@@ -84,6 +85,7 @@ LOCAL_SRC_FILES := \
   ../../../Src/System.cpp \
 
 LOCAL_STATIC_LIBRARIES += minizip stb android_native_app_glue
+LOCAL_SHARED_LIBRARIES += ktx
 
 # start building based on everything since CLEAR_VARS
 include $(BUILD_STATIC_LIBRARY)
@@ -91,3 +93,4 @@ include $(BUILD_STATIC_LIBRARY)
 $(call import-module,android/native_app_glue)
 $(call import-module,3rdParty/minizip/build/android/jni)
 $(call import-module,3rdParty/stb/build/android/jni)
+$(call import-module,3rdParty/khronos/ktx/makefiles/androidprebuilt/jni)

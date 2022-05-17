@@ -346,6 +346,9 @@ class XrApp {
     virtual void AttachActionSets();
     virtual void SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState);
 
+    // Called to deal with lifetime
+    void HandleSessionStateChanges(XrSessionState state);
+
    private:
     // Called one time when the application process starts.
     // Returns true if the application initialized successfully.
@@ -364,11 +367,8 @@ class XrApp {
     // AppPaused() and AppResumed()
     void HandleLifecycle(const xrJava* context);
 
-    // Called to deal with lifetime
-    void HandleSessionStateChanges(XrSessionState state);
-
     // Events
-    void HandleXrEvents();
+    virtual void HandleXrEvents();
 
     // Internal Input
     void HandleInput(ovrApplFrameIn& in, XrFrameState& frameState);

@@ -9,6 +9,7 @@ Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 
 *************************************************************************************/
 
+#include <openxr/openxr.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
@@ -82,6 +83,7 @@ union ovrCompositorLayer_Union {
     XrCompositionLayerCylinderKHR Cylinder;
     XrCompositionLayerCubeKHR Cube;
     XrCompositionLayerEquirectKHR Equirect;
+    XrCompositionLayerPassthroughFB Passthrough;
 };
 
 enum { ovrMaxLayerCount = 16 };
@@ -408,6 +410,15 @@ ovrApp
 */
 
 struct ovrExtensionFunctionPointers {
+    PFN_xrCreatePassthroughFB xrCreatePassthroughFB = nullptr;
+    PFN_xrDestroyPassthroughFB xrDestroyPassthroughFB = nullptr;
+    PFN_xrCreatePassthroughLayerFB xrCreatePassthroughLayerFB = nullptr;
+    PFN_xrDestroyPassthroughLayerFB xrDestroyPassthroughLayerFB = nullptr;
+    PFN_xrPassthroughLayerResumeFB xrPassthroughLayerResumeFB = nullptr;
+    PFN_xrPassthroughLayerPauseFB xrPassthroughLayerPauseFB = nullptr;
+    PFN_xrPassthroughLayerSetStyleFB xrPassthroughLayerSetStyleFB = nullptr;
+    PFN_xrPassthroughStartFB xrPassthroughStartFB = nullptr;
+    PFN_xrPassthroughPauseFB xrPassthroughPauseFB = nullptr;
     PFN_xrEnumerateSupportedComponentsFB xrEnumerateSupportedComponentsFB = nullptr;
     PFN_xrSetComponentEnabledFB xrSetComponentEnabledFB = nullptr;
     PFN_xrGetComponentStatusFB xrGetComponentStatusFB = nullptr;
@@ -1063,6 +1074,7 @@ void android_main(struct android_app* androidApp) {
         XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME,
         XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME,
         XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME,
+        XR_FB_PASSTHROUGH_EXTENSION_NAME,
         XR_FB_SPATIAL_ENTITY_EXTENSION_NAME,
         XR_FB_SPATIAL_ENTITY_QUERY_EXTENSION_NAME,
                 XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME};
@@ -1425,6 +1437,44 @@ void android_main(struct android_app* androidApp) {
     SimpleXrInput* input = CreateSimpleXrInput(instance);
     input->BeginSession(app.Session);
 
+    /// Hook up extensions for passthrough
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrCreatePassthroughFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrCreatePassthroughFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrDestroyPassthroughFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrDestroyPassthroughFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrCreatePassthroughLayerFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrCreatePassthroughLayerFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrDestroyPassthroughLayerFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrDestroyPassthroughLayerFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrPassthroughLayerResumeFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrPassthroughLayerResumeFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrPassthroughLayerPauseFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrPassthroughLayerPauseFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrPassthroughLayerSetStyleFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrPassthroughLayerSetStyleFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrPassthroughStartFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrPassthroughStartFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance,
+        "xrPassthroughPauseFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrPassthroughPauseFB)));
+
     /// Hook up extensions for spatial entity
     OXR(xrGetInstanceProcAddr(
         instance,
@@ -1455,6 +1505,34 @@ void android_main(struct android_app* androidApp) {
         "xrSpatialEntityEraseSpaceFB",
         (PFN_xrVoidFunction*)(&app.FunPtrs.xrSpatialEntityEraseSpaceFB)));
     
+    // Create and start passthrough
+    XrPassthroughFB passthrough = XR_NULL_HANDLE;
+    XrPassthroughLayerFB reconPassthroughLayer = XR_NULL_HANDLE;
+    {
+        XrPassthroughCreateInfoFB ptci = {XR_TYPE_PASSTHROUGH_CREATE_INFO_FB};
+        XrResult result;
+        OXR(result = app.FunPtrs.xrCreatePassthroughFB(app.Session, &ptci, &passthrough));
+
+        if (XR_SUCCEEDED(result)) {
+            ALOGV("Creating passthrough layer");
+            XrPassthroughLayerCreateInfoFB plci = {XR_TYPE_PASSTHROUGH_LAYER_CREATE_INFO_FB};
+            plci.passthrough = passthrough;
+            plci.purpose = XR_PASSTHROUGH_LAYER_PURPOSE_RECONSTRUCTION_FB;
+            OXR(app.FunPtrs.xrCreatePassthroughLayerFB(app.Session, &plci, &reconPassthroughLayer));
+        }
+
+        if (XR_SUCCEEDED(result)) {
+            ALOGV("Setting passthrough style");
+            XrPassthroughStyleFB style{XR_TYPE_PASSTHROUGH_STYLE_FB};
+            OXR(app.FunPtrs.xrPassthroughLayerResumeFB(reconPassthroughLayer));
+            style.textureOpacityFactor = 0.5f;
+            style.edgeColor = {0.0f, 0.0f, 0.0f, 0.0f};
+            OXR(app.FunPtrs.xrPassthroughLayerSetStyleFB(reconPassthroughLayer, &style));
+        }
+
+        OXR(result = app.FunPtrs.xrPassthroughStartFB(passthrough));
+    }
+
     // Controller button states
     bool aButtonVal = false;
     bool aPrevButtonVal = false;
@@ -1686,6 +1764,16 @@ void android_main(struct android_app* androidApp) {
 
         app.LayerCount = 0;
         memset(app.Layers, 0, sizeof(ovrCompositorLayer_Union) * ovrMaxLayerCount);
+
+        // passthrough layer is backmost layer (if available)
+        if (reconPassthroughLayer != XR_NULL_HANDLE) {
+            XrCompositionLayerPassthroughFB passthrough_layer = {};
+            passthrough_layer.type = XR_TYPE_COMPOSITION_LAYER_PASSTHROUGH_FB;
+            passthrough_layer.layerHandle = reconPassthroughLayer;
+            passthrough_layer.flags = XR_COMPOSITION_LAYER_BLEND_TEXTURE_SOURCE_ALPHA_BIT;
+            passthrough_layer.space = XR_NULL_HANDLE;
+            app.Layers[app.LayerCount++].Passthrough = passthrough_layer;
+        }
 
         XrCompositionLayerProjection proj_layer = {};
         proj_layer.type = XR_TYPE_COMPOSITION_LAYER_PROJECTION;

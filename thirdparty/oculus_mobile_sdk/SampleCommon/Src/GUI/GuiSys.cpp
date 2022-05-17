@@ -128,7 +128,7 @@ class ovrInfoText {
 class OvrGuiSysLocal : public OvrGuiSys {
    public:
     OvrGuiSysLocal(const void* context);
-    virtual ~OvrGuiSysLocal();
+    ~OvrGuiSysLocal() override;
 
     virtual void Init(
         ovrFileSys* fileSysArg,

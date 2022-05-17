@@ -105,7 +105,7 @@ class ovrTextureManagerImpl : public ovrTextureManager {
 
    private:
     ovrTextureManagerImpl();
-    virtual ~ovrTextureManagerImpl();
+    ~ovrTextureManagerImpl() override;
 
     int FindTextureIndex(char const* uri) const;
     int FindTextureIndex(int const iconId) const;

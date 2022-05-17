@@ -131,7 +131,7 @@ class ovrUriScheme_File : public ovrUriScheme {
 class ovrUriScheme_Apk : public ovrUriScheme {
    public:
     ovrUriScheme_Apk(char const* schemeName);
-    virtual ~ovrUriScheme_Apk();
+    ~ovrUriScheme_Apk() override;
 
     void* GetZipFileForHostName(char const* hostName) const;
 
@@ -204,7 +204,7 @@ class ovrUriScheme_Apk : public ovrUriScheme {
 class ovrStream_File : public ovrStream {
    public:
     ovrStream_File(ovrUriScheme const& scheme);
-    virtual ~ovrStream_File();
+    ~ovrStream_File() override;
 
    private:
     FILE* F;
@@ -236,7 +236,7 @@ class ovrStream_File : public ovrStream {
 class ovrStream_Apk : public ovrStream {
    public:
     ovrStream_Apk(ovrUriScheme const& scheme);
-    virtual ~ovrStream_Apk();
+    ~ovrStream_Apk() override;
 
    private:
     std::string HostName;

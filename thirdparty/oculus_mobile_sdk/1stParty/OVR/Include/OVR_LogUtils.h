@@ -183,7 +183,7 @@ inline void LogWithFileTag(const int prio, const char* fileTag, const char* fmt,
 #define OVR_FAIL(...)                             \
     {                                             \
         LogWithFileTag(0, __FILE__, __VA_ARGS__); \
-        exit(0);                                  \
+        abort();                                  \
     }
 #define OVR_LOG_WITH_TAG(__tag__, ...) LogWithTag(0, __FILE__, __VA_ARGS__)
 #define OVR_ASSERT_WITH_TAG(__expr__, __tag__)
@@ -262,22 +262,32 @@ inline void LogWithFileTag(const int prio, const char* fileTag, const char* fmt,
 #endif
 
 #elif defined(OVR_OS_MAC) || defined(OVR_OS_LINUX)
+#include <string>
+#include <folly/logging/xlog.h>
 
-#define OVR_LOG(...) \
-    {}
-#define OVR_WARN(...) \
-    {}
-#define OVR_ERROR(...) \
-    {}
-#define OVR_FAIL(...) \
-    {                 \
-        ;             \
-        exit(0);      \
+// Helper that converts a printf-style format string to an std::string. Needed
+// because the folly macros don't accept printf-style strings.
+#define FORMAT_STR(...)                                                 \
+    ([&] {                                                              \
+        size_t _buf_len = snprintf(nullptr, 0, __VA_ARGS__);            \
+        std::string _format_str_result;                                 \
+        _format_str_result.resize(_buf_len);                            \
+        snprintf(_format_str_result.data(), _buf_len + 1, __VA_ARGS__); \
+        return _format_str_result;                                      \
+    }())
+
+#define OVR_LOG(...) XLOG(INFO, FORMAT_STR(__VA_ARGS__))
+#define OVR_WARN(...) XLOG(WARN, FORMAT_STR(__VA_ARGS__))
+#define OVR_ERROR(...) XLOG(ERR, FORMAT_STR(__VA_ARGS__))
+#define OVR_FAIL(...) XLOG(FATAL, FORMAT_STR(__VA_ARGS__))
+#define OVR_LOG_WITH_TAG(__tag__, ...) OVR_LOG(__VA_ARGS__)
+#define OVR_ASSERT_WITH_TAG(__expr__, __tag__)           \
+    {                                                    \
+        if (!(__expr__)) {                               \
+            OVR_FAIL("ASSERTION FAILED: %s", #__expr__); \
+        }                                                \
     }
-#define OVR_LOG_WITH_TAG(__tag__, ...) \
-    {}
-#define OVR_ASSERT_WITH_TAG(__expr__, __tag__) \
-    {}
+
 #else
 #error "unknown platform"
 #endif

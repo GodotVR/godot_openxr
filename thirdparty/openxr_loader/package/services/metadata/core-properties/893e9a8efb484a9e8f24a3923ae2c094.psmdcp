@@ -3,7 +3,7 @@
   <dc:creator>Khronos Group</dc:creator>
   <dc:description>Khronos OpenXR loader and headers required to build a Win32 or UWP OpenXR application</dc:description>
   <dc:identifier>OpenXR.Loader</dc:identifier>
-  <version>1.0.20</version>
+  <version>1.0.22</version>
   <keywords>native khronos openxr loader</keywords>
   <lastModifiedBy>NuGet, Version=5.8.0.6930, Culture=neutral, PublicKeyToken=31bf3856ad364e35;Microsoft Windows NT 10.0.17763.0;.NET Framework 4.7.2</lastModifiedBy>
 </coreProperties>

@@ -2,7 +2,7 @@
 <package xmlns="http://schemas.microsoft.com/packaging/2010/07/nuspec.xsd">
   <metadata>
     <id>OpenXR.Loader</id>
-    <version>1.0.20</version>
+    <version>1.0.22</version>
     <authors>Khronos Group</authors>
     <owners>Khronos Group</owners>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

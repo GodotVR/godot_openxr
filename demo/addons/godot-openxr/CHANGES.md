@@ -8,7 +8,8 @@ Changes to the Godot OpenXR asset
 - Fixed invalid pose data when controllers are becoming inactive.
 - Added Quest 2 controller models to the demo.
 - Add support for the hand tracking aim state extension.
-- Oculus OpenXR mobile SDK version 38 update.
+- OpenXR updated to 1.0.22
+- Oculus OpenXR mobile SDK version 39 update.
 
 1.2.0
 -------------------

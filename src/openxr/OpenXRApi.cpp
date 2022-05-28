@@ -1427,6 +1427,7 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 bool OpenXRApi::initialiseInstance() {
 	XrResult result;
 
+	Godot::print("OpenXR TEST MGSCHWAN");
 #ifdef DEBUG
 	Godot::print("OpenXR initialiseInstance");
 #endif
@@ -2959,6 +2960,10 @@ bool OpenXRApi::release_swapchain(int eye) {
 			.next = nullptr
 		};
 		XrResult result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
+		
+		if ( result != XR_SUCCESS )
+			swapchain_error = true;
+
 		return xr_result(result, "failed to release swapchain image!");
 	} else {
 		return XR_SUCCESS;
@@ -3642,6 +3647,13 @@ void OpenXRApi::process_openxr() {
 
 	if (!running) {
 		return;
+	}
+
+	if (swapchain_error) {
+		swapchain_error = false;
+		Godot::print("SWAPCHAIN should be reinitialized");
+		cleanupSwapChains();
+		initialiseSwapChains();
 	}
 
 	XrFrameWaitInfo frameWaitInfo = {

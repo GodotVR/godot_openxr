@@ -46,6 +46,9 @@ public:
 	void set_color_space(const int p_color_space);
 	godot::Dictionary get_available_color_spaces();
 
+	int get_play_space_type() const;
+	void set_play_space_type(const int p_play_space_type);
+
 	double get_refresh_rate() const;
 	void set_refresh_rate(const double p_refresh_rate);
 	godot::Array get_available_refresh_rates() const;

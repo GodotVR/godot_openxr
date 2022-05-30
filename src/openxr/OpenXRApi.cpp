@@ -1826,6 +1826,14 @@ bool OpenXRApi::initialiseSession() {
 	return true;
 }
 
+void OpenXRApi::set_play_space_type(XrReferenceSpaceType p_type) {
+	if (is_initialised()) {
+		Godot::print_error("Setting the play space type is only allowed prior to initialization.", __FUNCTION__, __FILE__, __LINE__);
+	} else {
+		play_space_type = p_type;
+	}
+}
+
 bool OpenXRApi::set_render_target_size_multiplier(float multiplier) {
 	if (is_initialised()) {
 		Godot::print_error("Setting the render target size multiplier is only allowed prior to initialization.", __FUNCTION__, __FILE__, __LINE__);

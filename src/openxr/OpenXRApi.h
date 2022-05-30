@@ -320,6 +320,9 @@ public:
 	uint32_t get_vendor_id() const { return vendor_id; }
 	XrTime get_next_frame_time() const;
 
+	XrReferenceSpaceType get_play_space_type() { return play_space_type; }
+	void set_play_space_type(XrReferenceSpaceType p_type);
+
 	float get_render_target_size_multiplier() { return render_target_size_multiplier; }
 	bool set_render_target_size_multiplier(float multiplier);
 

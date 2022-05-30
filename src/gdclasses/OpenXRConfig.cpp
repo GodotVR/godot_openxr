@@ -27,6 +27,10 @@ void OpenXRConfig::_register_methods() {
 	register_property<OpenXRConfig, int>("color_space", &OpenXRConfig::set_color_space, &OpenXRConfig::get_color_space, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
 	register_method("get_available_color_spaces", &OpenXRConfig::get_available_color_spaces);
 
+	register_method("get_play_space_type", &OpenXRConfig::get_play_space_type);
+	register_method("set_play_space_type", &OpenXRConfig::set_play_space_type);
+	register_property<OpenXRConfig, int>("play_space_type", &OpenXRConfig::set_play_space_type, &OpenXRConfig::get_play_space_type, 2, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "View,Local,Stage"); // we don't support XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT and XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO at this time.
+
 	register_method("get_refresh_rate", &OpenXRConfig::get_refresh_rate);
 	register_method("set_refresh_rate", &OpenXRConfig::set_refresh_rate);
 	register_property<OpenXRConfig, double>("refresh_rate", &OpenXRConfig::set_refresh_rate, &OpenXRConfig::get_refresh_rate, 1, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_NOEDITOR);
@@ -186,6 +190,54 @@ godot::Dictionary OpenXRConfig::get_available_color_spaces() {
 		return color_space_wrapper->get_available_color_spaces();
 	} else {
 		return godot::Dictionary();
+	}
+}
+
+int OpenXRConfig::get_play_space_type() const {
+	if (openxr_api == NULL) {
+		return XR_REFERENCE_SPACE_TYPE_STAGE;
+	} else {
+		switch (openxr_api->get_play_space_type()) {
+			case XR_REFERENCE_SPACE_TYPE_VIEW:
+				return 0;
+			case XR_REFERENCE_SPACE_TYPE_LOCAL:
+				return 1;
+			case XR_REFERENCE_SPACE_TYPE_STAGE:
+				return 2;
+				//case XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT:
+				//	return ??;
+				//case XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO:
+				//	return ??;
+			default:
+				return 2;
+		}
+	}
+}
+
+void OpenXRConfig::set_play_space_type(const int p_play_space_type) {
+	if (openxr_api == NULL) {
+		Godot::print("OpenXR object wasn't constructed.");
+	} else {
+		switch (p_play_space_type) {
+			case 0: {
+				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_VIEW);
+			} break;
+			case 2: {
+				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_LOCAL);
+			} break;
+			case 3: {
+				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_STAGE);
+			} break;
+				//case ??: {
+				//	openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT);
+				//} break;
+				//case ??: {
+				//	openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO);
+				//} break;
+			default: {
+				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_STAGE);
+			} break;
+		}
 	}
 }
 

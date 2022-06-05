@@ -1427,7 +1427,6 @@ bool OpenXRApi::isReferenceSpaceSupported(XrReferenceSpaceType type) {
 bool OpenXRApi::initialiseInstance() {
 	XrResult result;
 
-	Godot::print("OpenXR TEST MGSCHWAN");
 #ifdef DEBUG
 	Godot::print("OpenXR initialiseInstance");
 #endif
@@ -3651,7 +3650,7 @@ void OpenXRApi::process_openxr() {
 
 	if (swapchain_error) {
 		swapchain_error = false;
-		Godot::print("SWAPCHAIN should be reinitialized");
+		Godot::print("Swapchains need reinitialization");
 		cleanupSwapChains();
 		initialiseSwapChains();
 	}

@@ -2412,10 +2412,16 @@ bool OpenXRApi::on_state_idle() {
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_idle();
 	}
+
+	emit_plugin_signal(SIGNAL_SESSION_IDLE);
+
 	return true;
 }
 
 bool OpenXRApi::on_state_ready() {
+
+	emit_plugin_signal(SIGNAL_SESSION_READY);
+
 #ifdef DEBUG
 	Godot::print("On state ready");
 #endif
@@ -2459,6 +2465,9 @@ bool OpenXRApi::on_state_synchronized() {
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_synchronized();
 	}
+
+	emit_plugin_signal(SIGNAL_SESSION_SYNCHRONIZED);
+
 	return true;
 }
 

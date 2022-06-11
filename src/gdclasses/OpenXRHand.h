@@ -18,6 +18,7 @@ private:
 	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 	int hand;
 	int motion_range;
+	int relative_transform;
 
 	Spatial *joints[XR_HAND_JOINT_COUNT_EXT];
 	void _set_motion_range();
@@ -39,6 +40,10 @@ public:
 
 	int get_motion_range() const;
 	void set_motion_range(int p_motion_range);
+
+	int get_relative_transform() const;
+	void set_relative_transform(int p_relative_transform);
+
 };
 } // namespace godot
 

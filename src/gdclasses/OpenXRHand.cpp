@@ -19,12 +19,17 @@ void OpenXRHand::_register_methods() {
 	register_method("set_motion_range", &OpenXRHand::set_motion_range);
 	register_property<OpenXRHand, int>("motion_range", &OpenXRHand::set_motion_range, &OpenXRHand::get_motion_range, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Unobstructed,Conform to controller");
 
+	register_method("get_relative_transform", &OpenXRHand::get_relative_transform);
+	register_method("set_relative_transform", &OpenXRHand::set_relative_transform);
+	register_property<OpenXRHand, int>("relative_transform", &OpenXRHand::set_relative_transform, &OpenXRHand::get_relative_transform, 0, GODOT_METHOD_RPC_MODE_DISABLED, GODOT_PROPERTY_USAGE_DEFAULT, GODOT_PROPERTY_HINT_ENUM, "Global,Local");
+
 	register_method("is_active", &OpenXRHand::is_active);
 }
 
 OpenXRHand::OpenXRHand() {
 	hand = 0;
 	motion_range = 0;
+	relative_transform = 0;
 	openxr_api = OpenXRApi::openxr_get_api();
 	hand_tracking_wrapper = XRExtHandTrackingExtensionWrapper::get_singleton();
 
@@ -139,8 +144,12 @@ void OpenXRHand::_physics_process(float delta) {
 
 			if (joints[i] != NULL) {
 				if (parents[i] == -1) {
-					// apply our reference frame to our root frame
-					t = reference_frame * t;
+					if (relative_transform) {
+						t = inv_transforms[XR_HAND_JOINT_PALM_EXT] * t;
+					} else {
+						// apply our reference frame to our root frame
+						t = reference_frame * t;
+					}
 				} else {
 					// transform to local
 					int parent = parents[i];
@@ -178,6 +187,14 @@ int OpenXRHand::get_hand() const {
 
 void OpenXRHand::set_hand(int p_hand) {
 	hand = p_hand == 1 ? 1 : 0;
+}
+
+int OpenXRHand::get_relative_transform() const {
+	return relative_transform;
+}
+
+void OpenXRHand::set_relative_transform(int p_relative_transform) {
+	relative_transform = p_relative_transform == 1 ? 1 : 0;
 }
 
 int OpenXRHand::get_motion_range() const {

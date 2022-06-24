@@ -3804,7 +3804,6 @@ TrackingConfidence OpenXRApi::transform_from_location(const XrSpaceLocation &p_l
 	TrackingConfidence confidence = _transform_from_location(p_location, t);
 	if (confidence != TRACKING_CONFIDENCE_NONE) {
 		// only update if we have tracking data
-		t.basis *= p_world_scale;
 		r_transform = t;
 	}
 	return confidence;
@@ -3815,7 +3814,6 @@ TrackingConfidence OpenXRApi::transform_from_location(const XrHandJointLocationE
 	TrackingConfidence confidence = _transform_from_location(p_location, t);
 	if (confidence != TRACKING_CONFIDENCE_NONE) {
 		// only update if we have tracking data
-		t.basis *= p_world_scale;
 		r_transform = t;
 	}
 	return confidence;

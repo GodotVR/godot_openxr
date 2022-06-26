@@ -194,46 +194,32 @@ godot::Dictionary OpenXRConfig::get_available_color_spaces() {
 }
 
 int OpenXRConfig::get_play_space_type() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else {
 		switch (openxr_api->get_play_space_type()) {
 			case XR_REFERENCE_SPACE_TYPE_VIEW:
-				return 0;
 			case XR_REFERENCE_SPACE_TYPE_LOCAL:
-				return 1;
 			case XR_REFERENCE_SPACE_TYPE_STAGE:
-				return 2;
-				//case XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT:
-				//	return ??;
-				//case XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO:
-				//	return ??;
+				return openxr_api->get_play_space_type();
+
 			default:
-				return 2;
+				return XR_REFERENCE_SPACE_TYPE_STAGE;
 		}
 	}
 }
 
 void OpenXRConfig::set_play_space_type(const int p_play_space_type) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		switch (p_play_space_type) {
-			case 0: {
-				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_VIEW);
+			case XR_REFERENCE_SPACE_TYPE_VIEW:
+			case XR_REFERENCE_SPACE_TYPE_LOCAL:
+			case XR_REFERENCE_SPACE_TYPE_STAGE: {
+				openxr_api->set_play_space_type(static_cast<XrReferenceSpaceType>(p_play_space_type));
 			} break;
-			case 2: {
-				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_LOCAL);
-			} break;
-			case 3: {
-				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_STAGE);
-			} break;
-				//case ??: {
-				//	openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT);
-				//} break;
-				//case ??: {
-				//	openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO);
-				//} break;
+
 			default: {
 				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_STAGE);
 			} break;

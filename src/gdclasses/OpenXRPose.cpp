@@ -18,6 +18,14 @@ void OpenXRPose::_register_methods() {
 			&OpenXRPose::get_invisible_if_inactive,
 			true);
 
+	register_method("get_invisible_if_no_confidence", &OpenXRPose::get_invisible_if_no_confidence);
+	register_method("set_invisible_if_no_confidence", &OpenXRPose::set_invisible_if_no_confidence);
+	register_property<OpenXRPose, bool>(
+			"invisible_if_no_confidence",
+			&OpenXRPose::set_invisible_if_no_confidence,
+			&OpenXRPose::get_invisible_if_no_confidence,
+			true);
+
 	// For now these are hard coded based on our actions
 	// As our actions JSON is parsed after initialisation we can't really present the dropdown (yet)
 	// For now this will do
@@ -45,7 +53,15 @@ void OpenXRPose::_register_methods() {
 			GODOT_METHOD_RPC_MODE_DISABLED,
 			GODOT_PROPERTY_USAGE_DEFAULT,
 			GODOT_PROPERTY_HINT_ENUM,
-			"/user/hand/left,/user/hand/right,/user/treadmill");
+			"/user/hand/left,/user/hand/right,/user/treadmill"
+			",/user/vive_tracker_htcx/role/left_foot,/user/vive_tracker_htcx/role/right_foot"
+			",/user/vive_tracker_htcx/role/left_shoulder,/user/vive_tracker_htcx/role/right_shoulder"
+			",/user/vive_tracker_htcx/role/left_elbow,/user/vive_tracker_htcx/role/right_elbow"
+			",/user/vive_tracker_htcx/role/left_knee,/user/vive_tracker_htcx/role/right_knee"
+			",/user/vive_tracker_htcx/role/waist"
+			",/user/vive_tracker_htcx/role/chest"
+			",/user/vive_tracker_htcx/role/camera"
+			",/user/vive_tracker_htcx/role/keyboard");
 
 	register_method("is_active", &OpenXRPose::is_active);
 	register_method("get_tracking_confidence", &OpenXRPose::get_tracking_confidence);
@@ -119,6 +135,8 @@ bool OpenXRPose::check_action_and_path() {
 }
 
 void OpenXRPose::_physics_process(float delta) {
+	bool visible = true;
+
 	if (openxr_api == nullptr || hand_tracking_wrapper == nullptr) {
 		return;
 	} else if (!openxr_api->is_initialised()) {
@@ -126,7 +144,7 @@ void OpenXRPose::_physics_process(float delta) {
 	}
 
 	if (invisible_if_inactive) {
-		set_visible(is_active());
+		visible = is_active();
 	}
 
 	ARVRServer *server = ARVRServer::get_singleton();
@@ -149,7 +167,16 @@ void OpenXRPose::_physics_process(float delta) {
 		Transform t;
 		confidence = _action->get_as_pose(_path, ws, t);
 		set_transform(reference_frame * t);
+	} else {
+		// we're not tracking anything...
+		confidence = TRACKING_CONFIDENCE_NONE;
 	}
+
+	if (invisible_if_no_confidence && confidence == TRACKING_CONFIDENCE_NONE) {
+		visible = false;
+	}
+
+	set_visible(visible);
 }
 
 bool OpenXRPose::is_active() {
@@ -182,6 +209,14 @@ bool OpenXRPose::get_invisible_if_inactive() const {
 
 void OpenXRPose::set_invisible_if_inactive(bool hide) {
 	invisible_if_inactive = hide;
+}
+
+bool OpenXRPose::get_invisible_if_no_confidence() const {
+	return invisible_if_no_confidence;
+}
+
+void OpenXRPose::set_invisible_if_no_confidence(bool hide) {
+	invisible_if_no_confidence = hide;
 }
 
 String OpenXRPose::get_action() const {

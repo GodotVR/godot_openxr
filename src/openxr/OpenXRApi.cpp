@@ -52,7 +52,19 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				"localised_name": "Grip Pose",
 				"paths": [
 					"/user/hand/left",
-					"/user/hand/right"
+					"/user/hand/right",
+					"/user/vive_tracker_htcx/role/left_foot",
+					"/user/vive_tracker_htcx/role/right_foot",
+					"/user/vive_tracker_htcx/role/left_shoulder",
+					"/user/vive_tracker_htcx/role/right_shoulder",
+					"/user/vive_tracker_htcx/role/left_elbow",
+					"/user/vive_tracker_htcx/role/right_elbow",
+					"/user/vive_tracker_htcx/role/left_knee",
+					"/user/vive_tracker_htcx/role/right_knee",
+					"/user/vive_tracker_htcx/role/waist",
+					"/user/vive_tracker_htcx/role/chest",
+					"/user/vive_tracker_htcx/role/camera",
+					"/user/vive_tracker_htcx/role/keyboard"
 				]
 			},
 			{
@@ -214,7 +226,19 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				"localised_name": "Controller haptic vibration",
 				"paths": [
 					"/user/hand/left",
-					"/user/hand/right"
+					"/user/hand/right",
+					"/user/vive_tracker_htcx/role/left_foot",
+					"/user/vive_tracker_htcx/role/right_foot",
+					"/user/vive_tracker_htcx/role/left_shoulder",
+					"/user/vive_tracker_htcx/role/right_shoulder",
+					"/user/vive_tracker_htcx/role/left_elbow",
+					"/user/vive_tracker_htcx/role/right_elbow",
+					"/user/vive_tracker_htcx/role/left_knee",
+					"/user/vive_tracker_htcx/role/right_knee",
+					"/user/vive_tracker_htcx/role/waist",
+					"/user/vive_tracker_htcx/role/chest",
+					"/user/vive_tracker_htcx/role/camera",
+					"/user/vive_tracker_htcx/role/keyboard"
 				]
 			}
 		]
@@ -1290,6 +1314,161 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				]
 			}
 		]
+	},)==="
+	R"===({
+		"path": "/interaction_profiles/htc/vive_tracker_htcx",
+		"bindings": [
+			{
+				"set": "godot",
+				"action": "grip_pose",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/input/grip/pose",
+					"/user/vive_tracker_htcx/role/right_foot/input/grip/pose",
+					"/user/vive_tracker_htcx/role/left_shoulder/input/grip/pose",
+					"/user/vive_tracker_htcx/role/right_shoulder/input/grip/pose",
+					"/user/vive_tracker_htcx/role/left_elbow/input/grip/pose",
+					"/user/vive_tracker_htcx/role/right_elbow/input/grip/pose",
+					"/user/vive_tracker_htcx/role/left_knee/input/grip/pose",
+					"/user/vive_tracker_htcx/role/right_knee/input/grip/pose",
+					"/user/vive_tracker_htcx/role/waist/input/grip/pose",
+					"/user/vive_tracker_htcx/role/chest/input/grip/pose",
+					"/user/vive_tracker_htcx/role/camera/input/grip/pose",
+					"/user/vive_tracker_htcx/role/keyboard/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "menu_button",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/input/menu/click",
+					"/user/vive_tracker_htcx/role/right_foot/input/menu/click",
+					"/user/vive_tracker_htcx/role/left_shoulder/input/menu/click",
+					"/user/vive_tracker_htcx/role/right_shoulder/input/menu/click",
+					"/user/vive_tracker_htcx/role/left_elbow/input/menu/click",
+					"/user/vive_tracker_htcx/role/right_elbow/input/menu/click",
+					"/user/vive_tracker_htcx/role/left_knee/input/menu/click",
+					"/user/vive_tracker_htcx/role/right_knee/input/menu/click",
+					"/user/vive_tracker_htcx/role/waist/input/menu/click",
+					"/user/vive_tracker_htcx/role/chest/input/menu/click",
+					"/user/vive_tracker_htcx/role/camera/input/menu/click",
+					"/user/vive_tracker_htcx/role/keyboard/input/menu/click",
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_button",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/input/trigger/click",
+					"/user/vive_tracker_htcx/role/right_foot/input/trigger/click",
+					"/user/vive_tracker_htcx/role/left_shoulder/input/trigger/click",
+					"/user/vive_tracker_htcx/role/right_shoulder/input/trigger/click",
+					"/user/vive_tracker_htcx/role/left_elbow/input/trigger/click",
+					"/user/vive_tracker_htcx/role/right_elbow/input/trigger/click",
+					"/user/vive_tracker_htcx/role/left_knee/input/trigger/click",
+					"/user/vive_tracker_htcx/role/right_knee/input/trigger/click",
+					"/user/vive_tracker_htcx/role/waist/input/trigger/click",
+					"/user/vive_tracker_htcx/role/chest/input/trigger/click",
+					"/user/vive_tracker_htcx/role/camera/input/trigger/click",
+					"/user/vive_tracker_htcx/role/keyboard/input/trigger/click",
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_button",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_foot/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/left_shoulder/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_shoulder/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/left_elbow/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_elbow/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/left_knee/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_knee/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/waist/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/chest/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/camera/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/keyboard/input/squeeze/click",
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_trigger",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/input/trigger/value",
+					"/user/vive_tracker_htcx/role/right_foot/input/trigger/value",
+					"/user/vive_tracker_htcx/role/left_shoulder/input/trigger/value",
+					"/user/vive_tracker_htcx/role/right_shoulder/input/trigger/value",
+					"/user/vive_tracker_htcx/role/left_elbow/input/trigger/value",
+					"/user/vive_tracker_htcx/role/right_elbow/input/trigger/value",
+					"/user/vive_tracker_htcx/role/left_knee/input/trigger/value",
+					"/user/vive_tracker_htcx/role/right_knee/input/trigger/value",
+					"/user/vive_tracker_htcx/role/waist/input/trigger/value",
+					"/user/vive_tracker_htcx/role/chest/input/trigger/value",
+					"/user/vive_tracker_htcx/role/camera/input/trigger/value",
+					"/user/vive_tracker_htcx/role/keyboard/input/trigger/value",
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_trigger",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_foot/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/left_shoulder/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_shoulder/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/left_elbow/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_elbow/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/left_knee/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/right_knee/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/waist/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/chest/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/camera/input/squeeze/click",
+					"/user/vive_tracker_htcx/role/keyboard/input/squeeze/click",
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary",
+				"paths": [
+					"/user/hand/left/input/trackpad",
+					"/user/hand/right/input/trackpad"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_button",
+				"paths": [
+					"/user/hand/left/input/trackpad/click",
+					"/user/hand/right/input/trackpad/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_touch",
+				"paths": [
+					"/user/hand/left/input/trackpad/touch",
+					"/user/hand/right/input/trackpad/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "haptic",
+				"paths": [
+					"/user/vive_tracker_htcx/role/left_foot/output/haptic",
+					"/user/vive_tracker_htcx/role/right_foot/output/haptic",
+					"/user/vive_tracker_htcx/role/left_shoulder/output/haptic",
+					"/user/vive_tracker_htcx/role/right_shoulder/output/haptic",
+					"/user/vive_tracker_htcx/role/left_elbow/output/haptic",
+					"/user/vive_tracker_htcx/role/right_elbow/output/haptic",
+					"/user/vive_tracker_htcx/role/left_knee/output/haptic",
+					"/user/vive_tracker_htcx/role/right_knee/output/haptic",
+					"/user/vive_tracker_htcx/role/waist/output/haptic",
+					"/user/vive_tracker_htcx/role/chest/output/haptic",
+					"/user/vive_tracker_htcx/role/camera/output/haptic",
+					"/user/vive_tracker_htcx/role/keyboard/output/haptic"
+				]
+			}
+		]
 	}
 ]
 )===";
@@ -1308,6 +1487,209 @@ const char *session_states[] = {
 	"XR_SESSION_STATE_LOSS_PENDING",
 	"XR_SESSION_STATE_EXITING",
 };
+
+////////////////////////////////////////////////////////////////////////////////
+// Input
+
+const char *OpenXRInputBase::get_name() const {
+	return name;
+}
+
+const XrPath OpenXRInputBase::get_toplevel_path() const {
+	return toplevel_path;
+}
+
+const XrPath OpenXRInputBase::get_active_profile() const {
+	return active_profile;
+}
+
+const char *OpenXRInputBase::get_active_profile_name() const {
+	return active_profile_str;
+}
+
+const int OpenXRInputBase::get_godot_controller() const {
+	return godot_controller;
+}
+
+const TrackingConfidence OpenXRInputBase::get_tracking_confidence() const {
+	return tracking_confidence;
+}
+
+OpenXRInputBase::OpenXRInputBase(const char *p_name, godot_int p_hand) {
+	// Copy our name
+	int len = strlen(p_name);
+	if (len > XR_MAX_PATH_LENGTH - 1) {
+		len = XR_MAX_PATH_LENGTH - 1;
+	}
+	memcpy(name, p_name, len);
+	name[len] = '\0';
+
+	// Reset our state
+	hand = p_hand;
+	toplevel_path = XR_NULL_PATH;
+	godot_controller = -1;
+	active_profile = XR_NULL_PATH;
+	active_profile_str[0] = '\0';
+	tracking_confidence = TRACKING_CONFIDENCE_NONE;
+
+	// We create our control controller right away, we want to make sure our controller ids become and stay predictable
+	if (godot_controller == -1) {
+		godot_controller = arvr_api->godot_arvr_add_controller(name, p_hand, true, true);
+
+#ifdef DEBUG
+		Godot::print("OpenXR mapped {0} to {1}", name, godot_controller);
+#endif
+	}
+}
+
+OpenXRInputBase::~OpenXRInputBase() {
+}
+
+void OpenXRInputBase::set_active_profile(OpenXRApi *p_openxr_api, XrPath p_active_profile) {
+	if (active_profile == p_active_profile) {
+		return;
+	}
+
+	active_profile = p_active_profile;
+	if (active_profile == XR_NULL_PATH) {
+		active_profile_str[0] = 0;
+		Godot::print("OpenXR No interaction profile for {0}", name);
+		return;
+	}
+
+	uint32_t strl;
+	XrResult res = xrPathToString(p_openxr_api->get_instance(), active_profile, XR_MAX_PATH_LENGTH, &strl, active_profile_str);
+	if (!p_openxr_api->xr_result(res, "Failed to get interaction profile path str for {0}", name)) {
+		return;
+	}
+
+	Godot::print("OpenXR Event: Interaction profile changed for {0}: {1}", name, active_profile_str);
+}
+
+void OpenXRInputBase::bind(OpenXRApi *p_openxr_api) {
+	XrResult res = xrStringToPath(p_openxr_api->get_instance(), name, &toplevel_path);
+	p_openxr_api->xr_result(res, "OpenXR Couldn't obtain path for {0}", name);
+}
+
+void OpenXRInputBase::unbind(OpenXRApi *p_openxr_api) {
+	toplevel_path = XR_NULL_PATH;
+	active_profile = XR_NULL_PATH;
+	if (godot_controller >= 0) {
+		arvr_api->godot_arvr_remove_controller(godot_controller);
+		godot_controller = -1;
+	}
+}
+
+OpenXRInputController::OpenXRInputController(const char *p_name, godot_int p_hand) :
+		OpenXRInputBase(p_name, p_hand) {
+	// nothing to do here for now...
+}
+
+void OpenXRInputController::update(OpenXRApi *p_openxr_api) {
+	if (toplevel_path == XR_NULL_PATH) {
+		// no path, skip this
+	} else if (godot_controller == -1) {
+		// not Godot controller registered
+	} else {
+		const float ws = ARVRServer::get_singleton()->get_world_scale();
+		OpenXRApi::DefaultAction *default_actions = &p_openxr_api->default_actions[0]; // Copy for easy access
+		bool is_active = false;
+
+		// If our aim pose is active, our controller is active
+		// note, if the user has removed this action then our old controller approach becomes defunct
+		if (default_actions[OpenXRApi::ACTION_AIM_POSE].action != NULL) {
+			is_active = default_actions[OpenXRApi::ACTION_AIM_POSE].action->is_pose_active(toplevel_path);
+		}
+
+		if (is_active) {
+			// Start with our pose, we put our ARVRController on our aim pose (may need to change this to our grip pose...)
+			godot_transform controller_transform;
+			Transform *t = (Transform *)&controller_transform;
+			tracking_confidence = default_actions[OpenXRApi::ACTION_AIM_POSE].action->get_as_pose(toplevel_path, ws, *t);
+
+			if (tracking_confidence != TRACKING_CONFIDENCE_NONE) {
+				arvr_api->godot_arvr_set_controller_transform(godot_controller, &controller_transform, true, true);
+			}
+
+			// OK, so OpenXR will tell us if the value has changed and we could skip sending our value
+			// but Godot also checks it so... just let Godot do it
+
+			// Button and axis are hardcoded..
+			// Axis
+			if (default_actions[OpenXRApi::ACTION_FRONT_TRIGGER].action != NULL) {
+				arvr_api->godot_arvr_set_controller_axis(godot_controller, 2, default_actions[OpenXRApi::ACTION_FRONT_TRIGGER].action->get_as_float(toplevel_path), true); // 0.0 -> 1.0
+			}
+			if (default_actions[OpenXRApi::ACTION_SIDE_TRIGGER].action != NULL) {
+				arvr_api->godot_arvr_set_controller_axis(godot_controller, 4, default_actions[OpenXRApi::ACTION_SIDE_TRIGGER].action->get_as_float(toplevel_path), true); // 0.0 -> 1.0
+			}
+			if (default_actions[OpenXRApi::ACTION_PRIMARY].action != NULL) {
+				Vector2 v = default_actions[OpenXRApi::ACTION_PRIMARY].action->get_as_vector(toplevel_path);
+				arvr_api->godot_arvr_set_controller_axis(godot_controller, 0, v.x, true); // -1.0 -> 1.0
+				arvr_api->godot_arvr_set_controller_axis(godot_controller, 1, v.y, true); // -1.0 -> 1.0
+			}
+			if (default_actions[OpenXRApi::ACTION_SECONDARY].action != NULL) {
+				Vector2 v = default_actions[OpenXRApi::ACTION_SECONDARY].action->get_as_vector(toplevel_path);
+				arvr_api->godot_arvr_set_controller_axis(godot_controller, 6, v.x, true); // -1.0 -> 1.0
+				arvr_api->godot_arvr_set_controller_axis(godot_controller, 7, v.y, true); // -1.0 -> 1.0
+			}
+			// Buttons
+			if (default_actions[OpenXRApi::ACTION_AX_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 7, default_actions[OpenXRApi::ACTION_AX_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_BY_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 1, default_actions[OpenXRApi::ACTION_BY_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_AX_TOUCH].action != nullptr) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 5, default_actions[OpenXRApi::ACTION_AX_TOUCH].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_BY_TOUCH].action != nullptr) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 6, default_actions[OpenXRApi::ACTION_BY_TOUCH].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_MENU_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 3, default_actions[OpenXRApi::ACTION_MENU_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_SELECT_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 4, default_actions[OpenXRApi::ACTION_SELECT_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_FRONT_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 15, default_actions[OpenXRApi::ACTION_FRONT_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_FRONT_TOUCH].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 16, default_actions[OpenXRApi::ACTION_FRONT_TOUCH].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_SIDE_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 2, default_actions[OpenXRApi::ACTION_SIDE_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_PRIMARY_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 14, default_actions[OpenXRApi::ACTION_PRIMARY_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_SECONDARY_BUTTON].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 13, default_actions[OpenXRApi::ACTION_SECONDARY_BUTTON].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_PRIMARY_TOUCH].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 12, default_actions[OpenXRApi::ACTION_PRIMARY_TOUCH].action->get_as_bool(toplevel_path));
+			}
+			if (default_actions[OpenXRApi::ACTION_SECONDARY_TOUCH].action != NULL) {
+				arvr_api->godot_arvr_set_controller_button(godot_controller, 11, default_actions[OpenXRApi::ACTION_SECONDARY_TOUCH].action->get_as_bool(toplevel_path));
+			}
+
+			if (default_actions[OpenXRApi::ACTION_HAPTIC].action != NULL) {
+				// Godot currently only gives us a float between 0.0 and 1.0 for rumble strength.
+				// Full haptic control will be offered through another object
+				float haptic = arvr_api->godot_arvr_get_controller_rumble(godot_controller);
+				if (haptic > 0.0) {
+					// 17,000,000.0 nanoseconds (17ms) is slightly more then the duration of one frame if we're outputting at 60fps
+					// so if we sustain our pulse we should be issuing a new pulse before the old one ends
+					default_actions[OpenXRApi::ACTION_HAPTIC].action->do_haptic_pulse(toplevel_path, 17.0 * 1000 * 1000, XR_FREQUENCY_UNSPECIFIED, haptic);
+				}
+			}
+		} else {
+			// In Godot 4 this will also mark the tracker as inactive but in Godot 3 we'll need the user to check this manually
+			// But our old approach of removing and re-adding controllers means that IDs get messed up so...
+			tracking_confidence = TRACKING_CONFIDENCE_NONE;
+		}
+	}
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 // Singleton management
@@ -2202,6 +2584,28 @@ void OpenXRApi::cleanupSwapChains() {
 	}
 }
 
+void OpenXRApi::add_input_map(OpenXRInputBase *p_input_map) {
+	inputmaps.push_back(p_input_map);
+}
+
+void OpenXRApi::setup_input_maps() {
+	add_input_map(new OpenXRInputController("/user/hand/left", 1));
+	add_input_map(new OpenXRInputController("/user/hand/right", 2));
+
+	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+		wrapper->add_input_maps();
+	}
+}
+
+void OpenXRApi::cleanup_input_maps() {
+	// unbindActionSets should already have been called so we can just clear our map
+	for (uint64_t i = 0; i < inputmaps.size(); i++) {
+		OpenXRInputBase *inputmap = inputmaps[i];
+		delete inputmap;
+	}
+	inputmaps.clear();
+}
+
 bool OpenXRApi::loadActionSets() {
 #ifdef DEBUG
 	Godot::print("OpenXR loadActionSets");
@@ -2232,9 +2636,8 @@ bool OpenXRApi::bindActionSets() {
 	// a developer that is not using the internal actions but defines their own may not care about these missing
 
 	// Init our input paths and godot controllers for our mapping to
-	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
-		XrResult res = xrStringToPath(instance, inputmaps[i].name, &inputmaps[i].toplevel_path);
-		xr_result(res, "OpenXR Couldn't obtain path for {0}", inputmaps[i].name);
+	for (uint64_t i = 0; i < inputmaps.size(); i++) {
+		inputmaps[i]->bind(this);
 	}
 
 	// find our default actions
@@ -2250,13 +2653,8 @@ bool OpenXRApi::bindActionSets() {
 
 void OpenXRApi::unbindActionSets() {
 	// cleanup our controller mapping
-	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
-		inputmaps[i].toplevel_path = XR_NULL_PATH;
-		inputmaps[i].active_profile = XR_NULL_PATH;
-		if (inputmaps[i].godot_controller >= 0) {
-			arvr_api->godot_arvr_remove_controller(inputmaps[i].godot_controller);
-			inputmaps[i].godot_controller = -1;
-		}
+	for (uint64_t i = 0; i < inputmaps.size(); i++) {
+		inputmaps[i]->unbind(this);
 	}
 
 	// reset our default actions
@@ -2443,6 +2841,7 @@ bool OpenXRApi::on_state_ready() {
 	initialiseSpaces();
 	initialiseSwapChains();
 
+	setup_input_maps();
 	bindActionSets();
 
 	running = true;
@@ -2526,6 +2925,7 @@ bool OpenXRApi::on_state_stopping() {
 	// need to cleanup various things which would otherwise be re-allocated if we have a state change back to ready
 	// note that cleaning up our action sets will invalidate many of the OpenXR nodes so we need to improve that as well.
 	unbindActionSets();
+	cleanup_input_maps();
 	cleanupSwapChains();
 	cleanupSpaces();
 
@@ -2614,8 +3014,10 @@ godot::Array OpenXRApi::get_enabled_extensions() const {
 }
 
 bool OpenXRApi::is_input_map_controller(int p_godot_controller) {
+	// TODO, this needs to change because this now always returns true as all our controllers are registered here now
+	// Possibly we should add a type variable and just return that.
 	for (const auto &inputmap : inputmaps) {
-		if (inputmap.godot_controller == p_godot_controller) {
+		if (inputmap->get_godot_controller() == p_godot_controller) {
 			return true;
 		}
 	}
@@ -2624,8 +3026,8 @@ bool OpenXRApi::is_input_map_controller(int p_godot_controller) {
 
 TrackingConfidence OpenXRApi::get_controller_tracking_confidence(const int p_godot_controller) const {
 	for (const auto &inputmap : inputmaps) {
-		if (inputmap.godot_controller == p_godot_controller) {
-			return inputmap.tracking_confidence;
+		if (inputmap->get_godot_controller() == p_godot_controller) {
+			return inputmap->get_tracking_confidence();
 		}
 	}
 
@@ -3201,121 +3603,8 @@ void OpenXRApi::update_actions() {
 	// now loop through our controllers, updated our positional trackers
 	// and perform our backwards compatibility layer
 
-	const float ws = ARVRServer::get_singleton()->get_world_scale();
-
-	for (uint64_t i = 0; i < USER_INPUT_MAX; i++) {
-		XrPath input_path = inputmaps[i].toplevel_path;
-		if (input_path == XR_NULL_PATH) {
-			// no path, skip this
-		} else {
-			bool is_active = false;
-
-			// If our aim pose is active, our controller is active
-			// note, if the user has removed this action then our old controller approach becomes defunct
-			if (default_actions[ACTION_AIM_POSE].action != NULL) {
-				is_active = default_actions[ACTION_AIM_POSE].action->is_pose_active(input_path);
-			}
-
-			if (is_active) {
-				if (inputmaps[i].godot_controller == -1) {
-					// hate using const_cast here but godot_arvr_add_controller should have it's parameter defined as const, it doesn't change it...
-					inputmaps[i].godot_controller = arvr_api->godot_arvr_add_controller(const_cast<char *>(inputmaps[i].name), (godot_int)i + 1, true, true);
-
-#ifdef DEBUG
-					Godot::print("OpenXR mapped {0} to {1}", inputmaps[i].name, inputmaps[i].godot_controller);
-#endif
-				}
-
-				// copy for readability
-				int godot_controller = inputmaps[i].godot_controller;
-
-				// Start with our pose, we put our ARVRController on our aim pose (may need to change this to our grip pose...)
-				godot_transform controller_transform;
-				Transform *t = (Transform *)&controller_transform;
-				inputmaps[i].tracking_confidence = default_actions[ACTION_AIM_POSE].action->get_as_pose(input_path, ws, *t);
-
-				if (inputmaps[i].tracking_confidence != TRACKING_CONFIDENCE_NONE) {
-					arvr_api->godot_arvr_set_controller_transform(godot_controller, &controller_transform, true, true);
-				}
-
-				// OK, so OpenXR will tell us if the value has changed and we could skip sending our value
-				// but Godot also checks it so... just let Godot do it
-
-				// Button and axis are hardcoded..
-				// Axis
-				if (default_actions[ACTION_FRONT_TRIGGER].action != NULL) {
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 2, default_actions[ACTION_FRONT_TRIGGER].action->get_as_float(input_path), true); // 0.0 -> 1.0
-				}
-				if (default_actions[ACTION_SIDE_TRIGGER].action != NULL) {
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 4, default_actions[ACTION_SIDE_TRIGGER].action->get_as_float(input_path), true); // 0.0 -> 1.0
-				}
-				if (default_actions[ACTION_PRIMARY].action != NULL) {
-					Vector2 v = default_actions[ACTION_PRIMARY].action->get_as_vector(input_path);
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 0, v.x, true); // -1.0 -> 1.0
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 1, v.y, true); // -1.0 -> 1.0
-				}
-				if (default_actions[ACTION_SECONDARY].action != NULL) {
-					Vector2 v = default_actions[ACTION_SECONDARY].action->get_as_vector(input_path);
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 6, v.x, true); // -1.0 -> 1.0
-					arvr_api->godot_arvr_set_controller_axis(godot_controller, 7, v.y, true); // -1.0 -> 1.0
-				}
-				// Buttons
-				if (default_actions[ACTION_AX_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 7, default_actions[ACTION_AX_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_BY_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 1, default_actions[ACTION_BY_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_AX_TOUCH].action != nullptr) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 5, default_actions[ACTION_AX_TOUCH].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_BY_TOUCH].action != nullptr) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 6, default_actions[ACTION_BY_TOUCH].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_MENU_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 3, default_actions[ACTION_MENU_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_SELECT_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 4, default_actions[ACTION_SELECT_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_FRONT_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 15, default_actions[ACTION_FRONT_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_FRONT_TOUCH].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 16, default_actions[ACTION_FRONT_TOUCH].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_SIDE_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 2, default_actions[ACTION_SIDE_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_PRIMARY_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 14, default_actions[ACTION_PRIMARY_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_SECONDARY_BUTTON].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 13, default_actions[ACTION_SECONDARY_BUTTON].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_PRIMARY_TOUCH].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 12, default_actions[ACTION_PRIMARY_TOUCH].action->get_as_bool(input_path));
-				}
-				if (default_actions[ACTION_SECONDARY_TOUCH].action != NULL) {
-					arvr_api->godot_arvr_set_controller_button(godot_controller, 11, default_actions[ACTION_SECONDARY_TOUCH].action->get_as_bool(input_path));
-				}
-
-				if (default_actions[ACTION_HAPTIC].action != NULL) {
-					// Godot currently only gives us a float between 0.0 and 1.0 for rumble strength.
-					// Full haptic control will be offered through another object
-					float haptic = arvr_api->godot_arvr_get_controller_rumble(godot_controller);
-					if (haptic > 0.0) {
-						// 17,000,000.0 nanoseconds (17ms) is slightly more then the duration of one frame if we're outputting at 60fps
-						// so if we sustain our pulse we should be issuing a new pulse before the old one ends
-						default_actions[ACTION_HAPTIC].action->do_haptic_pulse(input_path, 17.0 * 1000 * 1000, XR_FREQUENCY_UNSPECIFIED, haptic);
-					}
-				}
-			} else if (inputmaps[i].godot_controller != -1) {
-				// Remove our controller, it's no longer active
-				arvr_api->godot_arvr_remove_controller(inputmaps[i].godot_controller);
-				inputmaps[i].godot_controller = -1;
-			}
-		}
+	for (uint64_t i = 0; i < inputmaps.size(); i++) {
+		inputmaps[i]->update(this);
 	}
 }
 
@@ -3583,40 +3872,20 @@ bool OpenXRApi::poll_events() {
 					.next = nullptr
 				};
 
-				for (int i = 0; i < USER_INPUT_MAX; i++) {
-					XrPath input_path = inputmaps[i].toplevel_path;
+				for (int i = 0; i < inputmaps.size(); i++) {
+					XrPath input_path = inputmaps[i]->get_toplevel_path();
 					if (input_path == XR_NULL_PATH) {
 						// incorrect path
 						continue;
 					}
 
 					XrResult res = xrGetCurrentInteractionProfile(event->session, input_path, &profile_state);
-					if (!xr_result(res, "Failed to get interaction profile for {0}", inputmaps[i].name)) {
+					if (!xr_result(res, "Failed to get interaction profile for {0}", inputmaps[i]->get_name())) {
 						continue;
 					}
 
-					XrPath new_profile = profile_state.interactionProfile;
-					if (inputmaps[i].active_profile != new_profile) {
-						inputmaps[i].active_profile = new_profile;
-						if (new_profile == XR_NULL_PATH) {
-							Godot::print("OpenXR No interaction profile for {0}", inputmaps[i].name);
-							continue;
-						}
-
-						uint32_t strl;
-						char profile_str[XR_MAX_PATH_LENGTH];
-						res = xrPathToString(instance, new_profile, XR_MAX_PATH_LENGTH, &strl, profile_str);
-						if (!xr_result(res, "Failed to get interaction profile path str for {0}", inputmaps[i].name)) {
-							continue;
-						}
-
-#ifdef DEBUG
-						Godot::print("OpenXR Event: Interaction profile changed for {0}: {1}", inputmaps[i].name, profile_str);
-#endif
-					}
+					inputmaps[i]->set_active_profile(this, profile_state.interactionProfile);
 				}
-
-				// TODO: do something
 			} break;
 			default:
 				if (!handled) {

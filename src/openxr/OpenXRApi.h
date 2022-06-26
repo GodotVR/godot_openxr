@@ -61,9 +61,46 @@ enum TrackingConfidence {
 #include "openxr/actions/action.h"
 #include "openxr/actions/actionset.h"
 
-#define USER_INPUT_MAX 2
-
 using namespace godot;
+
+class OpenXRApi;
+
+class OpenXRInputBase {
+protected:
+	godot_int hand; // 0 = not applicable, 1 = left hand controller, 2 = right hand controller
+	char name[XR_MAX_PATH_LENGTH];
+	XrPath toplevel_path;
+	XrPath active_profile; // note, this can be a profile added in the OpenXR runtime unknown to our default mappings
+	char active_profile_str[XR_MAX_PATH_LENGTH];
+
+	TrackingConfidence tracking_confidence;
+	godot_int godot_controller;
+
+public:
+	// these are mostly all read only from outside
+	const char *get_name() const;
+	const XrPath get_toplevel_path() const;
+	const XrPath get_active_profile() const;
+	const char *get_active_profile_name() const;
+	const int get_godot_controller() const;
+	const TrackingConfidence get_tracking_confidence() const;
+
+	// interface
+	void set_active_profile(OpenXRApi *p_openxr_api, XrPath p_active_profile);
+	virtual void bind(OpenXRApi *p_openxr_api);
+	virtual void unbind(OpenXRApi *p_openxr_api);
+	virtual void update(OpenXRApi *p_openxr_api) = 0;
+
+	OpenXRInputBase(const char *p_name, godot_int p_hand = 0);
+	virtual ~OpenXRInputBase();
+};
+
+class OpenXRInputController : public OpenXRInputBase {
+public:
+	virtual void update(OpenXRApi *p_openxr_api) override;
+
+	OpenXRInputController(const char *p_name, godot_int p_hand = 0);
+};
 
 class OpenXRApi {
 	friend class Action;
@@ -73,22 +110,7 @@ public:
 	// These are hardcoded and meant for our backwards compatibility layer
 	// If not configured in our action sets they will be defunct
 
-	struct InputMap {
-		const char *name;
-		XrPath toplevel_path;
-		godot_int godot_controller;
-		XrPath active_profile; // note, this can be a profile added in the OpenXR runtime unknown to our default mappings
-		TrackingConfidence tracking_confidence;
-	};
-
-	InputMap inputmaps[USER_INPUT_MAX] = {
-		{ "/user/hand/left", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
-		{ "/user/hand/right", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
-		// gamepad is already supported in Godots own joystick handling, head we're using directly
-		// { "/user/foot/left", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
-		// { "/user/foot/right", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
-		// { "/user/treadmill", XR_NULL_PATH, -1, XR_NULL_PATH, TRACKING_CONFIDENCE_NONE },
-	};
+	std::vector<OpenXRInputBase *> inputmaps;
 
 	// Default actions we support so we can mimic our old ARVRController handling
 	enum DefaultActions {
@@ -251,6 +273,9 @@ private:
 	bool initialiseSwapChains();
 	void cleanupSwapChains();
 
+	void setup_input_maps();
+	void cleanup_input_maps();
+
 	bool loadActionSets();
 	bool bindActionSets();
 	void unbindActionSets();
@@ -366,6 +391,8 @@ public:
 	bool is_input_map_controller(int p_godot_controller);
 
 	TrackingConfidence get_controller_tracking_confidence(const int p_godot_controller) const;
+
+	void add_input_map(OpenXRInputBase *p_input_map);
 
 	static const char *default_action_sets_json;
 	godot::String get_action_sets_json() const;

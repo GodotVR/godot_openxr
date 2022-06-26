@@ -17,6 +17,7 @@ private:
 	TrackingConfidence confidence = TRACKING_CONFIDENCE_NONE;
 	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 	bool invisible_if_inactive = true;
+	bool invisible_if_no_confidence = true;
 	String action;
 	String path;
 
@@ -39,6 +40,8 @@ public:
 
 	bool get_invisible_if_inactive() const;
 	void set_invisible_if_inactive(bool hide);
+	bool get_invisible_if_no_confidence() const;
+	void set_invisible_if_no_confidence(bool hide);
 
 	String get_action() const;
 	void set_action(const String p_action);

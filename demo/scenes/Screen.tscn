@@ -38,9 +38,6 @@ margin_right = 267.0
 margin_bottom = 338.0
 custom_fonts/font = ExtResource( 1 )
 text = "Press me!!"
-__meta__ = {
-"_edit_use_anchors_": false
-}
 
 [node name="Count" type="Label" parent="."]
 margin_left = 290.0
@@ -78,6 +75,15 @@ __meta__ = {
 "_edit_use_anchors_": false
 }
 
+[node name="Quit" type="Button" parent="."]
+margin_left = 470.0
+margin_top = 347.0
+margin_right = 587.0
+margin_bottom = 385.0
+custom_fonts/font = ExtResource( 1 )
+text = "Quit"
+
 [connection signal="pressed" from="Button" to="." method="_on_Button_pressed"]
 [connection signal="pressed" from="ToggleBounds" to="." method="_on_ToggleBounds_pressed"]
 [connection signal="pressed" from="TogglePassthrough" to="." method="_on_TogglePassthrough_pressed"]
+[connection signal="pressed" from="Quit" to="." method="_on_Quit_pressed"]

@@ -26,3 +26,7 @@ func _on_ToggleBounds_pressed():
 func _on_TogglePassthrough_pressed():
 	if fp_controller:
 		fp_controller.enable_passthrough = !fp_controller.enable_passthrough
+
+
+func _on_Quit_pressed():
+	get_tree().quit()

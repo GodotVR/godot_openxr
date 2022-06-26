@@ -1,0 +1,37 @@
+{
+	"thumbnail": "vive_controller_thumbnail.png",
+	"components": {
+		"body": {
+			"filename": "vr_tracker_vive_3_0.obj",
+			"component_local": {
+				"origin": [ 0.0, 0.0, 0.0 ],
+				"rotate_xyz": [ 0.0, 0.0, 0.0 ]
+			}
+		},
+		"back": {
+			"component_local": {
+				"origin": [ 0.0, 0.0, 0.0 ],
+				"rotate_xyz": [ 0.0, 0.0, 180.0 ]
+			}
+		},
+		"pistol": {
+			"component_local": {
+				"origin": [ 0.0, 0.0, 0.0 ],
+				"rotate_xyz": [ -30.0, 0.0, 180.0 ]
+			}
+		},
+		"front_rolled": {
+			"component_local": {
+				"origin": [ 0.0, 0.0, 0.01 ],
+				"rotate_xyz": [ 90.0, 180.0, 0.0 ]
+			}
+		},
+		"front": {
+			"component_local": {
+				"origin": [ 0.0, 0.0, 0.01 ],
+				"rotate_xyz": [ 90.0, 0.0, 0.0 ]
+			}
+		}
+	}
+}
+}

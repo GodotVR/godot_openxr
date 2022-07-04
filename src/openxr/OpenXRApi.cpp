@@ -1752,7 +1752,7 @@ bool OpenXRApi::initialiseSession() {
 #ifdef WIN32
 	graphics_binding_gl = XrGraphicsBindingOpenGLWin32KHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR,
-		.next = NULL,
+		.next = nullptr,
 	};
 
 	graphics_binding_gl.hDC = (HDC)os->get_native_handle(OS::WINDOW_VIEW);
@@ -1765,7 +1765,7 @@ bool OpenXRApi::initialiseSession() {
 #elif ANDROID
 	graphics_binding_gl = XrGraphicsBindingOpenGLESAndroidKHR{
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR,
-		.next = NULL,
+		.next = nullptr,
 	};
 
 	graphics_binding_gl.display = eglGetCurrentDisplay();
@@ -1774,7 +1774,7 @@ bool OpenXRApi::initialiseSession() {
 #else
 	graphics_binding_gl = (XrGraphicsBindingOpenGLXlibKHR){
 		.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_XLIB_KHR,
-		.next = NULL,
+		.next = nullptr,
 	};
 
 	void *display_handle = (void *)os->get_native_handle(OS::DISPLAY_HANDLE);
@@ -1785,11 +1785,11 @@ bool OpenXRApi::initialiseSession() {
 	graphics_binding_gl.glxContext = (GLXContext)glxcontext_handle;
 	graphics_binding_gl.glxDrawable = (GLXDrawable)glxdrawable_handle;
 
-	if (graphics_binding_gl.xDisplay == NULL) {
-		Godot::print("OpenXR Failed to get xDisplay from Godot, using XOpenDisplay(NULL)");
-		graphics_binding_gl.xDisplay = XOpenDisplay(NULL);
+	if (graphics_binding_gl.xDisplay == nullptr) {
+		Godot::print("OpenXR Failed to get xDisplay from Godot, using XOpenDisplay(nullptr)");
+		graphics_binding_gl.xDisplay = XOpenDisplay(nullptr);
 	}
-	if (graphics_binding_gl.glxContext == NULL) {
+	if (graphics_binding_gl.glxContext == nullptr) {
 		Godot::print("OpenXR Failed to get glxContext from Godot, using glXGetCurrentContext()");
 		graphics_binding_gl.glxContext = glXGetCurrentContext();
 	}
@@ -2136,26 +2136,26 @@ bool OpenXRApi::initialiseSwapChains() {
 	projectionLayer->views = nullptr;
 
 	frameState.type = XR_TYPE_FRAME_STATE;
-	frameState.next = NULL;
+	frameState.next = nullptr;
 
 	views = (XrView *)malloc(sizeof(XrView) * view_count);
-	if (views == NULL) {
+	if (views == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for views", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
 	projection_views = (XrCompositionLayerProjectionView *)malloc(sizeof(XrCompositionLayerProjectionView) * view_count);
-	if (projection_views == NULL) {
+	if (projection_views == nullptr) {
 		Godot::print_error("OpenXR Couldn't allocate memory for projection views", __FUNCTION__, __FILE__, __LINE__);
 		return false;
 	}
 
 	for (uint32_t i = 0; i < view_count; i++) {
 		views[i].type = XR_TYPE_VIEW;
-		views[i].next = NULL;
+		views[i].next = nullptr;
 
 		projection_views[i].type = XR_TYPE_COMPOSITION_LAYER_PROJECTION_VIEW;
-		projection_views[i].next = NULL;
+		projection_views[i].next = nullptr;
 		projection_views[i].subImage.swapchain = swapchains[i];
 		projection_views[i].subImage.imageArrayIndex = 0;
 		projection_views[i].subImage.imageRect.offset.x = 0;
@@ -2172,33 +2172,33 @@ void OpenXRApi::cleanupSwapChains() {
 		free(swapchain_acquired);
 		swapchain_acquired = nullptr;
 	}
-	if (swapchains != NULL) {
+	if (swapchains != nullptr) {
 		for (uint32_t i = 0; i < view_count; i++) {
 			if (swapchains[i] != XR_NULL_HANDLE) {
 				xrDestroySwapchain(swapchains[i]);
 			}
 		}
 		free(swapchains);
-		swapchains = NULL;
+		swapchains = nullptr;
 	}
-	if (projection_views != NULL) {
+	if (projection_views != nullptr) {
 		free(projection_views);
-		projection_views = NULL;
+		projection_views = nullptr;
 	}
-	if (images != NULL) {
+	if (images != nullptr) {
 		for (uint32_t i = 0; i < view_count; i++) {
 			free(images[i]);
 		}
 		free(images);
-		images = NULL;
+		images = nullptr;
 	}
-	if (projectionLayer != NULL) {
+	if (projectionLayer != nullptr) {
 		free(projectionLayer);
-		projectionLayer = NULL;
+		projectionLayer = nullptr;
 	}
-	if (views != NULL) {
+	if (views != nullptr) {
 		free(views);
-		views = NULL;
+		views = nullptr;
 	}
 }
 
@@ -2240,7 +2240,7 @@ bool OpenXRApi::bindActionSets() {
 	// find our default actions
 	for (uint64_t i = 0; i < ACTION_MAX; i++) {
 		default_actions[i].action = get_action(default_actions[i].name);
-		if (default_actions[i].action == NULL) {
+		if (default_actions[i].action == nullptr) {
 			Godot::print("OpenXR didn't find internal action {0}", default_actions[i].name);
 		}
 	}
@@ -2261,7 +2261,7 @@ void OpenXRApi::unbindActionSets() {
 
 	// reset our default actions
 	for (uint64_t i = 0; i < ACTION_MAX; i++) {
-		default_actions[i].action = NULL;
+		default_actions[i].action = nullptr;
 	}
 
 	// reset our spaces
@@ -2364,9 +2364,9 @@ void OpenXRApi::uninitialize() {
 	cleanupSpaces();
 
 	// cleanup our session and instance
-	if (buffer_index != NULL) {
+	if (buffer_index != nullptr) {
 		free(buffer_index);
-		buffer_index = NULL;
+		buffer_index = nullptr;
 	}
 	if (session != XR_NULL_HANDLE) {
 		for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
@@ -2429,7 +2429,7 @@ bool OpenXRApi::on_state_ready() {
 #endif
 	XrSessionBeginInfo sessionBeginInfo = {
 		.type = XR_TYPE_SESSION_BEGIN_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.primaryViewConfigurationType = view_config_type
 	};
 
@@ -2668,14 +2668,14 @@ ActionSet *OpenXRApi::get_action_set(const godot::String &p_name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 Action *OpenXRApi::get_action(const char *p_name) {
 	// Find this action within our action sets (assuming we don't have duplication)
 	for (uint64_t i = 0; i < action_sets.size(); i++) {
 		Action *action = action_sets[i]->get_action(p_name);
-		if (action != NULL) {
+		if (action != nullptr) {
 			return action;
 		}
 	}
@@ -2720,9 +2720,9 @@ bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
 		int priority = action_set["priority"];
 
 		ActionSet *new_action_set = get_action_set(action_set_name);
-		if (new_action_set == NULL) {
+		if (new_action_set == nullptr) {
 			new_action_set = new ActionSet(this, action_set_name, localised_name, priority);
-			if (new_action_set == NULL) {
+			if (new_action_set == nullptr) {
 				Godot::print("Couldn't create action set {0}", action_set_name);
 				continue;
 			}
@@ -2764,7 +2764,7 @@ bool OpenXRApi::parse_action_sets(const godot::String &p_json) {
 			}
 
 			Action *new_action = new_action_set->add_action(action_type, name, localised_name, toplevel_paths.size(), toplevel_paths.data());
-			if (new_action == NULL) {
+			if (new_action == nullptr) {
 				Godot::print("Couldn't create action {0}", name);
 
 				continue;
@@ -2822,12 +2822,12 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 			Array io_paths = binding["paths"];
 
 			ActionSet *action_set = get_action_set(action_set_name);
-			if (action_set == NULL) {
+			if (action_set == nullptr) {
 				Godot::print("OpenXR Couldn't find set {0}", action_set_name);
 				continue;
 			}
 			Action *action = action_set->get_action(action_name.utf8().get_data());
-			if (action == NULL) {
+			if (action == nullptr) {
 				Godot::print("OpenXR Couldn't find action {0}", action_name);
 				continue;
 			}
@@ -2852,7 +2852,7 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 		// update our profile
 		const XrInteractionProfileSuggestedBinding suggestedBindings = {
 			.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING,
-			.next = NULL,
+			.next = nullptr,
 			.interactionProfile = interaction_profile_path,
 			.countSuggestedBindings = (uint32_t)xr_bindings.size(),
 			.suggestedBindings = xr_bindings.data()
@@ -2890,10 +2890,10 @@ bool OpenXRApi::check_graphics_requirements_gl(XrSystemId system_id) {
 #else
 	XrGraphicsRequirementsOpenGLKHR opengl_reqs = {
 		.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR,
-		.next = NULL
+		.next = nullptr
 	};
 
-	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = NULL;
+	PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = nullptr;
 	XrResult result = xrGetInstanceProcAddr(instance, "xrGetOpenGLGraphicsRequirementsKHR", (PFN_xrVoidFunction *)&pfnGetOpenGLGraphicsRequirementsKHR);
 
 	if (!xr_result(result, "Failed to get xrGetOpenGLGraphicsRequirementsKHR fp!")) {
@@ -3107,14 +3107,14 @@ void OpenXRApi::fill_projection_matrix(int eye, godot_real p_z_near, godot_real 
 	// fill_projection_matrix is called first, so we definitely need it here.
 	XrViewLocateInfo viewLocateInfo = {
 		.type = XR_TYPE_VIEW_LOCATE_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.viewConfigurationType = XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO,
 		.displayTime = frameState.predictedDisplayTime,
 		.space = play_space
 	};
 	XrViewState viewState = {
 		.type = XR_TYPE_VIEW_STATE,
-		.next = NULL
+		.next = nullptr
 	};
 	uint32_t viewCountOutput;
 	XrResult result;
@@ -3212,7 +3212,7 @@ void OpenXRApi::update_actions() {
 
 			// If our aim pose is active, our controller is active
 			// note, if the user has removed this action then our old controller approach becomes defunct
-			if (default_actions[ACTION_AIM_POSE].action != NULL) {
+			if (default_actions[ACTION_AIM_POSE].action != nullptr) {
 				is_active = default_actions[ACTION_AIM_POSE].action->is_pose_active(input_path);
 			}
 
@@ -3243,27 +3243,27 @@ void OpenXRApi::update_actions() {
 
 				// Button and axis are hardcoded..
 				// Axis
-				if (default_actions[ACTION_FRONT_TRIGGER].action != NULL) {
+				if (default_actions[ACTION_FRONT_TRIGGER].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_axis(godot_controller, 2, default_actions[ACTION_FRONT_TRIGGER].action->get_as_float(input_path), true); // 0.0 -> 1.0
 				}
-				if (default_actions[ACTION_SIDE_TRIGGER].action != NULL) {
+				if (default_actions[ACTION_SIDE_TRIGGER].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_axis(godot_controller, 4, default_actions[ACTION_SIDE_TRIGGER].action->get_as_float(input_path), true); // 0.0 -> 1.0
 				}
-				if (default_actions[ACTION_PRIMARY].action != NULL) {
+				if (default_actions[ACTION_PRIMARY].action != nullptr) {
 					Vector2 v = default_actions[ACTION_PRIMARY].action->get_as_vector(input_path);
 					arvr_api->godot_arvr_set_controller_axis(godot_controller, 0, v.x, true); // -1.0 -> 1.0
 					arvr_api->godot_arvr_set_controller_axis(godot_controller, 1, v.y, true); // -1.0 -> 1.0
 				}
-				if (default_actions[ACTION_SECONDARY].action != NULL) {
+				if (default_actions[ACTION_SECONDARY].action != nullptr) {
 					Vector2 v = default_actions[ACTION_SECONDARY].action->get_as_vector(input_path);
 					arvr_api->godot_arvr_set_controller_axis(godot_controller, 6, v.x, true); // -1.0 -> 1.0
 					arvr_api->godot_arvr_set_controller_axis(godot_controller, 7, v.y, true); // -1.0 -> 1.0
 				}
 				// Buttons
-				if (default_actions[ACTION_AX_BUTTON].action != NULL) {
+				if (default_actions[ACTION_AX_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 7, default_actions[ACTION_AX_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_BY_BUTTON].action != NULL) {
+				if (default_actions[ACTION_BY_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 1, default_actions[ACTION_BY_BUTTON].action->get_as_bool(input_path));
 				}
 				if (default_actions[ACTION_AX_TOUCH].action != nullptr) {
@@ -3272,35 +3272,35 @@ void OpenXRApi::update_actions() {
 				if (default_actions[ACTION_BY_TOUCH].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 6, default_actions[ACTION_BY_TOUCH].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_MENU_BUTTON].action != NULL) {
+				if (default_actions[ACTION_MENU_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 3, default_actions[ACTION_MENU_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_SELECT_BUTTON].action != NULL) {
+				if (default_actions[ACTION_SELECT_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 4, default_actions[ACTION_SELECT_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_FRONT_BUTTON].action != NULL) {
+				if (default_actions[ACTION_FRONT_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 15, default_actions[ACTION_FRONT_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_FRONT_TOUCH].action != NULL) {
+				if (default_actions[ACTION_FRONT_TOUCH].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 16, default_actions[ACTION_FRONT_TOUCH].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_SIDE_BUTTON].action != NULL) {
+				if (default_actions[ACTION_SIDE_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 2, default_actions[ACTION_SIDE_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_PRIMARY_BUTTON].action != NULL) {
+				if (default_actions[ACTION_PRIMARY_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 14, default_actions[ACTION_PRIMARY_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_SECONDARY_BUTTON].action != NULL) {
+				if (default_actions[ACTION_SECONDARY_BUTTON].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 13, default_actions[ACTION_SECONDARY_BUTTON].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_PRIMARY_TOUCH].action != NULL) {
+				if (default_actions[ACTION_PRIMARY_TOUCH].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 12, default_actions[ACTION_PRIMARY_TOUCH].action->get_as_bool(input_path));
 				}
-				if (default_actions[ACTION_SECONDARY_TOUCH].action != NULL) {
+				if (default_actions[ACTION_SECONDARY_TOUCH].action != nullptr) {
 					arvr_api->godot_arvr_set_controller_button(godot_controller, 11, default_actions[ACTION_SECONDARY_TOUCH].action->get_as_bool(input_path));
 				}
 
-				if (default_actions[ACTION_HAPTIC].action != NULL) {
+				if (default_actions[ACTION_HAPTIC].action != nullptr) {
 					// Godot currently only gives us a float between 0.0 and 1.0 for rumble strength.
 					// Full haptic control will be offered through another object
 					float haptic = arvr_api->godot_arvr_get_controller_rumble(godot_controller);
@@ -3366,7 +3366,7 @@ bool OpenXRApi::get_view_transform(int eye, float world_scale, godot_transform *
 		return false;
 	}
 
-	if (views == NULL || !view_pose_valid) {
+	if (views == nullptr || !view_pose_valid) {
 		return false;
 	}
 
@@ -3390,7 +3390,7 @@ bool OpenXRApi::get_head_center(float world_scale, godot_transform *transform) {
 	XrResult result;
 	XrSpaceLocation location = {
 		.type = XR_TYPE_SPACE_LOCATION,
-		.next = NULL
+		.next = nullptr
 	};
 
 	XrTime time;
@@ -3471,7 +3471,7 @@ int OpenXRApi::get_external_texture_for_eye(int eye, bool *has_support) {
 #endif
 
 	// process should be called by now but just in case...
-	if (state > XR_SESSION_STATE_UNKNOWN && buffer_index != NULL) {
+	if (state > XR_SESSION_STATE_UNKNOWN && buffer_index != nullptr) {
 		// make sure we know that we're rendering directly to our
 		// texture chain
 		*has_support = true;

@@ -19,7 +19,7 @@ void GDN_EXPORT godot_openxr_gdnative_terminate(godot_gdnative_terminate_options
 }
 
 void GDN_EXPORT godot_openxr_gdnative_singleton() {
-	if (godot::arvr_api != NULL) {
+	if (godot::arvr_api != nullptr) {
 		godot::arvr_api->godot_arvr_register_interface(&interface_struct);
 	}
 }

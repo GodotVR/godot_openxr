@@ -83,7 +83,7 @@ OpenXRConfig::OpenXRConfig() {
 }
 
 OpenXRConfig::~OpenXRConfig() {
-	if (openxr_api != NULL) {
+	if (openxr_api != nullptr) {
 		OpenXRApi::openxr_release_api();
 	}
 	color_space_wrapper = nullptr;
@@ -99,7 +99,7 @@ void OpenXRConfig::_init() {
 }
 
 bool OpenXRConfig::keep_3d_linear() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return false;
 	} else {
 		return openxr_api->get_keep_3d_linear();
@@ -107,7 +107,7 @@ bool OpenXRConfig::keep_3d_linear() const {
 }
 
 int OpenXRConfig::get_view_config_type() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return 1;
 	} else {
 		XrViewConfigurationType config_type = openxr_api->get_view_configuration_type();
@@ -137,7 +137,7 @@ int OpenXRConfig::get_view_config_type() const {
 
 void OpenXRConfig::set_view_config_type(const int p_config_type) {
 	// TODO may need to add something here that this is read only after initialisation
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		switch (p_config_type) {
@@ -156,7 +156,7 @@ void OpenXRConfig::set_view_config_type(const int p_config_type) {
 }
 
 int OpenXRConfig::get_form_factor() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return 0;
 	} else {
 		return (int)openxr_api->get_form_factor();
@@ -164,7 +164,7 @@ int OpenXRConfig::get_form_factor() const {
 }
 
 void OpenXRConfig::set_form_factor(const int p_form_factor) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		openxr_api->set_form_factor((XrFormFactor)p_form_factor);
@@ -194,7 +194,7 @@ godot::Dictionary OpenXRConfig::get_available_color_spaces() {
 }
 
 int OpenXRConfig::get_play_space_type() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return XR_REFERENCE_SPACE_TYPE_STAGE;
 	} else {
 		switch (openxr_api->get_play_space_type()) {
@@ -215,7 +215,7 @@ int OpenXRConfig::get_play_space_type() const {
 }
 
 void OpenXRConfig::set_play_space_type(const int p_play_space_type) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		switch (p_play_space_type) {
@@ -265,7 +265,7 @@ godot::Array OpenXRConfig::get_available_refresh_rates() const {
 }
 
 godot::Array OpenXRConfig::get_enabled_extensions() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		godot::Array arr;
 		return arr;
 	} else {
@@ -284,7 +284,7 @@ int OpenXRConfig::get_tracking_confidence(const int p_godot_controller) const {
 }
 
 String OpenXRConfig::get_action_sets() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return String();
 	} else {
 		return openxr_api->get_action_sets_json();
@@ -292,7 +292,7 @@ String OpenXRConfig::get_action_sets() const {
 }
 
 void OpenXRConfig::set_action_sets(const String p_action_sets) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		openxr_api->set_action_sets_json(p_action_sets);
@@ -300,7 +300,7 @@ void OpenXRConfig::set_action_sets(const String p_action_sets) {
 }
 
 String OpenXRConfig::get_interaction_profiles() const {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		return String();
 	} else {
 		return openxr_api->get_interaction_profiles_json();
@@ -308,7 +308,7 @@ String OpenXRConfig::get_interaction_profiles() const {
 }
 
 void OpenXRConfig::set_interaction_profiles(const String p_interaction_profiles) {
-	if (openxr_api == NULL) {
+	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
 		openxr_api->set_interaction_profiles_json(p_interaction_profiles);

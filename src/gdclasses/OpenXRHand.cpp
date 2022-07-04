@@ -29,12 +29,12 @@ OpenXRHand::OpenXRHand() {
 	hand_tracking_wrapper = XRExtHandTrackingExtensionWrapper::get_singleton();
 
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
-		joints[i] = NULL;
+		joints[i] = nullptr;
 	}
 }
 
 OpenXRHand::~OpenXRHand() {
-	if (openxr_api != NULL) {
+	if (openxr_api != nullptr) {
 		OpenXRApi::openxr_release_api();
 	}
 
@@ -78,7 +78,7 @@ void OpenXRHand::_ready() {
 	// We cast to spatials which should allow us to use any subclass of that.
 	for (int i = 0; i < XR_HAND_JOINT_COUNT_EXT; i++) {
 		joints[i] = Object::cast_to<Spatial>(get_node(node_names[i]));
-		if (joints[i] == NULL) {
+		if (joints[i] == nullptr) {
 			printf("Couldn't obtain joint for %s\n", node_names[i]);
 		}
 	}
@@ -137,7 +137,7 @@ void OpenXRHand::_physics_process(float delta) {
 			// store the inverse to make live easier later on
 			inv_transforms[i] = t.inverse();
 
-			if (joints[i] != NULL) {
+			if (joints[i] != nullptr) {
 				if (parents[i] == -1) {
 					// apply our reference frame to our root frame
 					t = reference_frame * t;

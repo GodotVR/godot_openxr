@@ -130,26 +130,26 @@ public:
 	};
 
 	DefaultAction default_actions[ACTION_MAX] = {
-		{ "aim_pose", XR_ACTION_TYPE_POSE_INPUT, NULL },
-		{ "grip_pose", XR_ACTION_TYPE_POSE_INPUT, NULL },
-		{ "front_trigger", XR_ACTION_TYPE_FLOAT_INPUT, NULL },
-		{ "side_trigger", XR_ACTION_TYPE_FLOAT_INPUT, NULL },
-		{ "primary", XR_ACTION_TYPE_VECTOR2F_INPUT, NULL },
-		{ "secondary", XR_ACTION_TYPE_VECTOR2F_INPUT, NULL },
-		{ "ax_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "by_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "ax_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "by_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "menu_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "select_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "front_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "front_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "side_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "primary_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "secondary_button", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "primary_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "secondary_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, NULL },
-		{ "haptic", XR_ACTION_TYPE_VIBRATION_OUTPUT, NULL },
+		{ "aim_pose", XR_ACTION_TYPE_POSE_INPUT, nullptr },
+		{ "grip_pose", XR_ACTION_TYPE_POSE_INPUT, nullptr },
+		{ "front_trigger", XR_ACTION_TYPE_FLOAT_INPUT, nullptr },
+		{ "side_trigger", XR_ACTION_TYPE_FLOAT_INPUT, nullptr },
+		{ "primary", XR_ACTION_TYPE_VECTOR2F_INPUT, nullptr },
+		{ "secondary", XR_ACTION_TYPE_VECTOR2F_INPUT, nullptr },
+		{ "ax_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "by_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "ax_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "by_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "menu_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "select_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "front_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "front_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "side_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "primary_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "secondary_button", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "primary_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "secondary_touch", XR_ACTION_TYPE_BOOLEAN_INPUT, nullptr },
+		{ "haptic", XR_ACTION_TYPE_VIBRATION_OUTPUT, nullptr },
 	};
 
 private:
@@ -191,30 +191,30 @@ private:
 	bool keep_3d_linear = false;
 #ifdef WIN32
 	XrGraphicsBindingOpenGLWin32KHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchainImageOpenGLKHR **images = nullptr;
 #elif ANDROID
 	XrGraphicsBindingOpenGLESAndroidKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLESKHR **images = NULL;
+	XrSwapchainImageOpenGLESKHR **images = nullptr;
 #else
 	XrGraphicsBindingOpenGLXlibKHR graphics_binding_gl;
-	XrSwapchainImageOpenGLKHR **images = NULL;
+	XrSwapchainImageOpenGLKHR **images = nullptr;
 #endif
 	float render_target_size_multiplier = 1.0f;
 	uint32_t render_target_width = 1024;
 	uint32_t render_target_height = 1024;
 	uint32_t swapchain_sample_count = 1;
 
-	XrSwapchain *swapchains = NULL;
-	bool *swapchain_acquired = NULL;
+	XrSwapchain *swapchains = nullptr;
+	bool *swapchain_acquired = nullptr;
 	uint32_t view_count;
 
-	XrCompositionLayerProjection *projectionLayer = NULL;
+	XrCompositionLayerProjection *projectionLayer = nullptr;
 	XrFrameState frameState = {};
 
-	uint32_t *buffer_index = NULL;
+	uint32_t *buffer_index = nullptr;
 
-	XrView *views = NULL;
-	XrCompositionLayerProjectionView *projection_views = NULL;
+	XrView *views = nullptr;
+	XrCompositionLayerProjectionView *projection_views = nullptr;
 	XrSpace play_space = XR_NULL_HANDLE;
 	XrSpace view_space = XR_NULL_HANDLE;
 	bool view_pose_valid = false;

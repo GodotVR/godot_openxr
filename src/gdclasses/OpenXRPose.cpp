@@ -54,7 +54,7 @@ void OpenXRPose::_register_methods() {
 OpenXRPose::OpenXRPose() {
 	invisible_if_inactive = true;
 	action = String("SkeletonBase");
-	_action = NULL;
+	_action = nullptr;
 	path = String("/user/hand/left");
 	_path = XR_NULL_PATH;
 	openxr_api = OpenXRApi::openxr_get_api();
@@ -62,7 +62,7 @@ OpenXRPose::OpenXRPose() {
 }
 
 OpenXRPose::~OpenXRPose() {
-	if (openxr_api != NULL) {
+	if (openxr_api != nullptr) {
 		OpenXRApi::openxr_release_api();
 	}
 
@@ -84,7 +84,7 @@ bool OpenXRPose::check_action_and_path() {
 		return false;
 	}
 
-	if (_action == NULL) {
+	if (_action == nullptr) {
 		Array split = action.split("/");
 		if (split.size() != 2) {
 			Godot::print("Incorrect action string {0}", action);
@@ -93,14 +93,14 @@ bool OpenXRPose::check_action_and_path() {
 		}
 
 		ActionSet *aset = openxr_api->get_action_set(split[0]);
-		if (aset == NULL) {
+		if (aset == nullptr) {
 			Godot::print("Couldn't find action set {0}", split[0]);
 			fail_cache = true;
 			return false;
 		}
 
 		_action = aset->get_action(split[1]);
-		if (_action == NULL) {
+		if (_action == nullptr) {
 			Godot::print("Couldn't find action {0}", split[1]);
 			fail_cache = true;
 			return false;
@@ -190,7 +190,7 @@ String OpenXRPose::get_action() const {
 
 void OpenXRPose::set_action(const String p_action) {
 	action = p_action;
-	_action = NULL;
+	_action = nullptr;
 	fail_cache = false;
 }
 

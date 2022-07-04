@@ -383,13 +383,13 @@ void OvrMetaData::WriteMetaFile(const char* metaFile) const {
         } else {
             size_t writtenCount = fwrite(buffer, 1, bufferLength, newMetaFile);
             if (writtenCount != static_cast<size_t>(bufferLength)) {
-                OVR_FAIL("OvrMetaData::WriteMetaFile failed to write %s", metaFile);
+                ALOGE_FAIL("OvrMetaData::WriteMetaFile failed to write %s", metaFile);
             }
             free(buffer);
         }
         fclose(newMetaFile);
     } else {
-        OVR_FAIL("OvrMetaData failed to create %s - check app permissions", FilePath.c_str());
+        ALOGE_FAIL("OvrMetaData failed to create %s - check app permissions", FilePath.c_str());
     }
 }
 
@@ -500,7 +500,7 @@ void OvrMetaData::ProcessRemoteMetaFile(const char* metaFileString, const int st
         // Serialize the new metadata
         std::shared_ptr<JSON> dataFile = MetaDataToJson();
         if (dataFile == NULL) {
-            OVR_FAIL("OvrMetaData::ProcessMetaData failed to generate JSON meta file");
+            ALOGE_FAIL("OvrMetaData::ProcessMetaData failed to generate JSON meta file");
         }
 
         dataFile->Save(FilePath.c_str());
@@ -572,7 +572,7 @@ void OvrMetaData::ProcessMetaData(
     // Rewrite new data
     dataFile = MetaDataToJson();
     if (dataFile == NULL) {
-        OVR_FAIL("OvrMetaData::ProcessMetaData failed to generate JSON meta file");
+        ALOGE_FAIL("OvrMetaData::ProcessMetaData failed to generate JSON meta file");
     }
 
     dataFile->Save(FilePath.c_str());
@@ -850,7 +850,7 @@ void OvrMetaData::Serialize() {
     // Serialize the new metadata
     std::shared_ptr<JSON> dataFile = MetaDataToJson();
     if (dataFile == NULL) {
-        OVR_FAIL("OvrMetaData::Serialize failed to generate JSON meta file");
+        ALOGE_FAIL("OvrMetaData::Serialize failed to generate JSON meta file");
     }
 
     dataFile->Save(FilePath.c_str());

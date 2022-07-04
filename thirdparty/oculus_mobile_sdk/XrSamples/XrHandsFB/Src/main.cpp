@@ -11,12 +11,6 @@ Copyright:  Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 
 #include <cstdint>
 #include <cstdio>
-#include <stdlib.h> // for exit()
-#include <unistd.h> // for sleep()
-
-#include <android/window.h>
-#include <android/native_window_jni.h>
-#include <android_native_app_glue.h>
 
 #include "XrApp.h"
 
@@ -28,7 +22,7 @@ Copyright:  Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include "Render/SimpleBeamRenderer.h"
 #include "Render/GeometryRenderer.h"
 
-#define USE_SIMPLE_CONTROLLER_PROFILE
+#define FORCE_ONLY_SIMPLE_CONTROLLER_PROFILE
 
 // Hands
 #ifndef XR_FB_hand_tracking_mesh
@@ -57,13 +51,35 @@ class XrHandsApp : public OVRFW::XrApp {
         return extensions;
     }
 
+#ifdef FORCE_ONLY_SIMPLE_CONTROLLER_PROFILE
+    // Returns a map from interaction profile paths to vectors of suggested bindings.
+    // xrSuggestInteractionProfileBindings() is called once for each interaction profile path in the
+    // returned map.
+    // Apps are encouraged to suggest bindings for every device/interaction profile they support.
+    // Override this for custom action bindings, or modify the default bindings.
+    std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> GetSuggestedBindings(
+        XrInstance instance) override {
+        // Get base suggested bindings
+        std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> allSuggestedBindings =
+            XrApp::GetSuggestedBindings(instance);
+
+        std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>>
+            onlySimpleSuggestedBindings{};
+
+        XrPath simpleInteractionProfile = XR_NULL_PATH;
+        OXR(xrStringToPath(
+            instance, "/interaction_profiles/khr/simple_controller", &simpleInteractionProfile));
+
+        // Only copy over suggested bindings for the simple interaction profile
+        onlySimpleSuggestedBindings[simpleInteractionProfile] =
+            allSuggestedBindings[simpleInteractionProfile];
+
+        return onlySimpleSuggestedBindings;
+    }
+#endif
+
     // Must return true if the application initializes successfully.
     virtual bool AppInit(const xrJava* context) override {
-        /// Init Rendering
-        if (false == OVRFW::XrApp::AppInit(context)) {
-            ALOG("base AppInit::Init FAILED.");
-            return false;
-        }
         if (false == ui_.Init(context, GetFileSys())) {
             ALOG("TinyUI::Init FAILED.");
             return false;
@@ -505,9 +521,6 @@ class XrHandsApp : public OVRFW::XrApp {
         /// Render UI
         ui_.Render(in, out);
 
-        /// Render beams
-        beamRenderer_.Render(in, out);
-
         /// Render controllers
         if (in.LeftRemoteTracked) {
             controllerRenderL_.Render(out.Surfaces);
@@ -559,6 +572,9 @@ class XrHandsApp : public OVRFW::XrApp {
                 handRendererR_.Render(out.Surfaces);
             }
         }
+
+        /// Render beams
+        beamRenderer_.Render(in, out);
     }
 
    public:
@@ -608,10 +624,4 @@ class XrHandsApp : public OVRFW::XrApp {
     std::vector<OVRFW::GeometryRenderer> handCapsuleRenderersR_;
 };
 
-//==============================================================
-// android_main
-//==============================================================
-void android_main(struct android_app* app) {
-    auto appl = std::make_unique<XrHandsApp>();
-    appl->Run(app);
-}
+ENTRY_POINT(XrHandsApp)

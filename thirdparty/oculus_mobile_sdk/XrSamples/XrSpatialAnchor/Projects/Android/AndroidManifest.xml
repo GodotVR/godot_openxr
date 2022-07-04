@@ -24,9 +24,6 @@
   <!-- Allows to access TrackingEnvironment functionality -->
   <uses-permission android:name="com.oculus.permission.ACCESS_TRACKING_ENV" />
 
-  <!-- Grants access to Experimental APIs. -->
-  <uses-feature android:name="com.oculus.experimental.enabled" />
-
   <!-- Grants access to Passthrough API. -->
   <uses-feature android:name="com.oculus.feature.PASSTHROUGH" />
 

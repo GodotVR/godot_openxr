@@ -465,8 +465,8 @@ class VRMenuFontParms {
     float AlphaCenter; // center value for alpha -- used for outlined or non-outlined
     float Scale; // scale factor for the text
     float WrapWidth; // wrap width in meters, < 0 means don't wrap
-    int MaxLines; // maximum number of lines that this text area can display ( TODO: hook this up to
-                  // scrolling )
+    int MaxLines; // maximum number of lines that this text area can display. Currently clamped
+                  // to 16. ( TODO: hook this up to scrolling )
     bool MultiLine; // used in conjunction with WrapWidth.  If set we only scale and don't wrap text
                     // ( single line )
 };

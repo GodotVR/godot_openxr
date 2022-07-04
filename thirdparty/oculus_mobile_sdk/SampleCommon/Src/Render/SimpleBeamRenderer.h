@@ -61,31 +61,36 @@ class SimpleBeamRenderer {
 
         // Add UI pointers to render
         for (auto& device : hitTestDevices) {
+            constexpr float beamLength = 0.5f; // 0.5 meter beam length
+            const OVR::Vector3f beamDir =
+                ((device.pointerEnd - device.pointerStart) * 0.5f).Normalized();
+            const OVR::Vector3f beamEnd = device.pointerStart + beamDir * beamLength;
             const auto& beam =
-                beamRenderer_.AddBeam(in, 0.03f, device.pointerStart, device.pointerEnd, BeamColor);
+                beamRenderer_.AddBeam(in, 0.015f, device.pointerStart, beamEnd, BeamColor);
             beams_.push_back(beam);
 
-            // if (LaserHit)
-            const auto& particle = particleSystem_.AddParticle(
-                in,
-                device.pointerEnd,
-                0.0f,
-                OVR::Vector3f(0.0f),
-                OVR::Vector3f(0.0f),
-                PointerParticleColor,
-                ovrEaseFunc::NONE,
-                0.0f,
-                0.1f * Scale,
-                0.1f,
-                0);
-            particles_.push_back(particle);
+            if (device.hitObject) {
+                const auto& particle = particleSystem_.AddParticle(
+                    in,
+                    device.pointerEnd,
+                    0.0f,
+                    OVR::Vector3f(0.0f),
+                    OVR::Vector3f(0.0f),
+                    PointerParticleColor,
+                    ovrEaseFunc::NONE,
+                    0.0f,
+                    0.05f * Scale,
+                    0.1f,
+                    0);
+                particles_.push_back(particle);
+            }
         }
     }
     void Render(const OVRFW::ovrApplFrameIn& in, OVRFW::ovrRendererOutput& out) {
         /// Render beams
-        const OVR::Matrix4f projectionMatrix;
         particleSystem_.Frame(in, spriteAtlas_, out.FrameMatrices.CenterView);
-        particleSystem_.RenderEyeView(out.FrameMatrices.CenterView, projectionMatrix, out.Surfaces);
+        particleSystem_.RenderEyeView(
+            out.FrameMatrices.CenterView, out.FrameMatrices.EyeProjection[0], out.Surfaces);
         beamRenderer_.Frame(in, out.FrameMatrices.CenterView);
         beamRenderer_.Render(out.Surfaces);
     }

@@ -73,6 +73,8 @@ struct ovrApplFrameIn {
     uint32_t AllTouches = 0u;
     uint32_t LastFrameAllButtons = 0u;
     uint32_t LastFrameAllTouches = 0u;
+    bool LeftRemoteIndexClick = false;
+    bool RightRemoteIndexClick = false;
     float LeftRemoteIndexTrigger = 0.0f;
     float RightRemoteIndexTrigger = 0.0;
     float LeftRemoteGripTrigger = 0.0f;

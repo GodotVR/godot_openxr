@@ -13,11 +13,10 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 #include <android/window.h>
 #include <android/native_window_jni.h>
+#include <openxr/openxr.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/prctl.h> // for prctl( PR_SET_NAME )
-
-// #define USE_SIMPLE_CONTROLLER_PROFILE
 
 using OVR::Bounds3f;
 using OVR::Matrix4f;
@@ -410,86 +409,111 @@ XrApp::LocVel XrApp::GetSpaceLocVel(XrSpace space, XrTime time) {
 // Returns a list of OpenXr extensions needed for this app
 std::vector<const char*> XrApp::GetExtensions() {
     std::vector<const char*> extensions = {
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
         XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME,
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+        XR_KHR_OPENGL_ENABLE_EXTENSION_NAME,
+#endif // defined(XR_USE_GRAPHICS_API_OPENGL_ES)
         XR_KHR_COMPOSITION_LAYER_COLOR_SCALE_BIAS_EXTENSION_NAME,
+#if defined(XR_USE_PLATFORM_ANDROID)
         XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_NAME,
         XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME,
+#endif // defined(XR_USE_PLATFORM_ANDROID)
         XR_KHR_COMPOSITION_LAYER_CUBE_EXTENSION_NAME,
-        XR_KHR_COMPOSITION_LAYER_CYLINDER_EXTENSION_NAME};
+        XR_KHR_COMPOSITION_LAYER_CYLINDER_EXTENSION_NAME
+    };
     return extensions;
 }
 
-XrPath XrApp::GetRequestedInteractionProfilePath(XrInstance instance) {
-    XrPath interactionProfilePath = XR_NULL_PATH;
+// Returns a map from interaction profile paths to vectors of suggested bindings.
+// xrSuggestInteractionProfileBindings() is called once for each interaction profile path in the
+// returned map.
+// Apps are encouraged to suggest bindings for every device/interaction profile they support.
+// Override this for custom action bindings, or modify the default bindings.
+std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> XrApp::GetSuggestedBindings(
+    XrInstance instance) {
+    std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> suggestedBindings{};
 
-#if defined(USE_SIMPLE_CONTROLLER_PROFILE)
+    // By default we support "oculus/touch_controller" and "khr/simple_controller" as a fallback
+    // All supported controllers should be explicitly listed here
+    XrPath simpleInteractionProfile = XR_NULL_PATH;
+    XrPath touchInteractionProfile = XR_NULL_PATH;
+
     OXR(xrStringToPath(
-        instance, "/interaction_profiles/khr/simple_controller", &interactionProfilePath));
-#else
+        instance, "/interaction_profiles/khr/simple_controller", &simpleInteractionProfile));
     OXR(xrStringToPath(
-        instance, "/interaction_profiles/oculus/touch_controller", &interactionProfilePath));
-#endif
-    return interactionProfilePath;
-}
+        instance, "/interaction_profiles/oculus/touch_controller", &touchInteractionProfile));
 
-std::vector<XrActionSuggestedBinding> XrApp::GetSuggestedBindings() {
-    std::vector<XrActionSuggestedBinding> bindings;
-#if defined(USE_SIMPLE_CONTROLLER_PROFILE)
-    bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/left/input/aim/pose"));
-    bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/right/input/aim/pose"));
-    bindings.emplace_back(
-        ActionSuggestedBinding(GripPoseAction, "/user/hand/right/input/grip/pose"));
-    bindings.emplace_back(
+    // -----------------------------------------
+    // Bindings for oculus/touch_controller
+    // -----------------------------------------
+    // Note: using the fact that operator[] creates an object if it doesn't exist in the map
+    suggestedBindings[touchInteractionProfile].emplace_back(
+        ActionSuggestedBinding(AimPoseAction, "/user/hand/left/input/aim/pose"));
+    suggestedBindings[touchInteractionProfile].emplace_back(
+        ActionSuggestedBinding(AimPoseAction, "/user/hand/right/input/aim/pose"));
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(GripPoseAction, "/user/hand/left/input/grip/pose"));
-
-    bindings.emplace_back(
-        ActionSuggestedBinding(ButtonAAction, "/user/hand/right/input/select/click"));
-    bindings.emplace_back(
-        ActionSuggestedBinding(ButtonXAction, "/user/hand/left/input/select/click"));
-
-    bindings.emplace_back(
-        ActionSuggestedBinding(ButtonBAction, "/user/hand/right/input/menu/click"));
-    bindings.emplace_back(
-        ActionSuggestedBinding(ButtonMenuAction, "/user/hand/left/input/menu/click"));
-#else
-    bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/left/input/aim/pose"));
-    bindings.emplace_back(ActionSuggestedBinding(AimPoseAction, "/user/hand/right/input/aim/pose"));
-    bindings.emplace_back(
-        ActionSuggestedBinding(GripPoseAction, "/user/hand/left/input/grip/pose"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(GripPoseAction, "/user/hand/right/input/grip/pose"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(JoystickAction, "/user/hand/left/input/thumbstick"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(JoystickAction, "/user/hand/right/input/thumbstick"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(IndexTriggerAction, "/user/hand/left/input/trigger/value"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(IndexTriggerAction, "/user/hand/right/input/trigger/value"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(GripTriggerAction, "/user/hand/left/input/squeeze/value"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(GripTriggerAction, "/user/hand/right/input/squeeze/value"));
-    bindings.emplace_back(ActionSuggestedBinding(ButtonAAction, "/user/hand/right/input/a/click"));
-    bindings.emplace_back(ActionSuggestedBinding(ButtonBAction, "/user/hand/right/input/b/click"));
-    bindings.emplace_back(ActionSuggestedBinding(ButtonXAction, "/user/hand/left/input/x/click"));
-    bindings.emplace_back(ActionSuggestedBinding(ButtonYAction, "/user/hand/left/input/y/click"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
+        ActionSuggestedBinding(ButtonAAction, "/user/hand/right/input/a/click"));
+    suggestedBindings[touchInteractionProfile].emplace_back(
+        ActionSuggestedBinding(ButtonBAction, "/user/hand/right/input/b/click"));
+    suggestedBindings[touchInteractionProfile].emplace_back(
+        ActionSuggestedBinding(ButtonXAction, "/user/hand/left/input/x/click"));
+    suggestedBindings[touchInteractionProfile].emplace_back(
+        ActionSuggestedBinding(ButtonYAction, "/user/hand/left/input/y/click"));
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(ButtonMenuAction, "/user/hand/left/input/menu/click"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(ThumbStickTouchAction, "/user/hand/left/input/thumbstick/touch"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(ThumbStickTouchAction, "/user/hand/right/input/thumbstick/touch"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(ThumbRestTouchAction, "/user/hand/left/input/thumbrest/touch"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(ThumbRestTouchAction, "/user/hand/right/input/thumbrest/touch"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(TriggerTouchAction, "/user/hand/left/input/trigger/touch"));
-    bindings.emplace_back(
+    suggestedBindings[touchInteractionProfile].emplace_back(
         ActionSuggestedBinding(TriggerTouchAction, "/user/hand/right/input/trigger/touch"));
-#endif
-    return bindings;
+
+    // -----------------------------------------
+    // Default bindings for khr/simple_controller
+    // -----------------------------------------
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(AimPoseAction, "/user/hand/left/input/aim/pose"));
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(AimPoseAction, "/user/hand/right/input/aim/pose"));
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(GripPoseAction, "/user/hand/right/input/grip/pose"));
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(GripPoseAction, "/user/hand/left/input/grip/pose"));
+
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(IndexTriggerAction, "/user/hand/right/input/select/click"));
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(IndexTriggerAction, "/user/hand/left/input/select/click"));
+
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(ButtonBAction, "/user/hand/right/input/menu/click"));
+    suggestedBindings[simpleInteractionProfile].emplace_back(
+        ActionSuggestedBinding(ButtonMenuAction, "/user/hand/left/input/menu/click"));
+
+    return suggestedBindings;
 }
 
 // Called one time when the application process starts.
@@ -529,21 +553,19 @@ bool XrApp::Init(const xrJava* context) {
 
         numInputLayers = numOutputLayers;
 
-        XrApiLayerProperties* layerProperties =
-            (XrApiLayerProperties*)malloc(numOutputLayers * sizeof(XrApiLayerProperties));
+        std::vector<XrApiLayerProperties> layerProperties(numOutputLayers);
 
         for (uint32_t i = 0; i < numOutputLayers; i++) {
             layerProperties[i].type = XR_TYPE_API_LAYER_PROPERTIES;
             layerProperties[i].next = NULL;
         }
 
-        OXR(xrEnumerateApiLayerProperties(numInputLayers, &numOutputLayers, layerProperties));
+        OXR(xrEnumerateApiLayerProperties(
+            numInputLayers, &numOutputLayers, layerProperties.data()));
 
         for (uint32_t i = 0; i < numOutputLayers; i++) {
             ALOGV("Found layer %s", layerProperties[i].layerName);
         }
-
-        free(layerProperties);
     }
 
     // Check that the extensions required are present.
@@ -573,16 +595,11 @@ bool XrApp::Init(const xrJava* context) {
 
         numInputExtensions = numOutputExtensions;
 
-        XrExtensionProperties* extensionProperties =
-            (XrExtensionProperties*)malloc(numOutputExtensions * sizeof(XrExtensionProperties));
-
-        for (uint32_t i = 0; i < numOutputExtensions; i++) {
-            extensionProperties[i].type = XR_TYPE_EXTENSION_PROPERTIES;
-            extensionProperties[i].next = NULL;
-        }
+        std::vector<XrExtensionProperties> extensionProperties(
+            numOutputExtensions, {XR_TYPE_EXTENSION_PROPERTIES});
 
         OXR(xrEnumerateInstanceExtensionProperties(
-            NULL, numInputExtensions, &numOutputExtensions, extensionProperties));
+            NULL, numInputExtensions, &numOutputExtensions, extensionProperties.data()));
         for (uint32_t i = 0; i < numOutputExtensions; i++) {
             ALOGV("Extension #%d = '%s'.", i, extensionProperties[i].extensionName);
         }
@@ -600,8 +617,6 @@ bool XrApp::Init(const xrJava* context) {
                 ALOGW("WARNING - Failed to find required extension %s", requiredExtensionNames[i]);
             }
         }
-
-        free(extensionProperties);
     }
 
     // Create the OpenXR instance.
@@ -676,6 +691,7 @@ bool XrApp::Init(const xrJava* context) {
     assert(MAX_NUM_LAYERS <= systemProperties.graphicsProperties.maxLayerCount);
 
     // Get the graphics requirements.
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     PFN_xrGetOpenGLESGraphicsRequirementsKHR pfnGetOpenGLESGraphicsRequirementsKHR = NULL;
     OXR(xrGetInstanceProcAddr(
         Instance,
@@ -685,6 +701,18 @@ bool XrApp::Init(const xrJava* context) {
     XrGraphicsRequirementsOpenGLESKHR graphicsRequirements = {};
     graphicsRequirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_ES_KHR;
     OXR(pfnGetOpenGLESGraphicsRequirementsKHR(Instance, systemId, &graphicsRequirements));
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+    // Get the graphics requirements.
+    PFN_xrGetOpenGLGraphicsRequirementsKHR pfnGetOpenGLGraphicsRequirementsKHR = NULL;
+    OXR(xrGetInstanceProcAddr(
+        Instance,
+        "xrGetOpenGLGraphicsRequirementsKHR",
+        (PFN_xrVoidFunction*)(&pfnGetOpenGLGraphicsRequirementsKHR)));
+
+    XrGraphicsRequirementsOpenGLKHR graphicsRequirements = {};
+    graphicsRequirements.type = XR_TYPE_GRAPHICS_REQUIREMENTS_OPENGL_KHR;
+    OXR(pfnGetOpenGLGraphicsRequirementsKHR(Instance, systemId, &graphicsRequirements));
+#endif // defined(XR_USE_GRAPHICS_API_OPENGL_ES)
 
     // Create the EGL Context
     ovrEgl_CreateContext(&Egl, NULL);
@@ -748,33 +776,69 @@ bool XrApp::Init(const xrJava* context) {
         CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "index_trigger_touch", NULL);
 
     /// Interaction profile can be overridden
-    XrPath interactionProfilePath = GetRequestedInteractionProfilePath(Instance);
-    std::vector<XrActionSuggestedBinding> bindings = GetSuggestedBindings();
+    std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> allSuggestedBindings =
+        GetSuggestedBindings(GetInstance());
 
-    XrInteractionProfileSuggestedBinding suggestedBindings = {};
-    suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
-    suggestedBindings.next = NULL;
-    suggestedBindings.interactionProfile = interactionProfilePath;
-    suggestedBindings.suggestedBindings = (const XrActionSuggestedBinding*)bindings.data();
-    suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
-    OXR(xrSuggestInteractionProfileBindings(Instance, &suggestedBindings));
+    // Best practice is for apps to suggest bindings for *ALL* interaction profiles
+    // that the app supports. Loop over all interaction profiles we support and suggest bindings:
+    for (auto& [interactionProfilePath, bindings] : allSuggestedBindings) {
+        XrInteractionProfileSuggestedBinding suggestedBindings = {};
+        suggestedBindings.type = XR_TYPE_INTERACTION_PROFILE_SUGGESTED_BINDING;
+        suggestedBindings.next = NULL;
+        suggestedBindings.interactionProfile = interactionProfilePath;
+        suggestedBindings.suggestedBindings = (const XrActionSuggestedBinding*)bindings.data();
+        suggestedBindings.countSuggestedBindings = (uint32_t)bindings.size();
+
+        OXR(xrSuggestInteractionProfileBindings(Instance, &suggestedBindings));
+    }
+
+    FileSys = std::unique_ptr<OVRFW::ovrFileSys>(ovrFileSys::Create(*context));
+    if (FileSys) {
+        OVRFW::ovrFileSys& fs = *FileSys;
+        MaterialParms materialParms;
+        materialParms.UseSrgbTextureFormats = false;
+        SceneModel = std::unique_ptr<OVRFW::ModelFile>(LoadModelFile(
+            fs, "apk:///assets/box.ovrscene", Scene.GetDefaultGLPrograms(), materialParms));
+        if (SceneModel != nullptr) {
+            Scene.SetWorldModel(*SceneModel);
+            Vector3f modelOffset;
+            modelOffset.x = 0.5f;
+            modelOffset.y = 0.0f;
+            modelOffset.z = -2.25f;
+            Scene.GetWorldModel()->State.SetMatrix(
+                Matrix4f::Scaling(2.5f, 2.5f, 2.5f) * Matrix4f::Translation(modelOffset));
+        }
+    }
+    SurfaceRender.Init();
 
     return AppInit(context);
 }
 
 bool XrApp::InitSession() {
     // Create the OpenXR Session.
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     XrGraphicsBindingOpenGLESAndroidKHR graphicsBindingAndroidGLES = {};
     graphicsBindingAndroidGLES.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_ES_ANDROID_KHR;
     graphicsBindingAndroidGLES.next = NULL;
     graphicsBindingAndroidGLES.display = Egl.Display;
     graphicsBindingAndroidGLES.config = Egl.Config;
     graphicsBindingAndroidGLES.context = Egl.Context;
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+    XrGraphicsBindingOpenGLWin32KHR graphicsBindingGL = {};
+    graphicsBindingGL.type = XR_TYPE_GRAPHICS_BINDING_OPENGL_WIN32_KHR;
+    graphicsBindingGL.next = NULL;
+    graphicsBindingGL.hDC = Egl.hDC;
+    graphicsBindingGL.hGLRC = Egl.hGLRC;
+#endif // defined(XR_USE_GRAPHICS_API_OPENGL_ES)
 
     XrSessionCreateInfo sessionCreateInfo = {};
     memset(&sessionCreateInfo, 0, sizeof(sessionCreateInfo));
     sessionCreateInfo.type = XR_TYPE_SESSION_CREATE_INFO;
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     sessionCreateInfo.next = &graphicsBindingAndroidGLES;
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+    sessionCreateInfo.next = &graphicsBindingGL;
+#endif
     sessionCreateInfo.createFlags = 0;
     sessionCreateInfo.systemId = SystemId;
 
@@ -793,14 +857,15 @@ bool XrApp::InitSession() {
     {
         uint32_t viewportConfigTypeCount = 0;
         OXR(xrEnumerateViewConfigurations(Instance, SystemId, 0, &viewportConfigTypeCount, NULL));
-        XrViewConfigurationType* viewportConfigurationTypes = (XrViewConfigurationType*)malloc(
-            viewportConfigTypeCount * sizeof(XrViewConfigurationType));
+
+        std::vector<XrViewConfigurationType> viewportConfigurationTypes(viewportConfigTypeCount);
+
         OXR(xrEnumerateViewConfigurations(
             Instance,
             SystemId,
             viewportConfigTypeCount,
             &viewportConfigTypeCount,
-            viewportConfigurationTypes));
+            viewportConfigurationTypes.data()));
 
         ALOGV("Available Viewport Configuration Types: %d", viewportConfigTypeCount);
         for (uint32_t i = 0; i < viewportConfigTypeCount; i++) {
@@ -823,16 +888,16 @@ bool XrApp::InitSession() {
                 Instance, SystemId, viewportConfigType, 0, &viewCount, NULL));
 
             if (viewCount > 0) {
-                XrViewConfigurationView* elements =
-                    (XrViewConfigurationView*)malloc(viewCount * sizeof(XrViewConfigurationView));
-
-                for (uint32_t e = 0; e < viewCount; e++) {
-                    elements[e].type = XR_TYPE_VIEW_CONFIGURATION_VIEW;
-                    elements[e].next = NULL;
-                }
+                std::vector<XrViewConfigurationView> elements(
+                    viewCount, {XR_TYPE_VIEW_CONFIGURATION_VIEW});
 
                 OXR(xrEnumerateViewConfigurationViews(
-                    Instance, SystemId, viewportConfigType, viewCount, &viewCount, elements));
+                    Instance,
+                    SystemId,
+                    viewportConfigType,
+                    viewCount,
+                    &viewCount,
+                    elements.data()));
 
                 // Log the view config info for each view type for debugging purposes.
                 for (uint32_t e = 0; e < viewCount; e++) {
@@ -860,14 +925,10 @@ bool XrApp::InitSession() {
                         ViewConfigurationView[e] = elements[e];
                     }
                 }
-
-                free(elements);
             } else {
                 ALOGE("Empty viewport configuration type: %d", viewCount);
             }
         }
-
-        free(viewportConfigurationTypes);
     }
 
     // Get the viewport configuration info for the chosen viewport configuration type.
@@ -878,16 +939,16 @@ bool XrApp::InitSession() {
     bool stageSupported = false;
     uint32_t numOutputSpaces = 0;
     OXR(xrEnumerateReferenceSpaces(Session, 0, &numOutputSpaces, NULL));
-    XrReferenceSpaceType* referenceSpaces =
-        (XrReferenceSpaceType*)malloc(numOutputSpaces * sizeof(XrReferenceSpaceType));
-    OXR(xrEnumerateReferenceSpaces(Session, numOutputSpaces, &numOutputSpaces, referenceSpaces));
+
+    std::vector<XrReferenceSpaceType> referenceSpaces(numOutputSpaces);
+    OXR(xrEnumerateReferenceSpaces(
+        Session, numOutputSpaces, &numOutputSpaces, referenceSpaces.data()));
     for (uint32_t i = 0; i < numOutputSpaces; i++) {
         if (referenceSpaces[i] == XR_REFERENCE_SPACE_TYPE_STAGE) {
             stageSupported = true;
             break;
         }
     }
-    free(referenceSpaces);
 
     // Create a space to the first path
     XrReferenceSpaceCreateInfo spaceCreateInfo = {};
@@ -1170,26 +1231,9 @@ void XrApp::AppEyeGLStateSetup(const ovrApplFrameIn& in, const ovrFramebuffer* f
 }
 
 // Called when the application initializes.
+// Overridden by the actual app
 // Must return true if the application initializes successfully.
 bool XrApp::AppInit(const xrJava* context) {
-    FileSys = std::unique_ptr<OVRFW::ovrFileSys>(ovrFileSys::Create(*context));
-    if (FileSys) {
-        OVRFW::ovrFileSys& fs = *FileSys;
-        MaterialParms materialParms;
-        materialParms.UseSrgbTextureFormats = false;
-        SceneModel = std::unique_ptr<OVRFW::ModelFile>(LoadModelFile(
-            fs, "apk:///assets/box.ovrscene", Scene.GetDefaultGLPrograms(), materialParms));
-        if (SceneModel != nullptr) {
-            Scene.SetWorldModel(*SceneModel);
-            Vector3f modelOffset;
-            modelOffset.x = 0.5f;
-            modelOffset.y = 0.0f;
-            modelOffset.z = -2.25f;
-            Scene.GetWorldModel()->State.SetMatrix(
-                Matrix4f::Scaling(2.5f, 2.5f, 2.5f) * Matrix4f::Translation(modelOffset));
-        }
-    }
-    SurfaceRender.Init();
     return true;
 }
 
@@ -1354,13 +1398,16 @@ void XrApp::Run(struct android_app* app) {
             XrMatrix4x4f viewMat = XrMatrix4x4f_CreateFromRigidTransform(&viewTransform[eye]);
             const XrFovf fov = Projections[eye].fov;
             XrMatrix4x4f projMat;
-            XrMatrix4x4f_CreateProjectionFov(
-                &projMat, fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, 0.1f, 0.0f);
+            XrMatrix4x4f_CreateProjectionFov(&projMat, GRAPHICS_OPENGL_ES, fov, 0.1f, 0.0f);
             out.FrameMatrices.EyeView[eye] = XrMatrix4x4f_To_OVRMatrix4f(viewMat);
             out.FrameMatrices.EyeProjection[eye] = XrMatrix4x4f_To_OVRMatrix4f(projMat);
             in.Eye[eye].ViewMatrix = out.FrameMatrices.EyeView[eye];
             in.Eye[eye].ProjectionMatrix = out.FrameMatrices.EyeProjection[eye];
         }
+
+        XrPosef centerView = XrPosef_Inverse(xfStageFromHead);
+        XrMatrix4x4f viewMat = XrMatrix4x4f_CreateFromRigidTransform(&centerView);
+        out.FrameMatrices.CenterView = XrMatrix4x4f_To_OVRMatrix4f(viewMat);
 
         // Input
         HandleInput(in, frameState);

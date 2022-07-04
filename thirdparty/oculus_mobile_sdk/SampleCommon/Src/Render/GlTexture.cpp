@@ -1466,7 +1466,6 @@ GlTexture LoadTextureKTX2(
         return GlTexture(0, 0, 0);
     }
 
-    eTextureFormat format = Texture_None;
     if (ktxTexture_NeedsTranscoding(kTexture)) {
         result = ktxTexture2_TranscodeBasis(
             (ktxTexture2*)kTexture, ktx_transcode_fmt_e::KTX_TTF_ASTC_4x4_RGBA, 0);
@@ -1474,7 +1473,6 @@ GlTexture LoadTextureKTX2(
             ALOG("%s: Coudln't transcode ktx2 file to ASTC, ETC files not supported", fileName);
             return GlTexture(0, 0, 0);
         }
-        format = Texture_ASTC_4x4;
     }
 
     GLuint texid;

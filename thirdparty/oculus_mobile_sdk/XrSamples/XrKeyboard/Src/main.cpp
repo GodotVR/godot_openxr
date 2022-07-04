@@ -80,11 +80,6 @@ class XrKeyboardApp : public OVRFW::XrApp {
 
     // Must return true if the application initializes successfully.
     virtual bool AppInit(const xrJava* context) override {
-        /// Init Rendering
-        if (false == OVRFW::XrApp::AppInit(context)) {
-            ALOG("base AppInit::Init FAILED.");
-            return false;
-        }
         if (false == ui_.Init(context, GetFileSys())) {
             ALOG("TinyUI::Init FAILED.");
             return false;
@@ -155,11 +150,11 @@ class XrKeyboardApp : public OVRFW::XrApp {
         this->FreeMove = false;
         /// Init session bound objects
         if (false == controllerRenderL_.Init(true)) {
-            ALOG("AppInit::Init L controller renderer FAILED.");
+            ALOG("SessionInit::Init L controller renderer FAILED.");
             return false;
         }
         if (false == controllerRenderR_.Init(false)) {
-            ALOG("AppInit::Init R controller renderer FAILED.");
+            ALOG("SessionInit::Init R controller renderer FAILED.");
             return false;
         }
         beamRenderer_.Init(GetFileSys(), nullptr, OVR::Vector4f(1.0f), 1.0f);
@@ -422,9 +417,6 @@ class XrKeyboardApp : public OVRFW::XrApp {
         /// Render UI
         ui_.Render(in, out);
 
-        /// Render beams
-        beamRenderer_.Render(in, out);
-
         /// Render controllers
         if (in.LeftRemoteTracked) {
             controllerRenderL_.Render(out.Surfaces);
@@ -446,6 +438,9 @@ class XrKeyboardApp : public OVRFW::XrApp {
             keyboardRenderer_.Opacity = keyboardOpacity_;
             keyboardRenderer_.Render(out.Surfaces);
         }
+
+        /// Render beams
+        beamRenderer_.Render(in, out);
 
         /// Rendering a blend of hand mask and solid hands
         /// keep hands semi-transparent for regular mask, solid for key lablel
@@ -686,10 +681,4 @@ class XrKeyboardApp : public OVRFW::XrApp {
     double lastTrackedTimeSeconds_ = 0.0;
 };
 
-//==============================================================
-// android_main
-//==============================================================
-void android_main(struct android_app* app) {
-    auto appl = std::make_unique<XrKeyboardApp>();
-    appl->Run(app);
-}
+ENTRY_POINT(XrKeyboardApp)

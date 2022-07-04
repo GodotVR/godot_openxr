@@ -54,8 +54,15 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)(
 
 #include <jni.h>
 
+#if defined(ANDROID)
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
+#elif defined(WIN32)
+#include <unknwn.h>
+#define XR_USE_GRAPHICS_API_OPENGL 1
+#define XR_USE_PLATFORM_WINDOWS 1
+#endif // defined(ANDROID)
+
 #include <openxr/openxr.h>
 #include <openxr/openxr_platform.h>
 
@@ -72,7 +79,11 @@ typedef struct ovrFramebuffer_s {
     uint32_t TextureSwapChainLength;
     uint32_t TextureSwapChainIndex;
     struct ovrSwapChain ColorSwapChain;
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     XrSwapchainImageOpenGLESKHR* ColorSwapChainImage;
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+    XrSwapchainImageOpenGLKHR* ColorSwapChainImage;
+#endif // defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     GLuint* DepthBuffers;
     GLuint* FrameBuffers;
 } ovrFramebuffer;

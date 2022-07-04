@@ -93,7 +93,7 @@ void main()
   lowp vec3 reflectionDir = dot( eyeDir, Normal ) * 2.0 * Normal - eyeDir;
 
   lowp vec4 diffuse = oColor;
-#ifdef USE_TEXTURE  
+#ifdef USE_TEXTURE
   diffuse = texture2D( Texture0, oTexCoord );
 #endif
 
@@ -188,17 +188,15 @@ bool ControllerRenderer::Init(
         /// We didn't get a resource, build using gemetry primitives
         OVRFW::GeometryBuilder gb;
 
-        /// common root
-        OVRFW::GlGeometry::Descriptor nullDesc;
-        nullDesc.transform = Matrix4f::RotationX(OVR::DegreeToRad(30.0f));
-        int nullIdx = gb.Add(nullDesc);
-
+        /// Loosely hand-calibrated for Quest 2 controllers, based on OpenXR 'hand/x/grip/pose'
+        /// If you're here to fix controller offset using vrapi you need a conversion
         /// long capsure
-        const Matrix4f capsuleMatrix = Matrix4f::Translation({0.0f, 0.05f, 0.0f}) *
-            Matrix4f::RotationX(OVR::DegreeToRad(90.0f));
+        const Matrix4f capsuleMatrix = Matrix4f::Translation({0.00f, -0.015f, -0.01f}) *
+            Matrix4f::RotationX(OVR::DegreeToRad(90.0f + 20.0f));
+
         gb.Add(
             OVRFW::BuildTesselatedCapsuleDescriptor(0.02f, 0.08f, 10, 7),
-            nullIdx,
+            0,
             {1.0f, 0.9f, 0.25f, 1.0f},
             capsuleMatrix);
 
@@ -206,7 +204,7 @@ bool ControllerRenderer::Init(
         const Matrix4f ringMatrix = Matrix4f::Translation({0.0f, 0.02f, 0.04f});
         gb.Add(
             OVRFW::BuildTesselatedCylinderDescriptor(0.04f, 0.015f, 24, 2, 1.0f, 1.0f),
-            nullIdx,
+            0,
             {0.6f, 0.8f, 0.25f, 1.0f},
             ringMatrix);
 

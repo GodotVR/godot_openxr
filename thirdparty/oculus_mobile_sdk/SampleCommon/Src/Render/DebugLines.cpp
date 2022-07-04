@@ -197,7 +197,7 @@ void OvrDebugLinesLocal::AddLine(
     const Vector4f& endColor,
     const long long endFrame,
     const bool depthTest) {
-    // OVR_LOG( "OvrDebugLinesLocal::AddDebugLine" );
+    // ALOG( "OvrDebugLinesLocal::AddDebugLine" );
     DebugLines_t& dl = depthTest ? DepthTested : NonDepthTested;
     dl.Attr.position.push_back(start);
     dl.Attr.position.push_back(end);

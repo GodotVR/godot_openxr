@@ -13,6 +13,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 #include <cstdint>
 #include <vector>
+#include <unordered_map>
 #include <mutex>
 #include <memory>
 
@@ -66,8 +67,15 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)(
 #define GL_TEXTURE_CUBE_MAP_ARRAY 0x9009
 #endif
 
+#if defined(ANDROID)
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
+#elif defined(WIN32)
+#include <unknwn.h>
+#define XR_USE_GRAPHICS_API_OPENGL 1
+#define XR_USE_PLATFORM_WINDOWS 1
+#endif // defined(ANDROID)
+
 #include <openxr/openxr.h>
 #include <openxr/openxr_oculus.h>
 #include <openxr/openxr_oculus_helpers.h>
@@ -291,8 +299,13 @@ class XrApp {
         /// do nothing
     }
 
-    virtual XrPath GetRequestedInteractionProfilePath(XrInstance instance);
-    virtual std::vector<XrActionSuggestedBinding> GetSuggestedBindings();
+    // Returns a map from interaction profile paths to vectors of suggested bindings.
+    // xrSuggestInteractionProfileBindings() is called once for each interaction profile path in the
+    // returned map.
+    // Apps are encouraged to suggest bindings for every device/interaction profile they support.
+    // Override this for custom action bindings, or modify the default bindings.
+    virtual std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> GetSuggestedBindings(
+        XrInstance instance);
 
     /// Xr Helpers
     XrInstance& GetInstance() {
@@ -383,7 +396,15 @@ class XrApp {
    protected:
     xrJava Context;
     ovrLifecycle Lifecycle = LIFECYCLE_UNKNOWN;
-    ovrEgl Egl;
+    ovrEgl Egl = {
+        0,
+        0,
+        EGL_NO_DISPLAY,
+        EGL_CAST(EGLConfig, 0),
+        EGL_NO_SURFACE,
+        EGL_NO_SURFACE,
+        EGL_NO_CONTEXT};
+
     ANativeWindow* NativeWindow;
     bool Resumed;
     bool Focused;
@@ -407,6 +428,7 @@ class XrApp {
     XrAction GripPoseAction = XR_NULL_HANDLE;
     XrAction JoystickAction = XR_NULL_HANDLE;
     XrAction IndexTriggerAction = XR_NULL_HANDLE;
+    XrAction IndexTriggerClickAction = XR_NULL_HANDLE;
     XrAction GripTriggerAction = XR_NULL_HANDLE;
     XrAction ButtonAAction = XR_NULL_HANDLE;
     XrAction ButtonBAction = XR_NULL_HANDLE;
@@ -450,3 +472,21 @@ class XrApp {
 };
 
 } // namespace OVRFW
+
+#if defined(ANDROID)
+
+#define ENTRY_POINT(appClass)                     \
+    void android_main(struct android_app* app) {  \
+        auto appl = std::make_unique<appClass>(); \
+        appl->Run(app);                           \
+    }
+
+#else
+
+#define ENTRY_POINT(appClass)                     \
+    int main(int argv, const char** argc) {       \
+        auto appl = std::make_unique<appClass>(); \
+        appl->Run(argv, argc);                    \
+    }
+
+#endif // defined(ANDROID)

@@ -718,8 +718,6 @@ ovrLexer::ExpectPunctuation(char const* punc, char* token, size_t const maxToken
 
 #if 0 // enable for unit tests at static initialization time
 
-#include "OVR_LogUtils.h"
-
 class ovrLexerUnitTest {
 public:
 	ovrLexerUnitTest()

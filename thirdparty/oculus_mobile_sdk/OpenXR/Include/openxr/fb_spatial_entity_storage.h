@@ -16,183 +16,164 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
   159 XR_FB_spatial_entity_storage
 */
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifndef XR_FB_spatial_entity_storage
+#define XR_FB_spatial_entity_storage 1
 
 #ifndef XR_FB_spatial_entity
 #error "This extension depends XR_FB_spatial_entity which has not been defined"
 #endif
 
-// While experimental, the experimental version must be set to get extension definitions
-#if defined(XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION)
-// Error if the chosen experimental version is beyond the latest defined in this header
-#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION < 1 || \
-    2 < XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION
-#error "unknown experimental version for XR_FB_spatial_entity_storage"
-#endif
-
-#define XR_FB_spatial_entity_storage 1
-
-#define XR_FBX1_spatial_entity_storage_SPEC_VERSION 2
-#define XR_FBX1_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME "XR_FBX1_spatial_entity_storage"
-
 #define XR_FBX2_spatial_entity_storage_SPEC_VERSION 2
 #define XR_FBX2_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME "XR_FBX2_spatial_entity_storage"
 
-#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 1
-#define XR_FB_spatial_entity_storage_SPEC_VERSION XR_FBX1_spatial_entity_storage_SPEC_VERSION
-#define XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME XR_FBX1_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME
-#else
+#ifndef XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION
+#define XR_FB_spatial_entity_storage_SPEC_VERSION 1
+#define XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME "XR_FB_spatial_entity_storage"
+#elif XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 2
 #define XR_FB_spatial_entity_storage_SPEC_VERSION XR_FBX2_spatial_entity_storage_SPEC_VERSION
 #define XR_FB_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME XR_FBX2_SPATIAL_ENTITY_STORAGE_EXTENSION_NAME
-#endif
-
-// In order to persist XrSpaces between application uses the XR_COMPONENT_TYPE_STORABLE_FB
-// component can be enabled on a spatial entity that supports this functionality.  If this
-// component has been enabled it allows for application developers to access the ability to
-// save, load, and erase persisted XrSpaces.
-
-// Storage location to be used to store, load, erase, and query spatial entities from
-typedef enum XrSpatialEntityStorageLocationFB {
-    XR_SPATIAL_ENTITY_STORAGE_LOCATION_INVALID_FB = 0,
-    XR_SPATIAL_ENTITY_STORAGE_LOCATION_LOCAL_FB = 1, // local device storage
-        XR_SPATIAL_ENTITY_STORAGE_LOCATION_MAX_ENUM_FB = 0x7FFFFFFF
-} XrSpatialEntityStorageLocationFB;
-
-typedef enum XrSpatialEntityStoragePersistenceModeFB {
-    XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_INVALID_FB = 0,
-    XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_INDEFINITE_HIGH_PRI_FB = 1,
-    XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_MAX_ENUM_FB = 0x7FFFFFFF
-} XrSpatialEntityStoragePersistenceModeFB;
-
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_STORAGE_SAVE_INFO_FB =
-    (XrStructureType)1000077000;
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_STORAGE_ERASE_INFO_FB =
-    (XrStructureType)1000077001;
-
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_STORAGE_LOCATION_INFO_FB =
-    (XrStructureType)1000077003;
-
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FBX1 =
-    (XrStructureType)1000077100;
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FBX1 =
-    (XrStructureType)1000077101;
-
-#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 1
-#define XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FB \
-    XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FBX1
-#define XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FB \
-    XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FBX1
-#define XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_LOAD_RESULT_FB \
-    XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_LOAD_RESULT_FBX1
 #else
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FB =
-    (XrStructureType)1000077103;
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FB =
-    (XrStructureType)1000077104;
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_LOAD_RESULT_FB =
-    (XrStructureType)1000077105;
+#error "unknown experimental version for XR_FB_spatial_entity_storage"
 #endif
 
-// Events
+// In order to persist XrSpaces between application uses the XR_SPACE_COMPONENT_TYPE_STORABLE_FB
+// component can be enabled on a space that supports this functionality.  If this
+// component has been enabled it allows for application developers to access the ability to
+// save and erase persisted XrSpaces.
 
-// Do to the asynchronos nature of storage events there are several result events that will
-// be returned when these functions have been completed.
+// Storage location to be used to store, erase, and query spaces from
+typedef enum XrSpaceStorageLocationFB {
+    XR_SPACE_STORAGE_LOCATION_INVALID_FB = 0,
+    XR_SPACE_STORAGE_LOCATION_LOCAL_FB = 1,
+        XR_SPACE_STORAGE_LOCATION_MAX_ENUM_FB = 0x7FFFFFFF
+} XrSpaceStorageLocationFB;
+
+// Whether data should be persisted indefinitely or otherwise
+typedef enum XrSpacePersistenceModeFB {
+    XR_SPACE_PERSISTENCE_MODE_INVALID_FB = 0,
+    XR_SPACE_PERSISTENCE_MODE_INDEFINITE_FB = 1,
+    XR_SPACE_PERSISTENCE_MODE_MAX_ENUM_FB = 0x7FFFFFFF
+} XrSpacePersistenceModeFB;
+
+// Space save information used by xrSaveSpaceFB
+static const XrStructureType XR_TYPE_SPACE_SAVE_INFO_FB = (XrStructureType)1000158000;
+typedef struct XrSpaceSaveInfoFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrSpace space;
+    XrSpaceStorageLocationFB location;
+    XrSpacePersistenceModeFB persistenceMode;
+} XrSpaceSaveInfoFB;
+
+// Space erase information used by xrEraseSpaceFB
+static const XrStructureType XR_TYPE_SPACE_ERASE_INFO_FB = (XrStructureType)1000158001;
+typedef struct XrSpaceEraseInfoFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrSpace space;
+    XrSpaceStorageLocationFB location;
+} XrSpaceEraseInfoFB;
 
 // Save Result
 // The save result event contains the success of the save/write operation to the
 // specified location as well as the XrSpace handle on which the save operation was attempted
 // on in addition to the unique Uuid and the triggered async request id from the initial
 // calling function
-typedef struct XrEventSpatialEntityStorageSaveResultFBX1 {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FBX1
-    const void* XR_MAY_ALIAS next; // contains a XrSpatialEntityIdInfoFB to access uuid
+static const XrStructureType XR_TYPE_EVENT_DATA_SPACE_SAVE_COMPLETE_FB =
+    (XrStructureType)1000158106;
+typedef struct XrEventDataSpaceSaveCompleteFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrAsyncRequestIdFB requestId;
     XrResult result;
     XrSpace space;
-    XrSpatialEntityUuidFBX1 uuid;
-    XrAsyncRequestIdFB request;
-} XrEventSpatialEntityStorageSaveResultFBX1;
-
-#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 1
-#define XrEventSpatialEntityStorageSaveResultFB XrEventSpatialEntityStorageSaveResultFBX1
-#else
-typedef struct XrEventSpatialEntityStorageSaveResultFB {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FB
-    const void* XR_MAY_ALIAS next; // contains a XrSpatialEntityIdInfoFB to access uuid
-    XrResult result;
-    XrSpace space;
-    XrSpatialEntityUuidFB uuid;
-    XrAsyncRequestIdFB request;
-} XrEventSpatialEntityStorageSaveResultFB;
-#endif
+    XrUuidEXT uuid;
+    XrSpaceStorageLocationFB location;
+} XrEventDataSpaceSaveCompleteFB;
 
 // Erase Result
 // The erase result event contains the success of the erase operation from the specified storage
 // location.  It will also provide the uuid of the anchor and the async request id from the initial
 // calling function
-typedef struct XrEventSpatialEntityStorageEraseResultFBX1 {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FBX1
-    const void* XR_MAY_ALIAS next; // contains a XrSpatialEntityIdInfoFB to access uuid
+static const XrStructureType XR_TYPE_EVENT_DATA_SPACE_ERASE_COMPLETE_FB =
+    (XrStructureType)1000158107;
+typedef struct XrEventDataSpaceEraseCompleteFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrAsyncRequestIdFB requestId;
     XrResult result;
-    XrSpatialEntityStorageLocationFB location;
-    XrSpatialEntityUuidFBX1 uuid;
-    XrAsyncRequestIdFB request;
-} XrEventSpatialEntityStorageEraseResultFBX1;
+    XrSpace space;
+    XrUuidEXT uuid;
+    XrSpaceStorageLocationFB location;
+} XrEventDataSpaceEraseCompleteFB;
 
-#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 1
-#define XrEventSpatialEntityStorageEraseResultFB XrEventSpatialEntityStorageEraseResultFBX1
-#else
-typedef struct XrEventSpatialEntityStorageEraseResultFB {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FB
-    const void* XR_MAY_ALIAS next; // contains a XrSpatialEntityIdInfoFB to access uuid
+typedef XrResult(XRAPI_PTR* PFN_xrSaveSpaceFB)(
+    XrSession session,
+    const XrSpaceSaveInfoFB* info,
+    XrAsyncRequestIdFB* requestId);
+
+typedef XrResult(XRAPI_PTR* PFN_xrEraseSpaceFB)(
+    XrSession session,
+    const XrSpaceEraseInfoFB* info,
+    XrAsyncRequestIdFB* requestId);
+
+#ifndef XR_NO_PROTOTYPES
+#ifdef XR_EXTENSION_PROTOTYPES
+
+XRAPI_ATTR XrResult XRAPI_CALL
+xrSaveSpaceFB(XrSession session, const XrSpaceSaveInfoFB* info, XrAsyncRequestIdFB* requestId);
+
+XRAPI_ATTR XrResult XRAPI_CALL
+xrEraseSpaceFB(XrSession session, const XrSpaceEraseInfoFB* info, XrAsyncRequestIdFB* requestId);
+
+#endif // XR_EXTENSION_PROTOTYPES
+#endif // !XR_NO_PROTOTYPES
+
+// =============================================================================
+// Begin Backwards Compatibility (DEPRECATED)
+// =============================================================================
+
+#ifdef XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION
+
+#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION >= 2
+
+
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FBX2 =
+    (XrStructureType)1000077103;
+typedef struct XrEventSpatialEntityStorageSaveResultFBX2 {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
     XrResult result;
-    XrSpatialEntityStorageLocationFB location;
-    XrSpatialEntityUuidFB uuid;
+    XrSpace space;
+    XrSpatialEntityUuidFBX2 uuid;
     XrAsyncRequestIdFB request;
-} XrEventSpatialEntityStorageEraseResultFB;
-#endif
+} XrEventSpatialEntityStorageSaveResultFBX2;
 
-
-// Info Structs
-
-// Storage location info is used by the query filters and added to the next chain in order to
-// specify which location the query filter wishes to perform it query from
-typedef struct XrSpatialEntityStorageLocationInfoFB {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_STORAGE_LOCATION_INFO_FB
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FBX2 =
+    (XrStructureType)1000077104;
+typedef struct XrEventSpatialEntityStorageEraseResultFBX2 {
+    XrStructureType type;
     const void* XR_MAY_ALIAS next;
-    XrSpatialEntityStorageLocationFB location;
-} XrSpatialEntityStorageLocationInfoFB;
-
-// Spatial entity save information used by xrSpatialEntitySaveSpaceFB
-typedef struct XrSpatialEntityStorageSaveInfoFB {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_STORAGE_SAVE_INFO_FB
-    const void* XR_MAY_ALIAS next;
-    XrSpace space;
-    XrSpatialEntityStorageLocationFB location;
-    XrSpatialEntityStoragePersistenceModeFB persistenceMode;
-} XrSpatialEntityStorageSaveInfoFB;
-
-// Spatial entity erase information used by xrSpatialEntityEraseSpaceFB
-typedef struct XrSpatialEntityStorageEraseInfoFB {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_STORAGE_ERASE_INFO_FB
-    const void* XR_MAY_ALIAS next;
-    XrSpace space;
-    XrSpatialEntityStorageLocationFB location;
-} XrSpatialEntityStorageEraseInfoFB;
+    XrResult result;
+    XrSpaceStorageLocationFB location;
+    XrSpatialEntityUuidFBX2 uuid;
+    XrAsyncRequestIdFB request;
+} XrEventSpatialEntityStorageEraseResultFBX2;
 
 
-typedef XrResult(XRAPI_PTR* PFN_xrSpatialEntitySaveSpaceFB)(
+typedef XrResult(XRAPI_PTR* PFN_xrSpatialEntitySaveSpaceFBX2)(
     XrSession session,
-    const XrSpatialEntityStorageSaveInfoFB* info,
-    XrAsyncRequestIdFB* request);
+    const XrSpaceSaveInfoFB* info,
+    XrAsyncRequestIdFB* requestId);
 
-typedef XrResult(XRAPI_PTR* PFN_xrSpatialEntityEraseSpaceFB)(
+typedef XrResult(XRAPI_PTR* PFN_xrSpatialEntityEraseSpaceFBX2)(
     XrSession session,
-    const XrSpatialEntityStorageEraseInfoFB* info,
-    XrAsyncRequestIdFB* request);
+    const XrSpaceEraseInfoFB* info,
+    XrAsyncRequestIdFB* requestId);
 
 
 #ifndef XR_NO_PROTOTYPES
@@ -200,19 +181,60 @@ typedef XrResult(XRAPI_PTR* PFN_xrSpatialEntityEraseSpaceFB)(
 
 XRAPI_ATTR XrResult XRAPI_CALL xrSpatialEntitySaveSpaceFB(
     XrSession session,
-    const XrSpatialEntityStorageSaveInfoFB* info,
-    XrAsyncRequestIdFB* request);
+    const XrSpaceSaveInfoFB* info,
+    XrAsyncRequestIdFB* requestId);
 
 XRAPI_ATTR XrResult XRAPI_CALL xrSpatialEntityEraseSpaceFB(
     XrSession session,
-    const XrSpatialEntityStorageEraseInfoFB* info,
-    XrAsyncRequestIdFB* request);
+    const XrSpaceEraseInfoFB* info,
+    XrAsyncRequestIdFB* requestId);
 
 
 #endif // XR_EXTENSION_PROTOTYPES
-#endif // XR_NO_PROTOTYPES
+#endif // !XR_NO_PROTOTYPES
 
-#endif // defined(XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION)
+#endif // XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION >= 2
+
+#if XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 2
+
+#define XrSpatialEntityStorageLocationFB XrSpaceStorageLocationFB
+#define XR_SPATIAL_ENTITY_STORAGE_LOCATION_INVALID_FB XR_SPACE_STORAGE_LOCATION_INVALID_FB
+#define XR_SPATIAL_ENTITY_STORAGE_LOCATION_LOCAL_FB XR_SPACE_STORAGE_LOCATION_LOCAL_FB
+#define XR_SPATIAL_ENTITY_STORAGE_LOCATION_MAX_ENUM_FB XR_SPACE_STORAGE_LOCATION_MAX_ENUM_FB
+
+#define XrSpatialEntityStoragePersistenceModeFB XrSpacePersistenceModeFB
+#define XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_INVALID_FB XR_SPACE_PERSISTENCE_MODE_INVALID_FB
+#define XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_INDEFINITE_HIGH_PRI_FB \
+    XR_SPACE_PERSISTENCE_MODE_INDEFINITE_FB
+#define XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_MAX_ENUM_FB XR_SPACE_PERSISTENCE_MODE_MAX_ENUM_FB
+
+#define XR_TYPE_SPATIAL_ENTITY_STORAGE_SAVE_INFO_FB XR_TYPE_SPACE_SAVE_INFO_FB
+#define XrSpatialEntityStorageSaveInfoFB XrSpaceSaveInfoFB
+
+#define XR_TYPE_SPATIAL_ENTITY_STORAGE_ERASE_INFO_FB XR_TYPE_SPACE_ERASE_INFO_FB
+#define XrSpatialEntityStorageEraseInfoFB XrSpaceEraseInfoFB
+
+
+#define XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FB \
+    XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FBX2
+#define XrEventSpatialEntityStorageSaveResultFB XrEventSpatialEntityStorageSaveResultFBX2
+
+#define XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FB \
+    XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FBX2
+#define XrEventSpatialEntityStorageEraseResultFB XrEventSpatialEntityStorageEraseResultFBX2
+
+
+#define PFN_xrSpatialEntitySaveSpaceFB PFN_xrSpatialEntitySaveSpaceFBX2
+#define PFN_xrSpatialEntityEraseSpaceFB PFN_xrSpatialEntityEraseSpaceFBX2
+
+#endif // XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION == 2
+
+
+#endif // XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION
+
+// =============================================================================
+// End Backwards Compatibility (DEPRECATED)
+// =============================================================================
 
 #endif // XR_FB_spatial_entity_storage
 

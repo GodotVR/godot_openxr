@@ -187,7 +187,7 @@ void VRMenuSurfaceTexture::Free() {
 #if 0
 static void PrintBounds( const char * name, char const * prefix, Bounds3f const & bounds )
 {
-	OVR_LOG( "'%s' %s: min( %.2f, %.2f, %.2f ) - max( %.2f, %.2f, %.2f )",
+	ALOG( "'%s' %s: min( %.2f, %.2f, %.2f ) - max( %.2f, %.2f, %.2f )",
 		name, prefix,
 		bounds.GetMins().x, bounds.GetMins().y, bounds.GetMins().z,
 		bounds.GetMaxs().x, bounds.GetMaxs().y, bounds.GetMaxs().z );
@@ -734,7 +734,7 @@ void VRMenuSurface::CreateFromSurfaceParms(OvrGuiSys& guiSys, VRMenuSurfaceParms
         }
         /// OVR_PERF_ACCUMULATE( VerifyImageParms );
         if (!isValid) {
-            // OVR_LOG( "VRMenuSurfaceParms '%s' - no valid images - skipping",
+            // ALOG( "VRMenuSurfaceParms '%s' - no valid images - skipping",
             // parms.SurfaceName.c_str() );
             return;
         }
@@ -752,7 +752,7 @@ void VRMenuSurface::CreateFromSurfaceParms(OvrGuiSys& guiSys, VRMenuSurfaceParms
         }
         /// OVR_PERF_ACCUMULATE( FindSurfaceForGeoSizing );
         if (surfaceIdx < 0) {
-            // OVR_LOG( "VRMenuSurface::CreateFromImageParms - no suitable image for surface
+            // ALOG( "VRMenuSurface::CreateFromImageParms - no suitable image for surface
             // creation" );
             return;
         }
@@ -2231,9 +2231,9 @@ void VRMenuObject::FreeTextSurface() const {
 
 static void DumpText(char const* token, char const* text, int const size) {
     // DUMP THE ENITER BUFFER TO THE LOG TO CATCH MEMORY CORRUPTION
-    OVR_LOG("VRGUI PARSE ERROR!");
-    OVR_LOG("lex token: %s", token);
-    OVR_LOG("lex buffer:");
+    ALOG("VRGUI PARSE ERROR!");
+    ALOG("lex token: %s", token);
+    ALOG("lex buffer:");
     const int BLOCK_SIZE = 256;
     int blocks = size / BLOCK_SIZE;
     char const* bufferStart = text;
@@ -2243,7 +2243,7 @@ static void DumpText(char const* token, char const* text, int const size) {
         char temp[BLOCK_SIZE + 1];
         memcpy(temp, cur, count);
         temp[count] = '\0';
-        OVR_LOG("block %i: %s", i, temp);
+        ALOG("block %i: %s", i, temp);
     }
 }
 

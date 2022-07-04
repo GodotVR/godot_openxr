@@ -30,20 +30,9 @@ Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include "SpatialAnchorGl.h"
 #include "SimpleXrInput.h"
 
-#ifndef XR_FB_spatial_entity
-#define XR_FB_spatial_entity_EXPERIMENTAL_VERSION 2
 #include <openxr/fb_spatial_entity.h>
-#endif
-
-#ifndef XR_FB_spatial_entity_query
-#define XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION 2
 #include <openxr/fb_spatial_entity_query.h>
-#endif
-
-#ifndef XR_FB_spatial_entity_storage
-#define XR_FB_spatial_entity_storage_EXPERIMENTAL_VERSION 2
 #include <openxr/fb_spatial_entity_storage.h>
-#endif
 
 
 using namespace OVR;
@@ -111,8 +100,8 @@ std::string bin2hex(const uint8_t* src, uint32_t size) {
     return res;
 }
 
-std::string uuidToHexString(const XrSpatialEntityUuidFB& uuid) {
-    return bin2hex(reinterpret_cast<const uint8_t*>(uuid.value), XR_UUID_SIZE_FB * 8);
+std::string uuidToHexString(const XrUuidEXT& uuid) {
+    return bin2hex(reinterpret_cast<const uint8_t*>(uuid.data), XR_UUID_SIZE_EXT);
 }
 
 /*
@@ -419,17 +408,18 @@ struct ovrExtensionFunctionPointers {
     PFN_xrPassthroughLayerSetStyleFB xrPassthroughLayerSetStyleFB = nullptr;
     PFN_xrPassthroughStartFB xrPassthroughStartFB = nullptr;
     PFN_xrPassthroughPauseFB xrPassthroughPauseFB = nullptr;
-    PFN_xrEnumerateSupportedComponentsFB xrEnumerateSupportedComponentsFB = nullptr;
-    PFN_xrSetComponentEnabledFB xrSetComponentEnabledFB = nullptr;
-    PFN_xrGetComponentStatusFB xrGetComponentStatusFB = nullptr;
+    PFN_xrEnumerateSpaceSupportedComponentsFB xrEnumerateSpaceSupportedComponentsFB = nullptr;
+    PFN_xrSetSpaceComponentStatusFB xrSetSpaceComponentStatusFB = nullptr;
+    PFN_xrGetSpaceComponentStatusFB xrGetSpaceComponentStatusFB = nullptr;
     PFN_xrCreateSpatialAnchorFB xrCreateSpatialAnchorFB = nullptr;
-    PFN_xrQuerySpatialEntityFB xrQuerySpatialEntityFB = nullptr;
-    PFN_xrSpatialEntitySaveSpaceFB xrSpatialEntitySaveSpaceFB = nullptr;
-    PFN_xrSpatialEntityEraseSpaceFB xrSpatialEntityEraseSpaceFB = nullptr;
+    PFN_xrQuerySpacesFB xrQuerySpacesFB = nullptr;
+    PFN_xrRetrieveSpaceQueryResultsFB xrRetrieveSpaceQueryResultsFB = nullptr;
+    PFN_xrSaveSpaceFB xrSaveSpaceFB = nullptr;
+    PFN_xrEraseSpaceFB xrEraseSpaceFB = nullptr;
     };
 
 struct ovrEnableComponentEvent {
-    XrComponentTypeFB componentType;
+    XrSpaceComponentTypeFB componentType;
     XrSpace space;
 };
 
@@ -437,7 +427,7 @@ struct ovrApp {
     void Clear();
     void HandleSessionStateChanges(XrSessionState state);
     void HandleXrEvents();
-    bool IsComponentSupported(XrSpace space, XrComponentTypeFB type);
+    bool IsComponentSupported(XrSpace space, XrSpaceComponentTypeFB type);
 
     ovrEgl Egl;
     ANativeWindow* NativeWindow;
@@ -597,11 +587,11 @@ void ovrApp::HandleSessionStateChanges(XrSessionState state) {
     }
 }
 
-bool ovrApp::IsComponentSupported(XrSpace space, XrComponentTypeFB type) {
+bool ovrApp::IsComponentSupported(XrSpace space, XrSpaceComponentTypeFB type) {
     uint32_t numComponents = 0;
-    OXR(FunPtrs.xrEnumerateSupportedComponentsFB(space, 0, &numComponents, nullptr));
-    std::vector<XrComponentTypeFB> components(numComponents);
-    OXR(FunPtrs.xrEnumerateSupportedComponentsFB(
+    OXR(FunPtrs.xrEnumerateSpaceSupportedComponentsFB(space, 0, &numComponents, nullptr));
+    std::vector<XrSpaceComponentTypeFB> components(numComponents);
+    OXR(FunPtrs.xrEnumerateSpaceSupportedComponentsFB(
         space, numComponents, &numComponents, components.data()));
 
     bool supported = false;
@@ -676,65 +666,127 @@ void ovrApp::HandleXrEvents() {
                         break;
                 }
             } break;
-            case XR_TYPE_EVENT_DATA_SET_COMPONENT_ENABLE_RESULT_FB: {
-                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SET_COMPONENT_ENABLE_RESULT_FB");
-                const XrEventDataSetComponentEnableResultFB* enableResult =
-                    (XrEventDataSetComponentEnableResultFB*)(baseEventHeader);
+            case XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB: {
+                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SPACE_SET_STATUS_COMPLETE_FB");
+                const XrEventDataSpaceSetStatusCompleteFB* enableResult =
+                    (XrEventDataSpaceSetStatusCompleteFB*)(baseEventHeader);
                 if (enableResult->result == XR_SUCCESS) {
-                    if (enableResult->componentType == XR_COMPONENT_TYPE_STORABLE_FB) {
-                        XrSpatialEntityStorageSaveInfoFB saveInfo = {
-                            XR_TYPE_SPATIAL_ENTITY_STORAGE_SAVE_INFO_FB,
+                    if (enableResult->componentType == XR_SPACE_COMPONENT_TYPE_STORABLE_FB) {
+                        XrSpaceSaveInfoFB saveInfo = {
+                            XR_TYPE_SPACE_SAVE_INFO_FB,
                             nullptr,
                             enableResult->space,
-                            XR_SPATIAL_ENTITY_STORAGE_LOCATION_LOCAL_FB,
-                            XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_INDEFINITE_HIGH_PRI_FB};
+                            XR_SPACE_STORAGE_LOCATION_LOCAL_FB,
+                            XR_SPACE_PERSISTENCE_MODE_INDEFINITE_FB};
 
                         // save the space
                         XrAsyncRequestIdFB requestId;
-                        OXR(FunPtrs.xrSpatialEntitySaveSpaceFB(Session, &saveInfo, &requestId));
-                    } else if (enableResult->componentType == XR_COMPONENT_TYPE_LOCATABLE_FB) {
+                        OXR(FunPtrs.xrSaveSpaceFB(Session, &saveInfo, &requestId));
+                    } else if (
+                        enableResult->componentType == XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB) {
                         if (AppRenderer.Scene.SpaceList.size() < MAX_PERSISTENT_SPACES) {
                             AppRenderer.Scene.SpaceList.push_back(enableResult->space);
                         }
                     }
                 }
             } break;
-            case XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB: {
-                ALOGV("xrPollEvent: received XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FB");
-                const XrEventSpatialEntityQueryResultsFB* queryResults =
-                    (XrEventSpatialEntityQueryResultsFB*)(baseEventHeader);
+            case XR_TYPE_EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB: {
+                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SPATIAL_ANCHOR_CREATE_COMPLETE_FB");
+                const XrEventDataSpatialAnchorCreateCompleteFB* createAnchorResult =
+                    (XrEventDataSpatialAnchorCreateCompleteFB*)(baseEventHeader);
+                XrSpace space = createAnchorResult->space;
+                AppRenderer.Scene.SpaceList.push_back(space);
 
-                for (uint32_t i = 0; i < queryResults->numResults; ++i) {
-                    auto& result = queryResults->results[i];
+                if (IsComponentSupported(space, XR_SPACE_COMPONENT_TYPE_STORABLE_FB)) {
+                    XrSpaceComponentStatusSetInfoFB request = {
+                        XR_TYPE_SPACE_COMPONENT_STATUS_SET_INFO_FB,
+                        nullptr,
+                        XR_SPACE_COMPONENT_TYPE_STORABLE_FB,
+                        XR_TRUE,
+                        0};
 
-                    if (IsComponentSupported(result.space, XR_COMPONENT_TYPE_LOCATABLE_FB)) {
-                        XrComponentEnableRequestFB request = {
-                            XR_TYPE_COMPONENT_ENABLE_REQUEST_FB,
+                    XrAsyncRequestIdFB requestId;
+                    XrResult res = FunPtrs.xrSetSpaceComponentStatusFB(space, &request, &requestId);
+                    if (res == XR_ERROR_SPACE_COMPONENT_STATUS_ALREADY_SET_FB) {
+                        XrSpaceSaveInfoFB saveInfo = {
+                            XR_TYPE_SPACE_SAVE_INFO_FB,
                             nullptr,
-                            XR_COMPONENT_TYPE_LOCATABLE_FB,
-                            true,
+                            space,
+                            XR_SPACE_STORAGE_LOCATION_LOCAL_FB,
+                            XR_SPACE_PERSISTENCE_MODE_INDEFINITE_FB};
+
+                        // save the space
+                        ALOGV("Saving created anchor.");
+                        OXR(FunPtrs.xrSaveSpaceFB(Session, &saveInfo, &requestId));
+                    }
+                }
+
+                
+                ALOGV(
+                    "Number of anchors after calling PlaceAnchor: %zu",
+                    AppRenderer.Scene.SpaceList.size());
+            } break;
+            case XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB: {
+                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB");
+                const auto resultsAvailable =
+                    (XrEventDataSpaceQueryResultsAvailableFB*)baseEventHeader;
+
+                XrResult res = XR_SUCCESS;
+
+                XrSpaceQueryResultsFB queryResults{XR_TYPE_SPACE_QUERY_RESULTS_FB};
+                queryResults.resultCapacityInput = 0;
+                queryResults.resultCountOutput = 0;
+                queryResults.results = nullptr;
+
+                res = FunPtrs.xrRetrieveSpaceQueryResultsFB(
+                    Session, resultsAvailable->requestId, &queryResults);
+                if (res != XR_SUCCESS) {
+                    ALOGV("xrRetrieveSpaceQueryResultsFB: error %u", res);
+                    break;
+                }
+
+                std::vector<XrSpaceQueryResultFB> results(queryResults.resultCountOutput);
+                queryResults.resultCapacityInput = results.size();
+                queryResults.results = results.data();
+
+                res = FunPtrs.xrRetrieveSpaceQueryResultsFB(
+                    Session, resultsAvailable->requestId, &queryResults);
+                if (res != XR_SUCCESS) {
+                    ALOGV("xrRetrieveSpaceQueryResultsFB: error %u", res);
+                    break;
+                }
+
+                for (uint32_t i = 0; i < queryResults.resultCountOutput; ++i) {
+                    auto& result = results[i];
+
+                    if (IsComponentSupported(result.space, XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB)) {
+                        XrSpaceComponentStatusSetInfoFB request = {
+                            XR_TYPE_SPACE_COMPONENT_STATUS_SET_INFO_FB,
+                            nullptr,
+                            XR_SPACE_COMPONENT_TYPE_LOCATABLE_FB,
+                            XR_TRUE,
                             0};
                         XrAsyncRequestIdFB requestId;
-                        XrResult res =
-                            FunPtrs.xrSetComponentEnabledFB(result.space, &request, &requestId);
-                        if (res == XR_ERROR_SET_COMPONENT_ENABLE_ALREADY_ENABLED_FB) {
+                        res =
+                            FunPtrs.xrSetSpaceComponentStatusFB(result.space, &request, &requestId);
+                        if (res == XR_ERROR_SPACE_COMPONENT_STATUS_ALREADY_SET_FB) {
                             if (AppRenderer.Scene.SpaceList.size() < MAX_PERSISTENT_SPACES) {
                                 AppRenderer.Scene.SpaceList.push_back(result.space);
                             }
                         }
                     }
 
-                    if (IsComponentSupported(result.space, XR_COMPONENT_TYPE_STORABLE_FB)) {
-                        XrComponentEnableRequestFB request = {
-                            XR_TYPE_COMPONENT_ENABLE_REQUEST_FB,
+                    if (IsComponentSupported(result.space, XR_SPACE_COMPONENT_TYPE_STORABLE_FB)) {
+                        XrSpaceComponentStatusSetInfoFB request = {
+                            XR_TYPE_SPACE_COMPONENT_STATUS_SET_INFO_FB,
                             nullptr,
-                            XR_COMPONENT_TYPE_STORABLE_FB,
-                            true,
+                            XR_SPACE_COMPONENT_TYPE_STORABLE_FB,
+                            XR_TRUE,
                             0};
                         XrAsyncRequestIdFB requestId;
-                        XrResult res =
-                            FunPtrs.xrSetComponentEnabledFB(result.space, &request, &requestId);
-                        if (res == XR_ERROR_SET_COMPONENT_ENABLE_ALREADY_ENABLED_FB) {
+                        res =
+                            FunPtrs.xrSetSpaceComponentStatusFB(result.space, &request, &requestId);
+                        if (res == XR_ERROR_SPACE_COMPONENT_STATUS_ALREADY_SET_FB) {
                             ALOGV(
                                 "xrPollEvent: Storable component was already enabled for Space uuid: %s",
                                 uuidToHexString(result.uuid).c_str());
@@ -744,41 +796,43 @@ void ovrApp::HandleXrEvents() {
                                     }
 
                 ALOGV(
-                    "Number of anchors after receiving XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB: %zu",
+                    "Number of anchors after receiving XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB: %zu",
                     AppRenderer.Scene.SpaceList.size());
+
             } break;
-            case XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB: {
-                ALOGV("xrPollEvent: received XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB");
+            case XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB: {
+                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB");
             } break;
-            case XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FB: {
-                ALOGV("xrPollEvent: received XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_SAVE_RESULT_FB");
-                const XrEventSpatialEntityStorageSaveResultFB* saveResult =
-                    (XrEventSpatialEntityStorageSaveResultFB*)(baseEventHeader);
+            case XR_TYPE_EVENT_DATA_SPACE_SAVE_COMPLETE_FB: {
+                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SPACE_SAVE_COMPLETE_FB");
+                const XrEventDataSpaceSaveCompleteFB* saveResult =
+                    (XrEventDataSpaceSaveCompleteFB*)(baseEventHeader);
 
                 if (saveResult->result == XR_SUCCESS) {
                     ALOGV("xrPollEvent: Save Space successful!");
                     const std::string hexStr = uuidToHexString(saveResult->uuid);
                     ALOGV("xrPollEvent: Save Space uuid: %s", hexStr.c_str());
-                    ALOGV("xrPollEvent: Save Space Async Request: %" PRIu64, saveResult->request);
+                    ALOGV("xrPollEvent: Save Space Async Request: %" PRIu64, saveResult->requestId);
                 } else {
                     ALOGV("xrPollEvent: Save Space failed!");
                 }
             } break;
-            case XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FB: {
-                ALOGV("xrPollEvent: received XR_TYPE_EVENT_SPATIAL_ENTITY_STORAGE_ERASE_RESULT_FB");
-                const XrEventSpatialEntityStorageEraseResultFB* eraseResult =
-                    (XrEventSpatialEntityStorageEraseResultFB*)(baseEventHeader);
+            case XR_TYPE_EVENT_DATA_SPACE_ERASE_COMPLETE_FB: {
+                ALOGV("xrPollEvent: received XR_TYPE_EVENT_DATA_SPACE_ERASE_COMPLETE_FB");
+                const XrEventDataSpaceEraseCompleteFB* eraseResult =
+                    (XrEventDataSpaceEraseCompleteFB*)(baseEventHeader);
 
                 if (eraseResult->result == XR_SUCCESS) {
                     ALOGV("xrPollEvent: Erase Space successful!");
-                    auto iter = DestroySpaceEventMap.find(eraseResult->request);
+                    auto iter = DestroySpaceEventMap.find(eraseResult->requestId);
                     if (iter != DestroySpaceEventMap.end()) {
                         xrDestroySpace(iter->second);
                         DestroySpaceEventMap.erase(iter);
                     }
                     const std::string hexStr = uuidToHexString(eraseResult->uuid);
                     ALOGV("xrPollEvent: Erase Space uuid: %s", hexStr.c_str());
-                    ALOGV("xrPollEvent: Erase Space Async Request: %" PRIu64, eraseResult->request);
+                    ALOGV(
+                        "xrPollEvent: Erase Space Async Request: %" PRIu64, eraseResult->requestId);
                 } else {
                     ALOGV("xrPollEvent: Erase Space failed!");
                 }
@@ -885,18 +939,18 @@ static Posef OvrFromXr(const XrPosef& p) {
 
 static void QueryAnchors(ovrApp& app) {
     ALOGV("QueryAnchors");
-    XrSpatialEntityQueryInfoActionQueryFB queryInfo = {
-        XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FB,
+    XrSpaceQueryInfoFB queryInfo = {
+        XR_TYPE_SPACE_QUERY_INFO_FB,
         nullptr,
+        XR_SPACE_QUERY_ACTION_LOAD_FB,
         MAX_PERSISTENT_SPACES,
         0,
-        XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB,
         nullptr,
         nullptr};
 
     XrAsyncRequestIdFB requestId;
-    OXR(app.FunPtrs.xrQuerySpatialEntityFB(
-        app.Session, (XrSpatialEntityQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
+    OXR(app.FunPtrs.xrQuerySpacesFB(
+        app.Session, (XrSpaceQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
 }
 
 
@@ -922,15 +976,12 @@ void DestroyAnchor(ovrApp& app) {
 
     XrSpace space = app.AppRenderer.Scene.SpaceList.back();
     app.AppRenderer.Scene.SpaceList.pop_back();
-    XrSpatialEntityStorageEraseInfoFB eraseInfo = {
-        XR_TYPE_SPATIAL_ENTITY_STORAGE_ERASE_INFO_FB,
-        nullptr,
-        space,
-        XR_SPATIAL_ENTITY_STORAGE_LOCATION_LOCAL_FB};
+    XrSpaceEraseInfoFB eraseInfo = {
+        XR_TYPE_SPACE_ERASE_INFO_FB, nullptr, space, XR_SPACE_STORAGE_LOCATION_LOCAL_FB};
 
     XrAsyncRequestIdFB requestId;
     XrResult res = XR_SUCCESS;
-    OXR(res = app.FunPtrs.xrSpatialEntityEraseSpaceFB(app.Session, &eraseInfo, &requestId));
+    OXR(res = app.FunPtrs.xrEraseSpaceFB(app.Session, &eraseInfo, &requestId));
     if (res == XR_SUCCESS) {
         app.DestroySpaceEventMap[requestId] = space;
     }
@@ -966,39 +1017,9 @@ void PlaceAnchor(ovrApp& app, SimpleXrInput* input, const XrFrameState& frameSta
     anchorCreateInfo.space = app.LocalSpace;
     anchorCreateInfo.poseInSpace = ToXrPosef(localFromRightAim);
     anchorCreateInfo.time = frameState.predictedDisplayTime;
-    XrSpace space;
-    OXR(app.FunPtrs.xrCreateSpatialAnchorFB(app.Session, &anchorCreateInfo, &space));
-    app.AppRenderer.Scene.SpaceList.push_back(space);
-
-    ovrCubeData cube;
-    cube.Model = OVR::Matrix4f(localFromRightAim);
-    cube.Model *= OVR::Matrix4f::Scaling(0.01f, 0.01f, 0.05f);
-    cube.ColorScale *= 0.0f;
-    cube.ColorBias = OVR::Vector4f(0, 1, 0, 1); // Green
-    app.AppRenderer.Scene.CubeData.push_back(cube);
-
-    if (app.IsComponentSupported(space, XR_COMPONENT_TYPE_STORABLE_FB)) {
-        XrComponentEnableRequestFB request = {
-            XR_TYPE_COMPONENT_ENABLE_REQUEST_FB, nullptr, XR_COMPONENT_TYPE_STORABLE_FB, true, 0};
-
-        XrAsyncRequestIdFB requestId;
-        XrResult res = app.FunPtrs.xrSetComponentEnabledFB(space, &request, &requestId);
-        if (res == XR_ERROR_SET_COMPONENT_ENABLE_ALREADY_ENABLED_FB) {
-            XrSpatialEntityStorageSaveInfoFB saveInfo = {
-                XR_TYPE_SPATIAL_ENTITY_STORAGE_SAVE_INFO_FB,
-                nullptr,
-                space,
-                XR_SPATIAL_ENTITY_STORAGE_LOCATION_LOCAL_FB,
-                XR_SPATIAL_ENTITY_STORAGE_PERSISTENCE_MODE_INDEFINITE_HIGH_PRI_FB};
-
-            // save the space
-            OXR(app.FunPtrs.xrSpatialEntitySaveSpaceFB(app.Session, &saveInfo, &requestId));
-        }
-    }
-
-    
-    ALOGV(
-        "Number of anchors after calling PlaceAnchor: %zu", app.AppRenderer.Scene.SpaceList.size());
+    XrAsyncRequestIdFB createRequest;
+    OXR(app.FunPtrs.xrCreateSpatialAnchorFB(app.Session, &anchorCreateInfo, &createRequest));
+    ALOGV("Place Spatial Anchor initiated.");
 }
 
 /**
@@ -1482,28 +1503,26 @@ void android_main(struct android_app* androidApp) {
         (PFN_xrVoidFunction*)(&app.FunPtrs.xrCreateSpatialAnchorFB)));
     OXR(xrGetInstanceProcAddr(
         instance,
-        "xrEnumerateSupportedComponentsFB",
-        (PFN_xrVoidFunction*)(&app.FunPtrs.xrEnumerateSupportedComponentsFB)));
+        "xrEnumerateSpaceSupportedComponentsFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrEnumerateSpaceSupportedComponentsFB)));
     OXR(xrGetInstanceProcAddr(
         instance,
-        "xrGetComponentStatusFB",
-        (PFN_xrVoidFunction*)(&app.FunPtrs.xrGetComponentStatusFB)));
+        "xrGetSpaceComponentStatusFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrGetSpaceComponentStatusFB)));
     OXR(xrGetInstanceProcAddr(
         instance,
-        "xrSetComponentEnabledFB",
-        (PFN_xrVoidFunction*)(&app.FunPtrs.xrSetComponentEnabledFB)));
+        "xrSetSpaceComponentStatusFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrSetSpaceComponentStatusFB)));
+    OXR(xrGetInstanceProcAddr(
+        instance, "xrQuerySpacesFB", (PFN_xrVoidFunction*)(&app.FunPtrs.xrQuerySpacesFB)));
     OXR(xrGetInstanceProcAddr(
         instance,
-        "xrQuerySpatialEntityFB",
-        (PFN_xrVoidFunction*)(&app.FunPtrs.xrQuerySpatialEntityFB)));
+        "xrRetrieveSpaceQueryResultsFB",
+        (PFN_xrVoidFunction*)(&app.FunPtrs.xrRetrieveSpaceQueryResultsFB)));
     OXR(xrGetInstanceProcAddr(
-        instance,
-        "xrSpatialEntitySaveSpaceFB",
-        (PFN_xrVoidFunction*)(&app.FunPtrs.xrSpatialEntitySaveSpaceFB)));
+        instance, "xrSaveSpaceFB", (PFN_xrVoidFunction*)(&app.FunPtrs.xrSaveSpaceFB)));
     OXR(xrGetInstanceProcAddr(
-        instance,
-        "xrSpatialEntityEraseSpaceFB",
-        (PFN_xrVoidFunction*)(&app.FunPtrs.xrSpatialEntityEraseSpaceFB)));
+        instance, "xrEraseSpaceFB", (PFN_xrVoidFunction*)(&app.FunPtrs.xrEraseSpaceFB)));
     
     // Create and start passthrough
     XrPassthroughFB passthrough = XR_NULL_HANDLE;
@@ -1715,8 +1734,7 @@ void android_main(struct android_app* androidApp) {
 
             const XrFovf fov = projections[eye].fov;
             XrMatrix4x4f projMat;
-            XrMatrix4x4f_CreateProjectionFov(
-                &projMat, fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, 0.1f, 0.0f);
+            XrMatrix4x4f_CreateProjectionFov(&projMat, GRAPHICS_OPENGL_ES, fov, 0.1f, 0.0f);
 
             frameIn.View[eye] = OvrFromXr(viewMat);
             frameIn.Proj[eye] = OvrFromXr(projMat);

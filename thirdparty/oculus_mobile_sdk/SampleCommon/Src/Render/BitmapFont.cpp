@@ -785,11 +785,11 @@ VertexBlockType DrawTextToVertexBlock(
             normal.y,
             normal.z,
             text);
-        OVR_ASSERT_WITH_TAG(normal.IsNormalized(), "BitmapFont");
+        assert(normal.IsNormalized());
     }
     if (!up.IsNormalized()) {
         ALOG("DrawTextToVertexBlock: up = ( %g, %g, %g ), text = '%s'", up.x, up.y, up.z, text);
-        OVR_ASSERT_WITH_TAG(up.IsNormalized(), "BitmapFont");
+        assert(up.IsNormalized());
     }
 
     const FontInfoType& fontInfo = AsLocal(font).GetFontInfo();
@@ -1128,7 +1128,7 @@ bool FontInfoType::LoadFromBuffer(void const* buffer, size_t const bufferSize) {
     std::shared_ptr<OVR::JSON> jsonRoot =
         OVR::JSON::Parse(reinterpret_cast<char const*>(buffer), &errorMsg);
     if (jsonRoot == NULL) {
-        OVR_WARN("OVR::JSON Error: %s", (errorMsg != NULL) ? errorMsg : "<NULL>");
+        ALOGW("OVR::JSON Error: %s", (errorMsg != NULL) ? errorMsg : "<NULL>");
         ALOG(
             "FontInfoType::LoadFromBuffer FAIL OVR::JSON ERROR = '%s' ",
             (errorMsg != NULL) ? errorMsg : "<NULL>");
@@ -1596,7 +1596,7 @@ bool BitmapFontLocal::LoadImageFromBuffer(
             imageName, buffer, TextureFlags_t(TEXTUREFLAG_NO_DEFAULT), ImageWidth, ImageHeight);
     }
     if (FontTexture.IsValid() == false) {
-        OVR_WARN("BitmapFontLocal::Load: failed to load '%s'", imageName);
+        ALOGW("BitmapFontLocal::Load: failed to load '%s'", imageName);
         return false;
     }
 
@@ -1717,7 +1717,6 @@ bool BitmapFontLocal::WordWrapText(
     float const xScale = FontInfo.ScaleFactorX * fontScale;
     double lineWidthAtLastBreak = 0.0;
     double lineWidth = 0.0;
-    bool isCJK = false;
 
     while (*cur != '\0') {
         // skip over formatting
@@ -1744,9 +1743,6 @@ bool BitmapFontLocal::WordWrapText(
             break;
         }
         intptr_t const charCodeSize = cur - pre;
-        // determine if the string is Chinese, Japanese or Korean.
-        isCJK |= (charCode >= 0x4E00 && charCode <= 0x9FAF) ||
-            (charCode >= 0x3000 && charCode <= 0x30FF);
 
         // replace tabs with a space
         if (charCode == '\t') {

@@ -13,7 +13,6 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <vector>
 
 #include "OVR_Types.h"
-#include "OVR_LogUtils.h"
 
 #include "Skeleton.h"
 

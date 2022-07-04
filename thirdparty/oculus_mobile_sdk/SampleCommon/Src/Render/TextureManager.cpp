@@ -19,7 +19,6 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <vector>
 #include <unordered_map>
 
-#include "OVR_LogUtils.h"
 #include "OVR_FileSys.h"
 #include "PackageFiles.h"
 

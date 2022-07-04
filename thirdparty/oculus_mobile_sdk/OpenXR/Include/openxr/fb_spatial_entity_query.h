@@ -11,249 +11,293 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #pragma once
 
 #include <openxr/fb_spatial_entity.h>
+#include <openxr/fb_spatial_entity_storage.h>
 
 /*
   157 XR_FB_spatial_entity_query
 */
 
-#if defined(__cplusplus)
+#ifdef __cplusplus
 extern "C" {
 #endif
 
 #ifndef XR_FB_spatial_entity_query
+#define XR_FB_spatial_entity_query 1
 
 #ifndef XR_FB_spatial_entity
 #error "This extension depends XR_FB_spatial_entity which has not been defined"
 #endif
 
-// While experimental, the experimental version must be set to get extension definitions
-#if defined(XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION)
-// Error if the chosen experimental version is beyond the latest defined in this header
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION < 1 || \
-    2 < XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION
-#error "unknown experimental version for XR_FB_spatial_entity_query"
+#ifndef XR_FB_spatial_entity_storage
+#error "This extension depends XR_FB_spatial_entity_storage which has not been defined"
 #endif
-
-#define XR_FB_spatial_entity_query 1
-
-#define XR_FBX1_spatial_entity_query_SPEC_VERSION 2
-#define XR_FBX1_SPATIAL_ENTITY_QUERY_EXTENSION_NAME "XR_FBX1_spatial_entity_query"
 
 #define XR_FBX2_spatial_entity_query_SPEC_VERSION 2
 #define XR_FBX2_SPATIAL_ENTITY_QUERY_EXTENSION_NAME "XR_FBX2_spatial_entity_query"
 
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XR_FB_spatial_entity_query_SPEC_VERSION XR_FBX1_spatial_entity_query_SPEC_VERSION
-#define XR_FB_SPATIAL_ENTITY_QUERY_EXTENSION_NAME XR_FBX1_SPATIAL_ENTITY_QUERY_EXTENSION_NAME
-#else
+#ifndef XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION
+#define XR_FB_spatial_entity_query_SPEC_VERSION 1
+#define XR_FB_SPATIAL_ENTITY_QUERY_EXTENSION_NAME "XR_FB_spatial_entity_query"
+#elif XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 2
 #define XR_FB_spatial_entity_query_SPEC_VERSION XR_FBX2_spatial_entity_query_SPEC_VERSION
 #define XR_FB_SPATIAL_ENTITY_QUERY_EXTENSION_NAME XR_FBX2_SPATIAL_ENTITY_QUERY_EXTENSION_NAME
+#else
+#error "unknown experimental version for XR_FB_spatial_entity_query"
 #endif
 
 // This extension allows an application to query the spaces that have been previously shared
 // or persisted onto the device
 //
-// There are several types of Query actions that can be performed.
+// The following types of Query actions can be performed:
 //
-// - XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB
-//      Performs a simple query that returns a XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FB for
-//      each XrSpace that was found during the query.  There will also be a final
-//      XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB event that is returned when all XrSpaces
+// - XR_SPACE_QUERY_ACTION_LOAD_FB
+//      Performs a simple query that returns a XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB
+//      when results found during the query become available.  There will also be a final
+//      XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB event that is returned when all XrSpaces
 //      have been returned.  This query type can be used when looking for a list of all
-//      spaces that match a filter criteria.  Using this query does an implicit load on the
-//      spsAnchorHandle for the spatial anchor
-
-
-// Example Usage:
-//    XrSpatialEntityStorageLocationInfoFB storageLocationInfo = {
-//        XR_TYPE_SPATIAL_ENTITY_STORAGE_LOCATION_INFO_FB,
-//        nullptr,
-//        XR_SPATIAL_ENTITY_STORAGE_LOCATION_LOCAL_FB};
+//      spaces that match the filter criteria specified.  Using this query does an implicit load
+//      on the spaces found by this query.
 //
-//    XrSpatialEntityQueryFilterSpaceTypeFB filterInfo = {
-//        XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FB,
-//        &storageLocationInfo,
-//        XR_SPATIAL_ENTITY_TYPE_SPATIAL_ANCHOR_FB};
-//
-//    XrSpatialEntityQueryInfoActionQueryFB queryInfo = {
-//        XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FB,
-//        nullptr,
-//        MAX_PERSISTENT_SPACES,
-//        0,
-//        XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB,
-//        (XrSpatialEntityQueryFilterBaseHeaderFB*)&filterInfo,
-//        nullptr};
-//
-//    XrAsyncRequestIdFB requestId;
-//    XrResult result = xrQuerySpatialEntityFB(
-//        app.Session, (XrSpatialEntityQueryInfoBaseHeaderFB*)&queryInfo, &requestId));
-//
-
-// Query Info Structs
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FB =
-    (XrStructureType)1000156000;
-
-// Query Filters Structs
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FBX1 =
-    (XrStructureType)1000156050;
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX1 =
-    (XrStructureType)1000156051;
-
-// Events
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1 =
-    (XrStructureType)1000156100;
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX1 =
-    (XrStructureType)1000156101;
 
 // Type of query being performed.
-typedef enum XrSpatialEntityQueryPredicateFB {
-    XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB = 0, // returns XrSpaces
-        XR_SPATIAL_ENTITY_QUERY_PREDICATE_MAX_ENUM_FB = 0x7FFFFFFF
-} XrSpatialEntityQueryPredicateFB;
+typedef enum XrSpaceQueryActionFB {
+    // returns XrSpaces
+    XR_SPACE_QUERY_ACTION_LOAD_FB = 0,
+        XR_SPACE_QUERY_ACTION_MAX_ENUM_FB = 0x7FFFFFFF
+} XrSpaceQueryActionFB;
 
-// Query Filters
-typedef struct XR_MAY_ALIAS XrSpatialEntityQueryFilterBaseHeaderFB {
+// Query base struct
+typedef struct XR_MAY_ALIAS XrSpaceQueryInfoBaseHeaderFB {
     XrStructureType type;
     const void* XR_MAY_ALIAS next;
-} XrSpatialEntityQueryFilterBaseHeaderFB;
+} XrSpaceQueryInfoBaseHeaderFB;
 
-// May be used to query the system to find all spaces of a particular type
-typedef struct XrSpatialEntityQueryFilterSpaceTypeFBX1 {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FBX1
+// Query filter base struct
+typedef struct XR_MAY_ALIAS XrSpaceFilterInfoBaseHeaderFB {
+    XrStructureType type;
     const void* XR_MAY_ALIAS next;
-    XrSpatialEntityTypeFBX1 spaceType;
-} XrSpatialEntityQueryFilterSpaceTypeFBX1;
+} XrSpaceFilterInfoBaseHeaderFB;
+
+// Query result to be returned in the results array of XrEventSpatialEntityQueryResultsFBX2 or as
+// output from xrRetrieveSpaceQueryResultsFB(). No type or next pointer included to save
+// space in the results array.
+typedef struct XrSpaceQueryResultFB {
+    XrSpace space;
+    XrUuidEXT uuid;
+} XrSpaceQueryResultFB;
+
+// May be used to query for spaces and perform a specific action on the spaces returned.
+// The available actions can be found in XrSpaceQueryActionFB.
+// The filter info provided to the filter member of the struct will be used as an inclusive
+// filter.  All spaces that match this criteria will be included in the results returned.
+// The excludeFilter member of the struct is not supported at this time.
+static const XrStructureType XR_TYPE_SPACE_QUERY_INFO_FB = (XrStructureType)1000156001;
+typedef struct XrSpaceQueryInfoFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrSpaceQueryActionFB queryAction;
+    uint32_t maxResultCount;
+    XrDuration timeout;
+    const XrSpaceFilterInfoBaseHeaderFB* filter;
+    const XrSpaceFilterInfoBaseHeaderFB* excludeFilter;
+} XrSpaceQueryInfoFB;
+
+// Storage location info is used by the query filters and added to the next chain in order to
+// specify which location the query filter wishes to perform it query from
+static const XrStructureType XR_TYPE_SPACE_STORAGE_LOCATION_FILTER_INFO_FB =
+    (XrStructureType)1000156003;
+typedef struct XrSpaceStorageLocationFilterInfoFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrSpaceStorageLocationFB location;
+} XrSpaceStorageLocationFilterInfoFB;
 
 // May be used to query the system to find all spaces that match the uuids provided
 // in the filter info
-typedef struct XrSpatialEntityQueryFilterIdsFBX1 {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX1
-    const void* XR_MAY_ALIAS next;
-    XrSpatialEntityUuidFBX1* uuids;
-    uint32_t numIds;
-} XrSpatialEntityQueryFilterIdsFBX1;
-
-// Query Info
-typedef struct XR_MAY_ALIAS XrSpatialEntityQueryInfoBaseHeaderFB {
+static const XrStructureType XR_TYPE_SPACE_UUID_FILTER_INFO_FB = (XrStructureType)1000156054;
+typedef struct XrSpaceUuidFilterInfoFB {
     XrStructureType type;
     const void* XR_MAY_ALIAS next;
-} XrSpatialEntityQueryInfoBaseHeaderFB;
+    uint32_t uuidCount;
+    const XrUuidEXT* uuids;
+} XrSpaceUuidFilterInfoFB;
 
-// May be used to query for spaces and perform a specific action on the spaces returned.
-// The available actions can be found in XrSpatialEntityQueryPredicateFB.
-// The filter info provided to the filter member of the struct will be used as an inclusive
-// filter.  All spaces that match this criteria will be included in the results returned.
-// The filter info provided to the excludeFilter member of the struct will be used to exclude
-// spaces from the results returned from the filter.  This is to allow for a more selective
-// style query
-typedef struct XrSpatialEntityQueryInfoActionQueryFB {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FB
-    const void* XR_MAY_ALIAS next; // string multiple queries together using next
-    int32_t maxQuerySpaces;
-    XrDuration timeout;
-    XrSpatialEntityQueryPredicateFB queryAction; // What -> type of query to be performed
-    const XrSpatialEntityQueryFilterBaseHeaderFB* filter; // Which -> which info we are querying for
-    const XrSpatialEntityQueryFilterBaseHeaderFB*
-        excludeFilter; // exclude specific results from query
-} XrSpatialEntityQueryInfoActionQueryFB;
-
-// Returned via XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1 when a XrSpace is found matching the
-// data provided by the filter info of the query
-typedef struct XrEventSpatialEntityQueryResultFBX1 {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1
+// May be used to query the system to find all spaces that have a particular component enabled
+static const XrStructureType XR_TYPE_SPACE_COMPONENT_FILTER_INFO_FB = (XrStructureType)1000156052;
+typedef struct XrSpaceComponentFilterInfoFB {
+    XrStructureType type;
     const void* XR_MAY_ALIAS next;
-    XrAsyncRequestIdFB request;
-    XrSpace space;
-    XrSpatialEntityUuidFBX1 uuid;
-} XrEventSpatialEntityQueryResultFBX1;
+    XrSpaceComponentTypeFB componentType;
+} XrSpaceComponentFilterInfoFB;
+
+static const XrStructureType XR_TYPE_SPACE_QUERY_RESULTS_FB = (XrStructureType)1000156002;
+typedef struct XrSpaceQueryResultsFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    uint32_t resultCapacityInput;
+    uint32_t resultCountOutput;
+    XrSpaceQueryResultFB* results;
+} XrSpaceQueryResultsFB;
+
+static const XrStructureType XR_TYPE_EVENT_DATA_SPACE_QUERY_RESULTS_AVAILABLE_FB =
+    (XrStructureType)1000156103;
+typedef struct XrEventDataSpaceQueryResultsAvailableFB {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrAsyncRequestIdFB requestId;
+} XrEventDataSpaceQueryResultsAvailableFB;
 
 // When a query has completely finished this event will be returned
-typedef struct XrEventSpatialEntityQueryCompleteFB {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB
+static const XrStructureType XR_TYPE_EVENT_DATA_SPACE_QUERY_COMPLETE_FB =
+    (XrStructureType)1000156104;
+typedef struct XrEventDataSpaceQueryCompleteFB {
+    XrStructureType type;
     const void* XR_MAY_ALIAS next;
+    XrAsyncRequestIdFB requestId;
     XrResult result;
-    int32_t numSpacesFound;
-    XrAsyncRequestIdFB request;
-} XrEventSpatialEntityQueryCompleteFB;
+} XrEventDataSpaceQueryCompleteFB;
 
-typedef XrResult(XRAPI_PTR* PFN_xrQuerySpatialEntityFB)(
+typedef XrResult(XRAPI_PTR* PFN_xrQuerySpacesFB)(
     XrSession session,
-    const XrSpatialEntityQueryInfoBaseHeaderFB* info,
-    XrAsyncRequestIdFB* request);
+    const XrSpaceQueryInfoBaseHeaderFB* info,
+    XrAsyncRequestIdFB* requestId);
 
+typedef XrResult(XRAPI_PTR* PFN_xrRetrieveSpaceQueryResultsFB)(
+    XrSession session,
+    XrAsyncRequestIdFB requestId,
+    XrSpaceQueryResultsFB* results);
 
 #ifndef XR_NO_PROTOTYPES
 #ifdef XR_EXTENSION_PROTOTYPES
 
-XRAPI_ATTR XrResult XRAPI_CALL xrQuerySpatialEntityFB(
+XRAPI_ATTR XrResult XRAPI_CALL xrQuerySpacesFB(
     XrSession session,
-    const XrSpatialEntityQueryInfoBaseHeaderFB* info,
-    XrAsyncRequestIdFB* request);
+    const XrSpaceQueryInfoBaseHeaderFB* info,
+    XrAsyncRequestIdFB* requestId);
 
+// Call this function to get available results for a request. Results are available following a
+// XrEventDataSpaceQueryResultsAvailableFB from xrPollEvent() and will be purged from the
+// runtime once results have been copied into the application's buffer. The application should call
+// this function once to populate resultCount before allocating enough memory for a second call to
+// actually retrieve any available results.
+XRAPI_ATTR XrResult XRAPI_CALL xrRetrieveSpaceQueryResultsFB(
+    XrSession session,
+    XrAsyncRequestIdFB requestId,
+    XrSpaceQueryResultsFB* results);
 
-#endif /* XR_EXTENSION_PROTOTYPES */
-#endif /* !XR_NO_PROTOTYPES */
+#endif // XR_EXTENSION_PROTOTYPES
+#endif // !XR_NO_PROTOTYPES
 
-// Functionality introduced in FBX2
+// =============================================================================
+// Begin Backwards Compatibility (DEPRECATED)
+// =============================================================================
+
+#ifdef XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION
+
 #if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION >= 2
 
-// Query Filters Structs
-static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB =
-    (XrStructureType)1000156053;
-
-// Events
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB =
-    (XrStructureType)1000156102;
-static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB =
-    XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX1;
-
-// May be used to query the system to find all spaces that match the uuids provided
-// in the filter info
-typedef struct XrSpatialEntityQueryFilterIdsFB {
-    XrStructureType type; // XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB
+static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FBX2 =
+    (XrStructureType)1000156000;
+typedef struct XrSpatialEntityQueryInfoActionQueryFBX2 {
+    XrStructureType type;
     const void* XR_MAY_ALIAS next;
-    XrSpatialEntityUuidFB* uuids;
+    int32_t maxQuerySpaces;
+    XrDuration timeout;
+    XrSpaceQueryActionFB queryAction;
+    const XrSpaceFilterInfoBaseHeaderFB* filter;
+    const XrSpaceFilterInfoBaseHeaderFB* excludeFilter;
+} XrSpatialEntityQueryInfoActionQueryFBX2;
+
+static const XrStructureType XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX2 =
+    (XrStructureType)1000156053;
+typedef struct XrSpatialEntityQueryFilterIdsFBX2 {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrSpatialEntityUuidFBX2* uuids;
     uint32_t numIds;
-} XrSpatialEntityQueryFilterIdsFB;
+} XrSpatialEntityQueryFilterIdsFBX2;
 
-
-// Query result to be returned in the results array of XrEventSpatialEntityQueryResultsFB or as
-// output from xrEnumerateSpatialEntityQueryResultsFB(). No type or next pointer included to save
-// space in the results array.
-typedef struct XrSpatialEntityQueryResultFB {
+typedef struct XrSpatialEntityQueryResultFBX2 {
     XrSpace space;
-    XrSpatialEntityUuidFB uuid;
-} XrSpatialEntityQueryResultFB;
+    XrSpatialEntityUuidFBX2 uuid;
+} XrSpatialEntityQueryResultFBX2;
 
-// Maximum number of results that a single XrEventSpatialEntityQueryResultsFB can hold.
-#define XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT 128
-
-// Returned when some number of query results are available.
-typedef struct XrEventSpatialEntityQueryResultsFB {
-    XrStructureType type; // XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB
+#define XR_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT_FBX2 128
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FBX2 =
+    (XrStructureType)1000156102;
+typedef struct XrEventSpatialEntityQueryResultsFBX2 {
+    XrStructureType type;
     const void* XR_MAY_ALIAS next;
     XrAsyncRequestIdFB request;
     uint32_t numResults;
-    XrSpatialEntityQueryResultFB results[XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT];
-} XrEventSpatialEntityQueryResultsFB;
+    XrSpatialEntityQueryResultFBX2 results[XR_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT_FBX2];
+} XrEventSpatialEntityQueryResultsFBX2;
+
+static const XrStructureType XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX2 =
+    (XrStructureType)1000156101;
+typedef struct XrEventSpatialEntityQueryCompleteFBX2 {
+    XrStructureType type;
+    const void* XR_MAY_ALIAS next;
+    XrResult result;
+    int32_t numSpacesFound;
+    XrAsyncRequestIdFB request;
+} XrEventSpatialEntityQueryCompleteFBX2;
+
+typedef XrResult(XRAPI_PTR* PFN_xrQuerySpatialEntityFBX2)(
+    XrSession session,
+    const XrSpaceQueryInfoBaseHeaderFB* info,
+    XrAsyncRequestIdFB* requestId);
+
 
 #endif // XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION >= 2
 
-// FBX1 Backwards compatibility
-#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 1
-#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FB \
-    XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_SPACE_TYPE_FBX1
-#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX1
-#define XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FB XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULT_FBX1
+#if XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 2
+
+#define XrSpatialEntityQueryPredicateFB XrSpaceQueryActionFB
+#define XR_SPATIAL_ENTITY_QUERY_PREDICATE_LOAD_FB XR_SPACE_QUERY_ACTION_LOAD_FB
+#define XR_SPATIAL_ENTITY_QUERY_PREDICATE_MAX_ENUM_FB XR_SPACE_QUERY_ACTION_MAX_ENUM_FB
+
+#define XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FB \
+    XR_TYPE_SPATIAL_ENTITY_QUERY_INFO_ACTION_QUERY_FBX2
+#define XrSpatialEntityQueryInfoActionQueryFB XrSpatialEntityQueryInfoActionQueryFBX2
+
+#define XrSpatialEntityQueryInfoBaseHeaderFB XrSpaceQueryInfoBaseHeaderFB
+#define XrSpatialEntityQueryFilterBaseHeaderFB XrSpaceFilterInfoBaseHeaderFB
+
+#define XR_TYPE_SPATIAL_ENTITY_STORAGE_LOCATION_INFO_FB \
+    XR_TYPE_SPACE_STORAGE_LOCATION_FILTER_INFO_FB
+#define XrSpatialEntityStorageLocationInfoFB XrSpaceStorageLocationFilterInfoFB
+
+#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FB XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_IDS_FBX2
+#define XrSpatialEntityQueryFilterIdsFB XrSpatialEntityQueryFilterIdsFBX2
+
+#define XR_TYPE_SPATIAL_ENTITY_QUERY_FILTER_COMPONENT_TYPE_FB XR_TYPE_SPACE_COMPONENT_FILTER_INFO_FB
+#define XrSpatialEntityQueryFilterComponentTypeFB XrSpaceComponentFilterInfoFB
+
+#define XR_FB_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT \
+    XR_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT_FBX2
+#define XR_FBX2_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT \
+    XR_SPATIAL_ENTITY_QUERY_MAX_RESULTS_PER_EVENT_FBX2
+
+#define XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FB \
+    XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_RESULTS_FBX2
+#define XrEventSpatialEntityQueryResultsFB XrEventSpatialEntityQueryResultsFBX2
+
 #define XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FB \
-    XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX1
-#define XrSpatialEntityQueryFilterSpaceTypeFB XrSpatialEntityQueryFilterSpaceTypeFBX1
-#define XrSpatialEntityQueryFilterIdsFB XrSpatialEntityQueryFilterIdsFBX1
-#define XrEventSpatialEntityQueryResultFB XrEventSpatialEntityQueryResultFBX1
+    XR_TYPE_EVENT_SPATIAL_ENTITY_QUERY_COMPLETE_FBX2
+#define XrEventSpatialEntityQueryCompleteFB XrEventSpatialEntityQueryCompleteFBX2
 
-#endif // Backwards compatibility
+#define PFN_xrQuerySpatialEntityFB PFN_xrQuerySpatialEntityFBX1
+#define PFN_xrTerminateSpatialEntityQueryFB PFN_xrTerminateSpatialEntityQueryFBX2
 
-#endif // defined(XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION)
+#endif // XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION == 2
+
+
+#endif // XR_FB_spatial_entity_query_EXPERIMENTAL_VERSION
+
+// =============================================================================
+// End Backwards Compatibility (DEPRECATED)
+// =============================================================================
 
 #endif // XR_FB_spatial_entity_query
 

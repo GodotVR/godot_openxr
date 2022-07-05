@@ -1,6 +1,10 @@
 Changes to the Godot OpenXR asset
 =================================
 
+1.4.0
+-------------------
+- Add support for palm pose
+
 1.3.0
 -------------------
 - Added default interaction profiles for Samsung Odyssey, HTC Cosmos, HTC Focus and Huawei controllers.

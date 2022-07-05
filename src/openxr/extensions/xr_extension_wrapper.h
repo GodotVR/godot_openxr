@@ -2,6 +2,7 @@
 #define XR_EXTENSION_WRAPPER_H
 
 #include "openxr/include/openxr_inc.h"
+#include <String.hpp>
 
 #include <map>
 
@@ -50,6 +51,11 @@ public:
 	// Returns true if the event was handled, false otherwise.
 	virtual bool on_event_polled(const XrEventDataBuffer &event) {
 		return false;
+	}
+
+	// Return false if we can't use this input path
+	virtual bool path_is_supported(const godot::String &p_io_path) {
+		return true;
 	}
 
 protected:

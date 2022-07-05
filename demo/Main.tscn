@@ -1,4 +1,4 @@
-[gd_scene load_steps=29 format=2]
+[gd_scene load_steps=30 format=2]
 
 [ext_resource path="res://Main.gd" type="Script" id=1]
 [ext_resource path="res://scenes/Ground.tscn" type="PackedScene" id=2]
@@ -42,6 +42,9 @@ height = 0.05
 radius = 0.01
 height = 0.02
 
+[sub_resource type="CubeMesh" id=5]
+size = Vector3( 0.02, 0.02, 0.02 )
+
 [node name="Main" type="Spatial"]
 script = ExtResource( 1 )
 
@@ -63,13 +66,11 @@ far = 1000.0
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, -0.0187781, 0.103895 )
 layers = 524288
 mesh = SubResource( 1 )
-material/0 = null
 
 [node name="ShadowHMD" type="MeshInstance" parent="FPController/ARVRCamera" index="1"]
 transform = Transform( -1.62921e-07, 0, 1, 0, 1, 0, -1, 0, -1.62921e-07, 1.44924e-09, 0, 0.00889538 )
 layers = 524288
 mesh = SubResource( 2 )
-material/0 = null
 
 [node name="FPS" parent="FPController/ARVRCamera" index="2" instance=ExtResource( 8 )]
 transform = Transform( 0.974339, 0, -0.225087, -0.0292084, 0.991545, -0.126435, 0.223184, 0.129765, 0.9661, 0.256799, 0.257084, -0.989923 )
@@ -123,20 +124,23 @@ max_samples = 10
 
 [node name="Left_grip_pose" parent="FPController" instance=ExtResource( 7 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.5, 1, -0.5 )
+action = "godot/grip_pose"
 
 [node name="Grip" type="MeshInstance" parent="FPController/Left_grip_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
 mesh = SubResource( 3 )
-material/0 = null
 
 [node name="Right_aim_pose" parent="FPController" instance=ExtResource( 7 )]
+action = "godot/grip_pose"
 
 [node name="Grip" type="MeshInstance" parent="FPController/Right_aim_pose"]
 transform = Transform( 1, 0, 0, 0, -1.62921e-07, -1, 0, 1, -1.62921e-07, 0, 0, 0 )
 mesh = SubResource( 3 )
-material/0 = null
 
 [node name="LeftHand" parent="FPController" instance=ExtResource( 14 )]
+motion_range = 1
+
+[node name="Skeleton" parent="FPController/LeftHand/HandModel/Armature001" index="0"]
 motion_range = 1
 
 [node name="IndexTip" parent="FPController/LeftHand/HandModel/Armature001/Skeleton" index="1"]
@@ -145,11 +149,13 @@ transform = Transform( 0.19221, -0.669965, -0.717079, 0.977075, 0.19881, 0.07615
 [node name="ShowIndexTip" type="MeshInstance" parent="FPController/LeftHand/HandModel/Armature001/Skeleton/IndexTip" index="0"]
 visible = false
 mesh = SubResource( 4 )
-material/0 = null
 
 [node name="RightHand" parent="FPController" instance=ExtResource( 15 )]
 motion_range = 1
 albedo_texture = ExtResource( 5 )
+
+[node name="Skeleton" parent="FPController/RightHand/HandModel/Armature" index="0"]
+motion_range = 1
 
 [node name="IndexTip" parent="FPController/RightHand/HandModel/Armature/Skeleton" index="1"]
 transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.69282, 0.977075, -0.19881, -0.0761527, -0.0345978, -0.164767, -0.0355401 )
@@ -157,7 +163,6 @@ transform = Transform( 0.19221, 0.669966, 0.717078, -0.091543, -0.715277, 0.6928
 [node name="ShowIndexTip" type="MeshInstance" parent="FPController/RightHand/HandModel/Armature/Skeleton/IndexTip" index="0"]
 visible = false
 mesh = SubResource( 4 )
-material/0 = null
 
 [node name="ShowBounds" parent="FPController" instance=ExtResource( 16 )]
 visible = false
@@ -202,6 +207,13 @@ transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0.0498809, 0 )
 show_target = true
 active_button = 7
 collide_with_areas = true
+
+[node name="LeftHandPalm" parent="FPController" instance=ExtResource( 7 )]
+transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, -0.460559, 1, -0.438722 )
+action = "godot/palm_pose"
+
+[node name="MeshInstance" type="MeshInstance" parent="FPController/LeftHandPalm"]
+mesh = SubResource( 5 )
 
 [node name="Table" parent="." instance=ExtResource( 3 )]
 transform = Transform( 1, 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, -6 )

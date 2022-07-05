@@ -145,7 +145,7 @@ void OpenXRHand::_physics_process(float delta) {
 			if (joints[i] != NULL) {
 				if (parents[i] == -1) {
 					if (relative_transform) {
-						t = inv_transforms[XR_HAND_JOINT_PALM_EXT] * t;
+						t = reference_frame * inv_transforms[XR_HAND_JOINT_PALM_EXT] * t;
 					} else {
 						// apply our reference frame to our root frame
 						t = reference_frame * t;

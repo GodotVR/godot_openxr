@@ -2164,7 +2164,7 @@ void OpenXRApi::cleanupSwapChains() {
 		free(swapchain_acquired);
 		swapchain_acquired = nullptr;
 	}
-	if (swapchains != NULL) {
+	if (swapchains != nullptr) {
 		for (uint32_t i = 0; i < view_count; i++) {
 			if (swapchains[i] != XR_NULL_HANDLE) {
 				xrDestroySwapchain(swapchains[i]);

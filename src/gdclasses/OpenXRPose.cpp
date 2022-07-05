@@ -32,7 +32,7 @@ void OpenXRPose::_register_methods() {
 			GODOT_METHOD_RPC_MODE_DISABLED,
 			GODOT_PROPERTY_USAGE_DEFAULT,
 			GODOT_PROPERTY_HINT_ENUM,
-			"SkeletonBase,godot/aim_pose,godot/grip_pose");
+			"SkeletonBase,godot/aim_pose,godot/grip_pose,godot/palm_pose");
 
 	// For now this is hard coded, these are fixed entries based on the OpenXR spec
 	register_method("get_path", &OpenXRPose::get_path);

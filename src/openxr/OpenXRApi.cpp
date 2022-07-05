@@ -56,6 +56,15 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				]
 			},
 			{
+				"type": "pose",
+				"name": "palm_pose",
+				"localised_name": "Palm Pose",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
 				"type": "float",
 				"name": "front_trigger",
 				"localised_name": "Front trigger",
@@ -246,6 +255,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
+				]
+			},
+			{
+				"set": "godot",
 				"action": "menu_button",
 				"paths": [
 					"/user/hand/left/input/menu/click",
@@ -287,6 +304,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/grip/pose",
 					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
 				]
 			},
 			{
@@ -388,6 +413,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/grip/pose",
 					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
 				]
 			},
 			{
@@ -501,6 +534,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
+				]
+			},
+			{
+				"set": "godot",
 				"action": "front_trigger",
 				"paths": [
 					"/user/hand/left/input/trigger/value",
@@ -610,6 +651,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
+				]
+			},
+			{
+				"set": "godot",
 				"action": "front_trigger",
 				"paths": [
 					"/user/hand/left/input/trigger/value",
@@ -707,6 +756,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/grip/pose",
 					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
 				]
 			},
 			{
@@ -824,6 +881,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/grip/pose",
 					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
 				]
 			},
 			{
@@ -954,6 +1019,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			},
 			{
 				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
+				]
+			},
+			{
+				"set": "godot",
 				"action": "front_trigger",
 				"paths": [
 					"/user/hand/left/input/trigger/value",
@@ -1019,6 +1092,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/grip/pose",
 					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
 				]
 			},
 			{
@@ -1151,6 +1232,14 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 				"paths": [
 					"/user/hand/left/input/grip/pose",
 					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
 				]
 			},
 			{
@@ -2850,9 +2939,29 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 			}
 			for (int p = 0; p < io_paths.size(); p++) {
 				String io_path_str = io_paths[p];
-				XrPath io_path;
+				XrPath io_path = XR_NULL_PATH;
+
+				bool is_supported = true;
+				for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
+					if (!wrapper->path_is_supported(io_path_str)) {
+						// Only the extension that controlls optional io paths will return false if the path is not supported.
+						is_supported = false;
+						break;
+					}
+				}
+
+				if (!is_supported) {
+					// If we include these interaction profiles can be rejected.
+					// This kind of makes sense but in our case seeing we're using a fixed action set we will exclude the entries.
+					Godot::print_warning(String("OpenXR ") + io_path_str + String(" is not supported by this runtime."), __FUNCTION__, __FILE__, __LINE__);
+					continue;
+				}
+
 				XrResult res = xrStringToPath(instance, io_path_str.utf8().get_data(), &io_path);
 				if (!xr_result(res, "OpenXR couldn't create path for {0}", io_path_str)) {
+					continue;
+				} else if (io_path == XR_NULL_PATH) {
+					Godot::print_warning(String("OpenXR ") + io_path_str + String(" is not supported by this runtime."), __FUNCTION__, __FILE__, __LINE__);
 					continue;
 				}
 

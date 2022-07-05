@@ -13,6 +13,7 @@ Copyright 	: 	Copyright 2015 Oculus VR, LLC. All Rights reserved.
 
 #include "Framebuffer.h"
 #include "Misc/Log.h"
+#include <vector>
 
 #define OXR(func)                                        \
     if (XR_FAILED(func)) {                               \
@@ -60,11 +61,10 @@ bool ovrFramebuffer_Create(
 
     // Allocate an array large enough to contain the supported formats.
     numInputFormats = numOutputFormats;
-    int64_t* supportedFormats = (int64_t*)malloc(numOutputFormats * sizeof(int64_t));
-    if (supportedFormats != NULL) {
-        OXR(xrEnumerateSwapchainFormats(
-            session, numInputFormats, &numOutputFormats, supportedFormats));
-    }
+
+    std::vector<int64_t> supportedFormats(numOutputFormats);
+    OXR(xrEnumerateSwapchainFormats(
+        session, numInputFormats, &numOutputFormats, supportedFormats.data()));
 
     // Verify the requested format is supported.
     uint64_t selectedFormat = 0;
@@ -74,8 +74,6 @@ bool ovrFramebuffer_Create(
             break;
         }
     }
-
-    free(supportedFormats);
 
     if (selectedFormat == 0) {
         ALOGE("Format not supported");
@@ -103,8 +101,13 @@ bool ovrFramebuffer_Create(
     OXR(xrEnumerateSwapchainImages(
         frameBuffer->ColorSwapChain.Handle, 0, &frameBuffer->TextureSwapChainLength, NULL));
     // Allocate the swapchain images array.
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     frameBuffer->ColorSwapChainImage = (XrSwapchainImageOpenGLESKHR*)malloc(
         frameBuffer->TextureSwapChainLength * sizeof(XrSwapchainImageOpenGLESKHR));
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+    frameBuffer->ColorSwapChainImage = (XrSwapchainImageOpenGLKHR*)malloc(
+        frameBuffer->TextureSwapChainLength * sizeof(XrSwapchainImageOpenGLKHR));
+#endif //
 
     // Populate the swapchain image array.
     for (uint32_t i = 0; i < frameBuffer->TextureSwapChainLength; i++) {

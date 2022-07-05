@@ -32,7 +32,7 @@ OpenXRSkeleton::OpenXRSkeleton() {
 }
 
 OpenXRSkeleton::~OpenXRSkeleton() {
-	if (openxr_api != NULL) {
+	if (openxr_api != nullptr) {
 		OpenXRApi::openxr_release_api();
 	}
 

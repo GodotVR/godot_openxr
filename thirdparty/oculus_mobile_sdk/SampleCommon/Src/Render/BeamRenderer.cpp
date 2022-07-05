@@ -62,7 +62,14 @@ varying highp vec2 oTexCoord;
 void main()
 {
     vec2 v = (oTexCoord - vec2(0.5)) * vec2(2.0);
-    float r = 1.0 - clamp(length(v), 0.0, 1.0);
+
+    // Fade toward the end of the beam
+    float forwardFade = 1.0 - oTexCoord.y * oTexCoord.y;
+
+    // Fade out from center of beam to the sides
+    float sideFade = 1.0 - abs((oTexCoord.x - 0.5) * 2.0);
+
+    float r = sideFade * forwardFade;
     gl_FragColor = outColor * vec4(r,r,r,r);
 }
 )glsl";
@@ -353,9 +360,15 @@ void ovrBeamRenderer::FrameInternal(
             continue;
         }
 
-        const Vector3f beamCenter = (cur.EndPos - cur.StartPos) * 0.5f;
-        const Vector3f beamDir = beamCenter.Normalized();
-        const Vector3f viewToCenter = (beamCenter - viewPos).Normalized();
+        // Vector describing length and direction of beam (but not position)
+        const Vector3f beamVector = cur.EndPos - cur.StartPos;
+        // Center of the beam in "world space". Start + half-way along the beam
+        const Vector3f beamCenter = cur.StartPos + beamVector * 0.5f;
+        const Vector3f beamDir = beamVector.Normalized();
+        // Vector from centerView to the center of the beam
+        const Vector3f viewToCenter = beamCenter - viewPos;
+        // Cross product gives us an offset direction for the beam such that the flat side is facing
+        // the viewer. Classic billboarding.
         const Vector3f cross = beamDir.Cross(viewToCenter).Normalized() * cur.Width * 0.5f;
 
         const float t = static_cast<float>(frame.PredictedDisplayTime - cur.StartTime);

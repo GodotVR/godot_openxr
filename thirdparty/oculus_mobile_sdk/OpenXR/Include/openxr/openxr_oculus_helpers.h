@@ -15,6 +15,13 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 #include "math.h" // for cosf(), sinf(), tanf()
 
+typedef enum {
+    GRAPHICS_VULKAN,
+    GRAPHICS_OPENGL,
+    GRAPHICS_OPENGL_ES,
+    GRAPHICS_D3D,
+} GraphicsAPI;
+
 // OpenXR time values are expressed in nanseconds.
 static inline double FromXrTime(const XrTime time) {
     return (time * 1e-9);
@@ -361,6 +368,7 @@ static inline XrMatrix4x4f XrMatrix4x4f_CreateFromRigidTransform(const XrPosef* 
 //              Journal of Graphics Tools, Volume 16, Issue 1, 2012
 static inline void XrMatrix4x4f_CreateProjection(
     XrMatrix4x4f* result,
+    GraphicsAPI graphicsApi,
     const float tanAngleLeft,
     const float tanAngleRight,
     const float tanAngleUp,
@@ -370,21 +378,14 @@ static inline void XrMatrix4x4f_CreateProjection(
     const float tanAngleWidth = tanAngleRight - tanAngleLeft;
 
     // Set to tanAngleDown - tanAngleUp for a clip space with positive Y down (Vulkan).
-#if defined(XR_USE_GRAPHICS_API_VULKAN)
-    const float tanAngleHeight = tanAngleDown - tanAngleUp;
-#else
     // Set to tanAngleUp - tanAngleDown for a clip space with positive Y up (OpenGL / D3D / Metal).
-    const float tanAngleHeight = tanAngleUp - tanAngleDown;
-#endif
+    const float tanAngleHeight = (graphicsApi == GRAPHICS_VULKAN) ? (tanAngleDown - tanAngleUp)
+                                                                  : (tanAngleUp - tanAngleDown);
 
     // Set to nearZ for a [-1,1] Z clip space (OpenGL / OpenGL ES).
-#if defined(XR_USE_GRAPHICS_API_OPENGL) || defined(XR_USE_GRAPHICS_API_OPENGL_ES)
-    const float offsetZ = nearZ;
-#else
     // Set to zero for a [0,1] Z clip space (Vulkan / D3D / Metal).
-    const float offsetZ = 0.0f;
-#endif
-
+    const float offsetZ =
+        (graphicsApi == GRAPHICS_OPENGL || graphicsApi == GRAPHICS_OPENGL_ES) ? nearZ : 0.0f;
     if (farZ <= nearZ) {
         // place the far plane at infinity
         result->m[0] = 2 / tanAngleWidth;
@@ -433,19 +434,18 @@ static inline void XrMatrix4x4f_CreateProjection(
 // Creates a projection matrix based on the specified FOV (specified in radians).
 static inline void XrMatrix4x4f_CreateProjectionFov(
     XrMatrix4x4f* result,
-    const float fovLeft,
-    const float fovRight,
-    const float fovUp,
-    const float fovDown,
+    GraphicsAPI graphicsApi,
+    const XrFovf fov,
     const float nearZ,
     const float farZ) {
-    const float tanLeft = tanf(fovLeft);
-    const float tanRight = tanf(fovRight);
+    const float tanLeft = tanf(fov.angleLeft);
+    const float tanRight = tanf(fov.angleRight);
 
-    const float tanDown = tanf(fovDown);
-    const float tanUp = tanf(fovUp);
+    const float tanDown = tanf(fov.angleDown);
+    const float tanUp = tanf(fov.angleUp);
 
-    XrMatrix4x4f_CreateProjection(result, tanLeft, tanRight, tanUp, tanDown, nearZ, farZ);
+    XrMatrix4x4f_CreateProjection(
+        result, graphicsApi, tanLeft, tanRight, tanUp, tanDown, nearZ, farZ);
 }
 
 // Creates a rotation matrix.

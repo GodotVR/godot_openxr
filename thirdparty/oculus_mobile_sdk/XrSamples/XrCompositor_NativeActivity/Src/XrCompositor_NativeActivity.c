@@ -3625,13 +3625,7 @@ void android_main(struct android_app* app) {
 
             const XrFovf fov = projections[eye].fov;
             XrMatrix4x4f_CreateProjectionFov(
-                &sceneMatrices.ProjectionMatrix[eye],
-                fov.angleLeft,
-                fov.angleRight,
-                fov.angleUp,
-                fov.angleDown,
-                0.1f,
-                0.0f);
+                &sceneMatrices.ProjectionMatrix[eye], GRAPHICS_OPENGL_ES, fov, 0.1f, 0.0f);
         }
 
         // update input information

@@ -12,7 +12,7 @@ ActionSet::ActionSet(OpenXRApi *p_api, const godot::String &p_name, const godot:
 	// create our action set...
 	XrActionSetCreateInfo actionSetInfo = {
 		.type = XR_TYPE_ACTION_SET_CREATE_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.priority = p_priority
 	};
 	strcpy(actionSetInfo.actionSetName, name.utf8().get_data());
@@ -52,7 +52,7 @@ godot::String ActionSet::get_name() const {
 Action *ActionSet::add_action(XrActionType p_type, const godot::String &p_name, const godot::String &p_localised_name, int p_toplevel_path_count, const XrPath *p_toplevel_paths) {
 	if (is_attached) {
 		// can't add an action after we've attached our set to our session
-		return NULL;
+		return nullptr;
 	}
 
 	// check if we already have this action
@@ -76,7 +76,7 @@ Action *ActionSet::get_action(const godot::String &p_name) {
 		}
 	}
 
-	return NULL;
+	return nullptr;
 }
 
 XrActionSet ActionSet::get_action_set() {
@@ -101,7 +101,7 @@ bool ActionSet::attach() {
 	// https://www.khronos.org/registry/OpenXR/specs/1.0/man/html/xrAttachSessionActionSets.html
 	XrSessionActionSetsAttachInfo attachInfo = {
 		.type = XR_TYPE_SESSION_ACTION_SETS_ATTACH_INFO,
-		.next = NULL,
+		.next = nullptr,
 		.countActionSets = 1,
 		.actionSets = &handle
 	};

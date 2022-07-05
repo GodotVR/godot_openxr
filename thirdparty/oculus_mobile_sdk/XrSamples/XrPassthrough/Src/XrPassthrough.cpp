@@ -1335,8 +1335,7 @@ void android_main(struct android_app* androidApp) {
 
             const XrFovf fov = projections[eye].fov;
             XrMatrix4x4f projMat;
-            XrMatrix4x4f_CreateProjectionFov(
-                &projMat, fov.angleLeft, fov.angleRight, fov.angleUp, fov.angleDown, 0.1f, 0.0f);
+            XrMatrix4x4f_CreateProjectionFov(&projMat, GRAPHICS_OPENGL_ES, fov, 0.1f, 0.0f);
 
             frameIn.View[eye] = OvrFromXr(viewMat);
             frameIn.Proj[eye] = OvrFromXr(projMat);

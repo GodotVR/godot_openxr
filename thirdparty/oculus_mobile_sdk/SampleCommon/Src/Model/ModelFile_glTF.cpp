@@ -2033,7 +2033,6 @@ bool LoadModelFile_glTF_OvrScene(
     // Since we are doing a zip file, we are going to parse through the zip file many times to find
     // the different data points.
     const char* gltfJson = nullptr;
-    int gltfJsonLength = 0;
     {
         // LOGCPUTIME( "Loading GLTF file" );
         for (int ret = unzGoToFirstFile(zfp); ret == UNZ_OK; ret = unzGoToNextFile(zfp)) {
@@ -2046,7 +2045,6 @@ bool LoadModelFile_glTF_OvrScene(
 
             if (OVR::OVR_stricmp(extension, ".gltf") == 0) {
                 LOGV("found %s", entryName);
-                const int size = finfo.uncompressed_size;
                 uint8_t* buffer = ReadBufferFromZipFile(zfp, (const uint8_t*)fileData, finfo);
 
                 if (buffer == nullptr) {
@@ -2059,7 +2057,6 @@ bool LoadModelFile_glTF_OvrScene(
 
                 if (gltfJson == nullptr) {
                     gltfJson = (const char*)buffer;
-                    gltfJsonLength = size;
                 } else {
                     ALOGW("LoadModelFile_glTF_OvrScene: multiple .gltf files found %s", fileName);
                     delete[] buffer;

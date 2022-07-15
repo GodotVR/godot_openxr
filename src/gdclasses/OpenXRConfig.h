@@ -27,6 +27,26 @@ private:
 	XRExtHandTrackingExtensionWrapper *hand_tracking_wrapper = nullptr;
 
 public:
+	// For Godot we can't have gaps in our enums so we define our own where needed.
+	// Sadly GDNative doesn't have a way to expose these enums.
+
+	enum ViewConfigurationType {
+		VIEW_CONFIGURATION_MONO,
+		VIEW_CONFIGURATION_STEREO,
+		// We don't support these (yet)
+		// VIEW_CONFIGURATION_QUAD,
+		// VIEW_CONFIGURATION_FPO,
+	};
+
+	enum PlaySpaceType {
+		PLAY_SPACE_VIEW,
+		PLAY_SPACE_LOCAL,
+		PLAY_SPACE_STAGE,
+		// We don't support these (yet)
+		// PLAY_SPACE_UNBOUNDED,
+		// PLAY_SPACE_COMBINED_EYE,
+	};
+
 	static void _register_methods();
 
 	void _init();

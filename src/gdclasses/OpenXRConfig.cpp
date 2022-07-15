@@ -113,17 +113,17 @@ int OpenXRConfig::get_view_config_type() const {
 		XrViewConfigurationType config_type = openxr_api->get_view_configuration_type();
 		switch (config_type) {
 			case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_MONO: {
-				return 0;
+				return VIEW_CONFIGURATION_MONO;
 			}; break;
 			case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO: {
-				return 1;
+				return VIEW_CONFIGURATION_STEREO;
 			}; break;
 			/* These are not (yet) supported, adding them in here for future reference
 			case XR_VIEW_CONFIGURATION_TYPE_PRIMARY_QUAD_VARJO: {
-				return 2;
+				return VIEW_CONFIGURATION_QUAD;
 			}; break;
 			case XR_VIEW_CONFIGURATION_TYPE_SECONDARY_MONO_FIRST_PERSON_OBSERVER_MSFT: {
-				return 3;
+				return VIEW_CONFIGURATION_FPO;
 			}; break;
 			*/
 			default: {
@@ -140,11 +140,12 @@ void OpenXRConfig::set_view_config_type(const int p_config_type) {
 	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
-		switch (p_config_type) {
-			case 0: {
+		ViewConfigurationType config_type = ViewConfigurationType(p_config_type);
+		switch (config_type) {
+			case VIEW_CONFIGURATION_MONO: {
 				openxr_api->set_view_configuration_type(XR_VIEW_CONFIGURATION_TYPE_PRIMARY_MONO);
 			}; break;
-			case 1: {
+			case VIEW_CONFIGURATION_STEREO: {
 				openxr_api->set_view_configuration_type(XR_VIEW_CONFIGURATION_TYPE_PRIMARY_STEREO);
 			}; break;
 			default: {
@@ -199,15 +200,15 @@ int OpenXRConfig::get_play_space_type() const {
 	} else {
 		switch (openxr_api->get_play_space_type()) {
 			case XR_REFERENCE_SPACE_TYPE_VIEW:
-				return 0;
+				return PLAY_SPACE_VIEW;
 			case XR_REFERENCE_SPACE_TYPE_LOCAL:
-				return 1;
+				return PLAY_SPACE_LOCAL;
 			case XR_REFERENCE_SPACE_TYPE_STAGE:
-				return 2;
+				return PLAY_SPACE_STAGE;
 				//case XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT:
-				//	return ??;
+				//	return PLAY_SPACE_UNBOUNDED;
 				//case XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO:
-				//	return ??;
+				//	return PLAY_SPACE_COMBINED_EYE;
 			default:
 				return 2;
 		}
@@ -218,20 +219,21 @@ void OpenXRConfig::set_play_space_type(const int p_play_space_type) {
 	if (openxr_api == nullptr) {
 		Godot::print("OpenXR object wasn't constructed.");
 	} else {
-		switch (p_play_space_type) {
-			case 0: {
+		PlaySpaceType play_space_type = PlaySpaceType(p_play_space_type);
+		switch (play_space_type) {
+			case PLAY_SPACE_VIEW: {
 				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_VIEW);
 			} break;
-			case 2: {
+			case PLAY_SPACE_LOCAL: {
 				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_LOCAL);
 			} break;
-			case 3: {
+			case PLAY_SPACE_STAGE: {
 				openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_STAGE);
 			} break;
-				//case ??: {
+				//case PLAY_SPACE_UNBOUNDED: {
 				//	openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_UNBOUNDED_MSFT);
 				//} break;
-				//case ??: {
+				//case PLAY_SPACE_COMBINED_EYE: {
 				//	openxr_api->set_play_space_type(XR_REFERENCE_SPACE_TYPE_COMBINED_EYE_VARJO);
 				//} break;
 			default: {

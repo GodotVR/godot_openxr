@@ -167,6 +167,7 @@ private:
 	static OpenXRApi *singleton;
 	bool initialised = false;
 	bool running = false;
+	bool swapchain_error = false;
 	int use_count = 1;
 	godot::OS::VideoDriver video_driver = godot::OS::VIDEO_DRIVER_GLES3;
 

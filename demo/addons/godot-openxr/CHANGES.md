@@ -10,6 +10,7 @@ Changes to the Godot OpenXR asset
 - Add support for the hand tracking aim state extension.
 - OpenXR updated to 1.0.24
 - Oculus OpenXR mobile SDK version 40 update.
+- Added workaround for swapchain release issue.
 
 1.2.0
 -------------------

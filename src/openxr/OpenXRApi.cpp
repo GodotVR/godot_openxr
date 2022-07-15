@@ -2967,6 +2967,12 @@ bool OpenXRApi::release_swapchain(int eye) {
 			.next = nullptr
 		};
 		XrResult result = xrReleaseSwapchainImage(swapchains[eye], &swapchainImageReleaseInfo);
+
+		// Workaround for dealing with swapchain not getting released properly after screen recording
+		if (result != XR_SUCCESS) {
+			swapchain_error = true;
+		}
+
 		return xr_result(result, "failed to release swapchain image!");
 	} else {
 		return XR_SUCCESS;
@@ -3676,6 +3682,14 @@ void OpenXRApi::process_openxr() {
 		Godot::print("OpenXR resetting invalid display period {0}", frameState.predictedDisplayPeriod);
 #endif
 		frameState.predictedDisplayPeriod = 0;
+	}
+
+	// Workaround for dealing with swapchain not getting released properly after screen recording
+	if (swapchain_error) {
+		swapchain_error = false;
+		Godot::print("Swapchains need reinitialization");
+		cleanupSwapChains();
+		initialiseSwapChains();
 	}
 
 	update_actions();

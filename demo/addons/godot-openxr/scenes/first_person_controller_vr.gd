@@ -7,6 +7,10 @@ signal failed_initialisation
 # Also add signals so we can have other parts of the application react to this.
 signal session_begun
 signal session_ending
+signal session_idle
+signal session_synchronized
+signal session_loss_pending
+signal session_exiting
 signal focused_state
 signal visible_state
 signal pose_recentered
@@ -131,11 +135,16 @@ func _stop_passthrough():
 func _connect_plugin_signals():
 	ARVRServer.connect("openxr_session_begun", self, "_on_openxr_session_begun")
 	ARVRServer.connect("openxr_session_ending", self, "_on_openxr_session_ending")
+	ARVRServer.connect("openxr_session_idle", self, "_on_openxr_session_idle")
+	ARVRServer.connect("openxr_session_synchronized", self, "_on_openxr_session_synchronized")
+	ARVRServer.connect("openxr_session_loss_pending", self, "_on_openxr_session_loss_pending")
+	ARVRServer.connect("openxr_session_exiting", self, "_on_openxr_session_exiting")
 	ARVRServer.connect("openxr_focused_state", self, "_on_openxr_focused_state")
 	ARVRServer.connect("openxr_visible_state", self, "_on_openxr_visible_state")
 	ARVRServer.connect("openxr_pose_recentered", self, "_on_openxr_pose_recentered")
 
 func _on_openxr_session_begun():
+	# This is called on session ready.
 	print("OpenXR session begun")
 
 	var vp : Viewport = _get_xr_viewport()
@@ -146,8 +155,26 @@ func _on_openxr_session_begun():
 	emit_signal("session_begun")
 
 func _on_openxr_session_ending():
+	# This is called on session stopping
+
 	print("OpenXR session ending")
 	emit_signal("session_ending")
+
+func _on_openxr_session_idle():
+	print("OpenXR session idle")
+	emit_signal("session_idle")
+
+func _on_openxr_session_synchronized():
+	print("OpenXR session synchronized")
+	emit_signal("session_synchronized")
+
+func _on_openxr_session_loss_pending():
+	print("OpenXR session loss pending")
+	emit_signal("session_loss_pending")
+
+func _on_openxr_session_exiting():
+	print("OpenXR session exiting")
+	emit_signal("session_exiting")
 
 func _on_openxr_focused_state():
 	print("OpenXR focused state")

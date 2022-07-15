@@ -2415,17 +2415,20 @@ void OpenXRApi::on_pause() {
 
 bool OpenXRApi::on_state_idle() {
 #ifdef DEBUG
-	Godot::print("On state idle");
+	Godot::print("OpenXR:On state idle");
 #endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_idle();
 	}
+
+	emit_plugin_signal(SIGNAL_SESSION_IDLE);
+
 	return true;
 }
 
 bool OpenXRApi::on_state_ready() {
 #ifdef DEBUG
-	Godot::print("On state ready");
+	Godot::print("OpenXR: On state ready");
 #endif
 	XrSessionBeginInfo sessionBeginInfo = {
 		.type = XR_TYPE_SESSION_BEGIN_INFO,
@@ -2462,17 +2465,20 @@ bool OpenXRApi::on_state_ready() {
 
 bool OpenXRApi::on_state_synchronized() {
 #ifdef DEBUG
-	Godot::print("On state synchronized");
+	Godot::print("OpenXR: On state synchronized");
 #endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_synchronized();
 	}
+
+	emit_plugin_signal(SIGNAL_SESSION_SYNCHRONIZED);
+
 	return true;
 }
 
 bool OpenXRApi::on_state_visible() {
 #ifdef DEBUG
-	Godot::print("On state visible");
+	Godot::print("OpenXR: On state visible");
 #endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_visible();
@@ -2488,7 +2494,7 @@ bool OpenXRApi::on_state_visible() {
 
 bool OpenXRApi::on_state_focused() {
 #ifdef DEBUG
-	Godot::print("On state focused");
+	Godot::print("OpenXR: On state focused");
 #endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_focused();
@@ -2504,7 +2510,7 @@ bool OpenXRApi::on_state_focused() {
 
 bool OpenXRApi::on_state_stopping() {
 #ifdef DEBUG
-	Godot::print("On state stopping");
+	Godot::print("OpenXR: On state stopping");
 #endif
 
 	emit_plugin_signal(SIGNAL_SESSION_ENDING);
@@ -2534,24 +2540,30 @@ bool OpenXRApi::on_state_stopping() {
 
 bool OpenXRApi::on_state_loss_pending() {
 #ifdef DEBUG
-	Godot::print("On state loss pending");
+	Godot::print("OpenXR: On state loss pending");
 #endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_loss_pending();
 	}
 	uninitialize();
+
+	emit_plugin_signal(SIGNAL_SESSION_LOSS_PENDING);
+
 	return true;
 }
 
 bool OpenXRApi::on_state_exiting() {
 	// we may want to trigger a signal back to the application to tell it, it should quit.
 #ifdef DEBUG
-	Godot::print("On state exiting");
+	Godot::print("OpenXR: On state exiting");
 #endif
 	for (XRExtensionWrapper *wrapper : registered_extension_wrappers) {
 		wrapper->on_state_exiting();
 	}
 	uninitialize();
+
+	emit_plugin_signal(SIGNAL_SESSION_EXITING);
+
 	return true;
 }
 

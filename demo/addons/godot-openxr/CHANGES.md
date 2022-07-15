@@ -11,6 +11,7 @@ Changes to the Godot OpenXR asset
 - OpenXR updated to 1.0.24
 - Oculus OpenXR mobile SDK version 40 update.
 - Added workaround for swapchain release issue.
+- Added signals for all session state changes.
 
 1.2.0
 -------------------

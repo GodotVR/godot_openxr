@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename    :   XrApp.cpp
@@ -5,18 +7,19 @@ Content     :   OpenXR application base class.
 Created     :   July 2020
 Authors     :   Federico Schliemann
 Language    :   c++
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *******************************************************************************/
 
 #include "XrApp.h"
 
+#if defined(ANDROID)
 #include <android/window.h>
 #include <android/native_window_jni.h>
 #include <openxr/openxr.h>
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/prctl.h> // for prctl( PR_SET_NAME )
+#endif // defined(ANDROID)
 
 using OVR::Bounds3f;
 using OVR::Matrix4f;
@@ -28,7 +31,7 @@ using OVR::Vector4f;
 
 void OXR_CheckErrors(XrInstance instance, XrResult result, const char* function, bool failOnError) {
     if (XR_FAILED(result)) {
-        char errorBuffer[XR_MAX_RESULT_STRING_SIZE];
+        char errorBuffer[XR_MAX_RESULT_STRING_SIZE]{};
         xrResultToString(instance, result, errorBuffer);
         if (failOnError) {
             ALOGE("OpenXR error: %s: %s\n", function, errorBuffer);
@@ -69,21 +72,9 @@ inline OVR::Vector2f XrVector2f_To_OVRVector2f(const XrVector2f& src) {
     return OVR::Vector2f{src.x, src.y};
 }
 
-__attribute__((unused)) static void LOG_POSE(const char* msg, const XrPosef* p) {
-    ALOGV(
-        "%s: orientation = { %f %f %f %f }, position = { %f %f %f }",
-        msg,
-        p->orientation.x,
-        p->orientation.y,
-        p->orientation.z,
-        p->orientation.w,
-        p->position.x,
-        p->position.y,
-        p->position.z);
-}
-
 namespace OVRFW {
 
+#if defined(ANDROID)
 /**
  * Process the next main command.
  */
@@ -139,11 +130,14 @@ void XrApp::HandleAndroidCmd(struct android_app* app, int32_t cmd) {
         }
     }
 }
+#endif // defined(ANDROID)
 
 void XrApp::HandleSessionStateChanges(XrSessionState state) {
     if (state == XR_SESSION_STATE_READY) {
+#if defined(ANDROID)
         assert(Resumed);
         assert(NativeWindow != NULL);
+#endif // defined(ANDROID)
         assert(SessionActive == false);
 
         XrSessionBeginInfo sessionBeginInfo;
@@ -158,6 +152,7 @@ void XrApp::HandleSessionStateChanges(XrSessionState state) {
 
         // Set session state once we have entered VR mode and have a valid session object.
         if (SessionActive) {
+#if defined(ANDROID)
             XrPerfSettingsLevelEXT cpuPerfLevel = XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
             switch (CpuLevel) {
                 case 0:
@@ -217,9 +212,12 @@ void XrApp::HandleSessionStateChanges(XrSessionState state) {
                 Session, XR_ANDROID_THREAD_TYPE_APPLICATION_MAIN_KHR, MainThreadTid));
             OXR(pfnSetAndroidApplicationThreadKHR(
                 Session, XR_ANDROID_THREAD_TYPE_RENDERER_MAIN_KHR, RenderThreadTid));
+#endif // defined(ANDROID)
         }
     } else if (state == XR_SESSION_STATE_STOPPING) {
+#if defined(ANDROID)
         assert(Resumed == false);
+#endif // defined(ANDROID)
         assert(SessionActive);
 
         OXR(xrEndSession(Session));
@@ -284,6 +282,9 @@ void XrApp::HandleXrEvents() {
                     case XR_SESSION_STATE_READY:
                     case XR_SESSION_STATE_STOPPING:
                         HandleSessionStateChanges(session_state_changed_event->state);
+                        break;
+                    case XR_SESSION_STATE_EXITING:
+                        ShouldExit = true;
                         break;
                     default:
                         break;
@@ -425,6 +426,38 @@ std::vector<const char*> XrApp::GetExtensions() {
     return extensions;
 }
 
+std::vector<XrExtensionProperties> XrApp::GetXrExtensionProperties() const {
+    XrResult result;
+    PFN_xrEnumerateInstanceExtensionProperties xrEnumerateInstanceExtensionProperties;
+    OXR(result = xrGetInstanceProcAddr(
+            XR_NULL_HANDLE,
+            "xrEnumerateInstanceExtensionProperties",
+            (PFN_xrVoidFunction*)&xrEnumerateInstanceExtensionProperties));
+    if (result != XR_SUCCESS) {
+        ALOGE("Failed to get xrEnumerateInstanceExtensionProperties function pointer.");
+        exit(1);
+    }
+
+    uint32_t numInputExtensions = 0;
+    uint32_t numOutputExtensions = 0;
+    OXR(xrEnumerateInstanceExtensionProperties(
+        NULL, numInputExtensions, &numOutputExtensions, NULL));
+    ALOGV("xrEnumerateInstanceExtensionProperties found %u extension(s).", numOutputExtensions);
+
+    numInputExtensions = numOutputExtensions;
+
+    std::vector<XrExtensionProperties> extensionProperties(
+        numOutputExtensions, {XR_TYPE_EXTENSION_PROPERTIES});
+
+    OXR(xrEnumerateInstanceExtensionProperties(
+        NULL, numInputExtensions, &numOutputExtensions, extensionProperties.data()));
+    for (uint32_t i = 0; i < numOutputExtensions; i++) {
+        ALOGV("Extension #%d = '%s'.", i, extensionProperties[i].extensionName);
+    }
+
+    return extensionProperties;
+};
+
 // Returns a map from interaction profile paths to vectors of suggested bindings.
 // xrSuggestInteractionProfileBindings() is called once for each interaction profile path in the
 // returned map.
@@ -519,6 +552,7 @@ std::unordered_map<XrPath, std::vector<XrActionSuggestedBinding>> XrApp::GetSugg
 // Called one time when the application process starts.
 // Returns true if the application initialized successfully.
 bool XrApp::Init(const xrJava* context) {
+#if defined(ANDROID)
     // Loader
     PFN_xrInitializeLoaderKHR xrInitializeLoaderKHR;
     xrGetInstanceProcAddr(
@@ -532,6 +566,7 @@ bool XrApp::Init(const xrJava* context) {
         loaderInitializeInfoAndroid.applicationContext = context->ActivityObject;
         xrInitializeLoaderKHR((XrLoaderInitInfoBaseHeaderKHR*)&loaderInitializeInfoAndroid);
     }
+#endif // defined(ANDROID)
 
     // Log available layers.
     {
@@ -570,51 +605,48 @@ bool XrApp::Init(const xrJava* context) {
 
     // Check that the extensions required are present.
     std::vector<const char*> extensions = GetExtensions();
-
-    const char* const* requiredExtensionNames = extensions.data();
-    const uint32_t numRequiredExtensions = extensions.size();
+    ALOGV("Required extension from app (num=%i): ", extensions.size());
+    for (auto extension : extensions) {
+        ALOGV("\t%s", extension);
+    }
 
     // Check the list of required extensions against what is supported by the runtime.
+    // And remove from required list if it is not supported.
     {
-        XrResult result;
-        PFN_xrEnumerateInstanceExtensionProperties xrEnumerateInstanceExtensionProperties;
-        OXR(result = xrGetInstanceProcAddr(
-                XR_NULL_HANDLE,
-                "xrEnumerateInstanceExtensionProperties",
-                (PFN_xrVoidFunction*)&xrEnumerateInstanceExtensionProperties));
-        if (result != XR_SUCCESS) {
-            ALOGE("Failed to get xrEnumerateInstanceExtensionProperties function pointer.");
-            exit(1);
-        }
+        const auto extensionProperties = GetXrExtensionProperties();
+        std::vector<std::string> removedExtensions;
 
-        uint32_t numInputExtensions = 0;
-        uint32_t numOutputExtensions = 0;
-        OXR(xrEnumerateInstanceExtensionProperties(
-            NULL, numInputExtensions, &numOutputExtensions, NULL));
-        ALOGV("xrEnumerateInstanceExtensionProperties found %u extension(s).", numOutputExtensions);
+        extensions.erase(
+            std::remove_if(
+                extensions.begin(),
+                extensions.end(),
+                [&extensionProperties, &removedExtensions](const char* requiredExtensionName) {
+                    bool found = false;
+                    for (auto extensionProperty : extensionProperties) {
+                        if (!strcmp(requiredExtensionName, extensionProperty.extensionName)) {
+                            ALOGV("Found required extension %s", requiredExtensionName);
+                            found = true;
+                            break;
+                        }
+                    }
 
-        numInputExtensions = numOutputExtensions;
+                    if (!found) {
+                        ALOGW(
+                            "WARNING - Failed to find required extension %s",
+                            requiredExtensionName);
+                        removedExtensions.push_back(requiredExtensionName);
+                        return true;
+                    }
+                    return false;
+                }),
+            extensions.end());
 
-        std::vector<XrExtensionProperties> extensionProperties(
-            numOutputExtensions, {XR_TYPE_EXTENSION_PROPERTIES});
-
-        OXR(xrEnumerateInstanceExtensionProperties(
-            NULL, numInputExtensions, &numOutputExtensions, extensionProperties.data()));
-        for (uint32_t i = 0; i < numOutputExtensions; i++) {
-            ALOGV("Extension #%d = '%s'.", i, extensionProperties[i].extensionName);
-        }
-
-        for (uint32_t i = 0; i < numRequiredExtensions; i++) {
-            bool found = false;
-            for (uint32_t j = 0; j < numOutputExtensions; j++) {
-                if (!strcmp(requiredExtensionNames[i], extensionProperties[j].extensionName)) {
-                    ALOGV("Found required extension %s", requiredExtensionNames[i]);
-                    found = true;
-                    break;
-                }
-            }
-            if (!found) {
-                ALOGW("WARNING - Failed to find required extension %s", requiredExtensionNames[i]);
+        if (!removedExtensions.empty()) {
+            ALOGW(
+                "Following required extensions from app were excluded based on their existence (num=%i): ",
+                removedExtensions.size());
+            for (auto extension : removedExtensions) {
+                ALOGW("\t%s", extension.c_str());
             }
         }
     }
@@ -636,8 +668,8 @@ bool XrApp::Init(const xrJava* context) {
     instanceCreateInfo.applicationInfo = appInfo;
     instanceCreateInfo.enabledApiLayerCount = 0;
     instanceCreateInfo.enabledApiLayerNames = NULL;
-    instanceCreateInfo.enabledExtensionCount = numRequiredExtensions;
-    instanceCreateInfo.enabledExtensionNames = requiredExtensionNames;
+    instanceCreateInfo.enabledExtensionCount = extensions.size();
+    instanceCreateInfo.enabledExtensionNames = extensions.data();
 
     XrResult initResult;
     OXR(initResult = xrCreateInstance(&instanceCreateInfo, &Instance));
@@ -732,7 +764,11 @@ bool XrApp::Init(const xrJava* context) {
 
     CpuLevel = CPU_LEVEL;
     GpuLevel = GPU_LEVEL;
+#if defined(ANDROID)
     MainThreadTid = gettid();
+#else
+    MainThreadTid = 0;
+#endif // defined(ANDROID)
     SystemId = systemId;
 
     // Actions
@@ -743,25 +779,18 @@ bool XrApp::Init(const xrJava* context) {
     XrPath handSubactionPaths[2] = {LeftHandPath, RightHandPath};
 
     AimPoseAction = CreateAction(
-        BaseActionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", NULL, 2, &handSubactionPaths[0]);
+        BaseActionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", NULL, 2, handSubactionPaths);
     GripPoseAction = CreateAction(
-        BaseActionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", NULL, 2, &handSubactionPaths[0]);
+        BaseActionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", NULL, 2, handSubactionPaths);
+
     JoystickAction = CreateAction(
-        BaseActionSet,
-        XR_ACTION_TYPE_VECTOR2F_INPUT,
-        "move_on_joy",
-        NULL,
-        2,
-        &handSubactionPaths[0]);
+        BaseActionSet, XR_ACTION_TYPE_VECTOR2F_INPUT, "move_on_joy", NULL, 2, handSubactionPaths);
+
     IndexTriggerAction = CreateAction(
-        BaseActionSet,
-        XR_ACTION_TYPE_FLOAT_INPUT,
-        "index_trigger",
-        NULL,
-        2,
-        &handSubactionPaths[0]);
+        BaseActionSet, XR_ACTION_TYPE_FLOAT_INPUT, "index_trigger", NULL, 2, handSubactionPaths);
+
     GripTriggerAction = CreateAction(
-        BaseActionSet, XR_ACTION_TYPE_FLOAT_INPUT, "grip_trigger", NULL, 2, &handSubactionPaths[0]);
+        BaseActionSet, XR_ACTION_TYPE_FLOAT_INPUT, "grip_trigger", NULL, 2, handSubactionPaths);
     ButtonAAction = CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_a", NULL);
     ButtonBAction = CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_b", NULL);
     ButtonXAction = CreateAction(BaseActionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "button_x", NULL);
@@ -936,6 +965,10 @@ bool XrApp::InitSession() {
     OXR(xrGetViewConfigurationProperties(
         Instance, SystemId, supportedViewConfigType, &ViewportConfig));
 
+    for (int eye = 0; eye < MAX_NUM_EYES; eye++) {
+        Projections[eye] = XrView{XR_TYPE_VIEW};
+    }
+
     bool stageSupported = false;
     uint32_t numOutputSpaces = 0;
     OXR(xrEnumerateReferenceSpaces(Session, 0, &numOutputSpaces, NULL));
@@ -960,6 +993,12 @@ bool XrApp::InitSession() {
     spaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_LOCAL;
     OXR(xrCreateReferenceSpace(Session, &spaceCreateInfo, &LocalSpace));
 
+    // xrCreateActionSpace requires Session, create them here.
+    LeftControllerAimSpace = CreateActionSpace(AimPoseAction, LeftHandPath);
+    RightControllerAimSpace = CreateActionSpace(AimPoseAction, RightHandPath);
+    LeftControllerGripSpace = CreateActionSpace(GripPoseAction, LeftHandPath);
+    RightControllerGripSpace = CreateActionSpace(GripPoseAction, RightHandPath);
+
     // to use as fake stage
     if (stageSupported) {
         spaceCreateInfo.referenceSpaceType = XR_REFERENCE_SPACE_TYPE_STAGE;
@@ -968,8 +1007,6 @@ bool XrApp::InitSession() {
         ALOGV("Created stage space");
         CurrentSpace = StageSpace;
     }
-
-    EglInitExtensions();
 
     // Create the frame buffers.
     for (int eye = 0; eye < MAX_NUM_EYES; eye++) {
@@ -982,13 +1019,12 @@ bool XrApp::InitSession() {
             NUM_MULTI_SAMPLES);
     }
 
-    // Attach to session
-    AttachActionSets();
-
-    LeftControllerAimSpace = XR_NULL_HANDLE;
-    LeftControllerGripSpace = XR_NULL_HANDLE;
-    RightControllerAimSpace = XR_NULL_HANDLE;
-    RightControllerGripSpace = XR_NULL_HANDLE;
+    // xrAttachSessionActionSets can only be called once, so skip it if the application
+    // is doing it manually
+    if (!SkipSyncActions) {
+        // Attach to session
+        AttachActionSets();
+    }
 
     return SessionInit();
 }
@@ -997,7 +1033,6 @@ void XrApp::EndSession() {
     for (int eye = 0; eye < MAX_NUM_EYES; eye++) {
         ovrFramebuffer_Destroy(&FrameBuffer[eye]);
     }
-    ovrEgl_DestroyContext(&Egl);
 
     OXR(xrDestroySpace(HeadSpace));
     OXR(xrDestroySpace(LocalSpace));
@@ -1006,8 +1041,10 @@ void XrApp::EndSession() {
         OXR(xrDestroySpace(StageSpace));
     }
     CurrentSpace = XR_NULL_HANDLE;
-    OXR(xrDestroySession(Session));
     SessionEnd();
+    OXR(xrDestroySession(Session));
+
+    ovrEgl_DestroyContext(&Egl);
 }
 
 // Called one time when the applicatoin process exits
@@ -1025,23 +1062,16 @@ void XrApp::AttachActionSets() {
     OXR(xrAttachSessionActionSets(Session, &attachInfo));
 }
 
-void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
+void XrApp::SyncActionSets(ovrApplFrameIn& in) {
     // sync action data
-    XrActiveActionSet activeActionSet = {};
-    activeActionSet.actionSet = BaseActionSet;
-    activeActionSet.subactionPath = XR_NULL_PATH;
-
-    XrActionsSyncInfo syncInfo = {};
-    syncInfo.type = XR_TYPE_ACTIONS_SYNC_INFO;
-    syncInfo.next = NULL;
+    XrActiveActionSet activeActionSet{BaseActionSet};
+    XrActionsSyncInfo syncInfo{XR_TYPE_ACTIONS_SYNC_INFO};
     syncInfo.countActiveActionSets = 1;
     syncInfo.activeActionSets = &activeActionSet;
     OXR(xrSyncActions(Session, &syncInfo));
 
     // query input action states
-    XrActionStateGetInfo getInfo = {};
-    getInfo.type = XR_TYPE_ACTION_STATE_GET_INFO;
-    getInfo.next = NULL;
+    XrActionStateGetInfo getInfo = {XR_TYPE_ACTION_STATE_GET_INFO};
     getInfo.subactionPath = XR_NULL_PATH;
 
     XrAction controller[] = {AimPoseAction, GripPoseAction, AimPoseAction, GripPoseAction};
@@ -1057,7 +1087,7 @@ void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
         XrPosef_Identity(), XrPosef_Identity(), XrPosef_Identity(), XrPosef_Identity()};
     for (int i = 0; i < 4; i++) {
         if (ActionPoseIsActive(controller[i], subactionPath[i])) {
-            LocVel lv = GetSpaceLocVel(controllerSpace[i], frameState.predictedDisplayTime);
+            LocVel lv = GetSpaceLocVel(controllerSpace[i], ToXrTime(in.PredictedDisplayTime));
             ControllerPoseActive[i] =
                 (lv.loc.locationFlags & XR_SPACE_LOCATION_POSITION_VALID_BIT) != 0;
             ControllerPose[i] = lv.loc.pose;
@@ -1078,12 +1108,10 @@ void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
     ALOG( "Current interaction profile is: '%s'", ipPath);
 #endif
 
-    /// accounting
-    in.PredictedDisplayTime = FromXrTime(frameState.predictedDisplayTime);
     /// Update pose
     XrSpaceLocation loc = {};
     loc.type = XR_TYPE_SPACE_LOCATION;
-    OXR(xrLocateSpace(HeadSpace, CurrentSpace, frameState.predictedDisplayTime, &loc));
+    OXR(xrLocateSpace(HeadSpace, CurrentSpace, ToXrTime(in.PredictedDisplayTime), &loc));
     in.HeadPose = XrPosef_To_OVRPosef(loc.pose);
     /// grip & point space
     in.LeftRemotePointPose = XrPosef_To_OVRPosef(ControllerPose[0]);
@@ -1172,10 +1200,13 @@ void XrApp::SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState) {
     */
 }
 
-void XrApp::HandleInput(ovrApplFrameIn& in, XrFrameState& frameState) {
-    // Sync default actions
-    SyncActionSets(in, frameState);
-    // Call extension
+void XrApp::HandleInput(ovrApplFrameIn& in) {
+    if (!SkipSyncActions) {
+        // Sync default actions
+        SyncActionSets(in);
+    }
+
+    // Call application Update function
     Update(in);
 }
 
@@ -1265,6 +1296,7 @@ void XrApp::Update(const ovrApplFrameIn& in) {}
 void XrApp::Render(const ovrApplFrameIn& in, ovrRendererOutput& out) {}
 
 // App entry point
+#if defined(ANDROID)
 void XrApp::Run(struct android_app* app) {
     ALOGV("----------------------------------------------------------------");
     ALOGV("android_app_entry()");
@@ -1282,19 +1314,32 @@ void XrApp::Run(struct android_app* app) {
     Context.Vm = app->activity->vm;
     Context.Env = Env;
     Context.ActivityObject = app->activity->clazz;
+#else
+void XrApp::Run() {
+    Context.Vm = nullptr;
+    Context.Env = nullptr;
+    Context.ActivityObject = nullptr;
+#endif // defined(ANDROID)
     Init(&Context);
 
     InitSession();
 
+#if defined(ANDROID)
     app->userData = this;
     app->onAppCmd = app_handle_cmd;
+#endif // defined(ANDROID)
 
     bool stageBoundsDirty = true;
     int frameCount = -1;
 
+#if defined(ANDROID)
     while (app->destroyRequested == 0) {
+#else
+    while (true) {
+#endif // defined(ANDROID)
         frameCount++;
 
+#if defined(ANDROID)
         // Read all pending events.
         for (;;) {
             int events;
@@ -1312,24 +1357,26 @@ void XrApp::Run(struct android_app* app) {
                 source->process(app, source);
             }
         }
+#elif defined(WIN32)
+        MSG msg;
+        while (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE) > 0) {
+            if (msg.message == WM_QUIT) {
+                ShouldExit = true;
+            } else {
+                ::TranslateMessage(&msg);
+                ::DispatchMessage(&msg);
+            }
+        }
+#endif // defined(ANDROID)
 
         HandleXrEvents();
 
-        if (SessionActive == false) {
-            continue;
+        if (ShouldExit) {
+            break;
         }
 
-        if (LeftControllerAimSpace == XR_NULL_HANDLE) {
-            LeftControllerAimSpace = CreateActionSpace(AimPoseAction, LeftHandPath);
-        }
-        if (RightControllerAimSpace == XR_NULL_HANDLE) {
-            RightControllerAimSpace = CreateActionSpace(AimPoseAction, RightHandPath);
-        }
-        if (LeftControllerGripSpace == XR_NULL_HANDLE) {
-            LeftControllerGripSpace = CreateActionSpace(GripPoseAction, LeftHandPath);
-        }
-        if (RightControllerGripSpace == XR_NULL_HANDLE) {
-            RightControllerGripSpace = CreateActionSpace(GripPoseAction, RightHandPath);
+        if (SessionActive == false) {
+            continue;
         }
 
         if (stageBoundsDirty) {
@@ -1390,6 +1437,13 @@ void XrApp::Run(struct android_app* app) {
         OVRFW::ovrRendererOutput out = {};
         in.FrameIndex = frameCount;
 
+        /// time accounting
+        in.PredictedDisplayTime = FromXrTime(frameState.predictedDisplayTime);
+        if (PrevDisplayTime > 0) {
+            in.DeltaSeconds = FromXrTime(frameState.predictedDisplayTime - PrevDisplayTime);
+        }
+        PrevDisplayTime = frameState.predictedDisplayTime;
+
         XrPosef viewTransform[2];
         for (int eye = 0; eye < MAX_NUM_EYES; eye++) {
             XrPosef xfHeadFromEye = Projections[eye].pose;
@@ -1410,7 +1464,7 @@ void XrApp::Run(struct android_app* app) {
         out.FrameMatrices.CenterView = XrMatrix4x4f_To_OVRMatrix4f(viewMat);
 
         // Input
-        HandleInput(in, frameState);
+        HandleInput(in);
 
         // Set-up the compositor layers for this frame.
         // NOTE: Multiple independent layers are allowed, but they need to be added
@@ -1477,7 +1531,9 @@ void XrApp::Run(struct android_app* app) {
 
     EndSession();
     Shutdown(&Context);
+#if defined(ANDROID)
     (*app->activity->vm).DetachCurrentThread();
+#endif // defined(ANDROID)
 }
 
 } // namespace OVRFW

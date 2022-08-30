@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ModelFile.cpp
 Content     :   Model file loading common elements.
 Created     :   December 2013
 Authors     :   John Carmack, J.M.P. van Waveren
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -118,7 +118,8 @@ void CalculateTransformFromRTS(
     const Vector3f translation,
     const Vector3f scale) {
     Matrix4f::Multiply(localTransform, Matrix4f(rotation), Matrix4f::Scaling(scale));
-    Matrix4f::Multiply(localTransform, Matrix4f::Translation(translation), *localTransform);
+    Matrix4f::Multiply(
+        localTransform, Matrix4f::Translation(translation), Matrix4f(*localTransform));
 }
 
 //-----------------------------------------------------------------------------
@@ -157,6 +158,7 @@ void LoadModelFileTexture(
     model.Textures.push_back(tex);
 }
 
+#if !defined(OVR_OS_WIN32)
 static ModelFile* LoadZippedModelFile(
     unzFile zfp,
     const char* fileName,
@@ -402,6 +404,34 @@ ModelFile* LoadModelFile(
     return LoadZippedModelFile(
         zfp, fileName, (char*)zlib_opaque.data, zlib_opaque.len, programs, materialParms);
 }
+#else
+ModelFile* LoadModelFileFromMemory(
+    const char* fileName,
+    const void* buffer,
+    int bufferLength,
+    const ModelGlPrograms& programs,
+    const MaterialParms& materialParms,
+    ModelGeo* outModelGeo) {
+    // Open the .ModelFile file as a zip.
+    ALOG("LoadModelFileFromMemory %s %i", fileName, bufferLength);
+
+    // Determine wether it's a glb binary file, or if it is a zipped up ovrscene.
+    if (strstr(fileName, ".glb") != nullptr) {
+        return LoadModelFile_glB(
+            fileName, (char*)buffer, bufferLength, programs, materialParms, outModelGeo);
+    }
+
+    return nullptr;
+}
+
+ModelFile* LoadModelFile(
+    const char* fileName,
+    const ModelGlPrograms& programs,
+    const MaterialParms& materialParms) {
+    ALOG("LoadModelFile %s", fileName);
+    return nullptr;
+}
+#endif // !defined(OVR_OS_WIN32)
 
 ModelFile* LoadModelFileFromOtherApplicationPackage(
     void* zipFile,

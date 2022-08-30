@@ -15,21 +15,26 @@ Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+
+#if defined(ANDROID)
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/prctl.h> // for prctl( PR_SET_NAME )
 #include <android/log.h>
 #include <android/native_window_jni.h> // for native window JNI
 #include <android/input.h>
+#endif
 
 #include <atomic>
 #include <thread>
 
+#if defined(ANDROID)
 #include <sys/system_properties.h>
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+#endif
 
 #include "SpatialAnchorGl.h"
 
@@ -86,6 +91,8 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(
 #endif
 
 #define DEBUG 1
+
+#if defined(ANDROID)
 #define OVR_LOG_TAG "SpatialAnchorGl"
 
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, OVR_LOG_TAG, __VA_ARGS__)
@@ -94,6 +101,17 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(
 #else
 #define ALOGV(...)
 #endif
+
+#else
+#define ALOGE(...)       \
+    printf("ERROR: ");   \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#define ALOGV(...)       \
+    printf("VERBOSE: "); \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#endif // defined(ANDROID)
 
 /*
 ================================================================================
@@ -645,6 +663,16 @@ void ovrFramebuffer::Clear() {
     Elements = nullptr;
 }
 
+static void* GlGetExtensionProc(const char* functionName) {
+#if defined(ANDROID)
+    return (void*)eglGetProcAddress(functionName);
+#elif defined(WIN32)
+    return (void*)wglGetProcAddress(functionName);
+#else
+    static_assert(false);
+#endif
+}
+
 bool ovrFramebuffer::Create(
     const GLenum colorFormat,
     const int width,
@@ -653,10 +681,10 @@ bool ovrFramebuffer::Create(
     const int swapChainLength,
     GLuint* colorTextures) {
     PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR =
-        (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress(
+        (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)GlGetExtensionProc(
             "glFramebufferTextureMultiviewOVR");
     PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC glFramebufferTextureMultisampleMultiviewOVR =
-        (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)eglGetProcAddress(
+        (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)GlGetExtensionProc(
             "glFramebufferTextureMultisampleMultiviewOVR");
 
     Width = width;
@@ -706,7 +734,7 @@ bool ovrFramebuffer::Create(
                 multisamples /* samples */,
                 0 /* baseViewIndex */,
                 2 /* numViews */));
-        } else {
+        } else if (glFramebufferTextureMultiviewOVR) {
             GL(glFramebufferTextureMultiviewOVR(
                 GL_DRAW_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,
@@ -755,9 +783,11 @@ void ovrFramebuffer::Unbind() {
 }
 
 void ovrFramebuffer::Resolve() {
+#if defined(ANDROID)
     // Discard the depth buffer, so the tiler won't need to write it back out to memory.
     const GLenum depthAttachment[1] = {GL_DEPTH_ATTACHMENT};
     glInvalidateFramebuffer(GL_DRAW_FRAMEBUFFER, 1, depthAttachment);
+#endif // defined(ANDROID)
 
     // We now let the resolve happen implicitly.
 }

@@ -1,12 +1,19 @@
 #pragma once
 
+#if defined(ANDROID)
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
-
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
+#else
+#include "unknwn.h"
+#include "Render/GlWrapperWin32.h"
+#define XR_USE_GRAPHICS_API_OPENGL 1
+#define XR_USE_PLATFORM_WIN32 1
+#endif // defined(ANDROID)
+
 #include <openxr/openxr.h>
 #include <openxr/openxr_oculus.h>
 #include <openxr/openxr_oculus_helpers.h>
@@ -61,6 +68,7 @@ struct Egl {
     void Clear();
     void CreateContext(const Egl* shareEgl);
     void DestroyContext();
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
     EGLint MajorVersion;
     EGLint MinorVersion;
     EGLDisplay Display;
@@ -68,6 +76,10 @@ struct Egl {
     EGLSurface TinySurface;
     EGLSurface MainSurface;
     EGLContext Context;
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+    HDC hDC;
+    HGLRC hGLRC;
+#endif
 };
 
 /*
@@ -97,8 +109,12 @@ struct App {
     void HandleXrEvents();
 
     Egl egl;
+
+#if defined(XR_USE_PLATFORM_ANDROID)
     ANativeWindow* NativeWindow;
     bool Resumed;
+#endif // defined(XR_USE_PLATFORM_ANDROID)
+    bool ShouldExit;
     bool Focused;
 
     XrInstance Instance;

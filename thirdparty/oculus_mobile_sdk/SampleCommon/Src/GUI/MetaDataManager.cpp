@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   MetaDataManager.cpp
 Content     :   A class to manage metadata used by FolderBrowser
 Created     :   January 26, 2015
 Authors     :   Jonathan E. Wright, Warsam Osman, Madhu Kalva
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -19,8 +18,12 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <algorithm>
 #include <locale>
 
+#if !defined(OVR_OS_WIN32)
 #include <dirent.h>
 #include <unistd.h>
+#else
+#include "windows.h"
+#endif // !defined(OVR_OS_WIN32)
 
 using OVR::JSON;
 using OVR::JsonReader;
@@ -68,6 +71,7 @@ std::unordered_map<std::string, std::string> RelativeDirectoryFileList(
     const int numSearchPaths = static_cast<const int>(searchPaths.size());
     for (int index = 0; index < numSearchPaths; ++index) {
         const std::string fullPath = searchPaths[index] + relativeDirPathString;
+#if !defined(OVR_OS_WIN32)
         DIR* dir = opendir(fullPath.c_str());
         if (dir != NULL) {
             struct dirent* entry;
@@ -102,6 +106,38 @@ std::unordered_map<std::string, std::string> RelativeDirectoryFileList(
             }
             closedir(dir);
         }
+#else
+        WIN32_FIND_DATAA findFileData;
+        HANDLE hFind = FindFirstFileA(fullPath.c_str(), &findFileData);
+        if (hFind != INVALID_HANDLE_VALUE) {
+            do {
+                if (findFileData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY) {
+                    std::string s = relativeDirPathString;
+                    s += findFileData.cFileName;
+                    s += "\\";
+#if defined(OVR_BUILD_DEBUG)
+                    ALOG("RelativeDirectoryFileList adding - %s", s.c_str());
+#endif
+                    std::string lowerCaseS = s.c_str();
+                    std::transform(
+                        lowerCaseS.begin(), lowerCaseS.end(), lowerCaseS.begin(), ::tolower);
+                    uniqueStrings[lowerCaseS] = s;
+                } else {
+                    std::string s = relativeDirPathString;
+                    s += findFileData.cFileName;
+#if defined(OVR_BUILD_DEBUG)
+                    ALOG("RelativeDirectoryFileList adding - %s", s.c_str());
+#endif
+                    std::string lowerCaseS = s.c_str();
+                    std::transform(
+                        lowerCaseS.begin(), lowerCaseS.end(), lowerCaseS.begin(), ::tolower);
+                    uniqueStrings[lowerCaseS] = s;
+                }
+            } while (FindNextFileA(hFind, &findFileData) != 0);
+        }
+
+        FindClose(hFind);
+#endif // !defined(OVR_OS_WIN32)
     }
 
     return uniqueStrings;

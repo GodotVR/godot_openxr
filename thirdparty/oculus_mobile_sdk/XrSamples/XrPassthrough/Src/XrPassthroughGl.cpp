@@ -15,21 +15,26 @@ Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include <stdlib.h>
 #include <math.h>
 #include <time.h>
+
+#if defined(ANDROID)
 #include <unistd.h>
 #include <pthread.h>
 #include <sys/prctl.h> // for prctl( PR_SET_NAME )
 #include <android/log.h>
 #include <android/native_window_jni.h> // for native window JNI
 #include <android/input.h>
+#endif // defined(ANDROID)
 
 #include <atomic>
 #include <thread>
 
+#if defined(ANDROID)
 #include <sys/system_properties.h>
 
 #include <EGL/egl.h>
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+#endif // defined(ANDROID)
 
 #include "XrPassthroughGl.h"
 
@@ -88,11 +93,22 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(
 #define DEBUG 1
 #define OVR_LOG_TAG "XrPassthroughGl"
 
+#if defined(ANDROID)
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, OVR_LOG_TAG, __VA_ARGS__)
 #if DEBUG
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, OVR_LOG_TAG, __VA_ARGS__)
 #else
 #define ALOGV(...)
+#endif
+#else
+#define ALOGE(...)       \
+    printf("ERROR: ");   \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#define ALOGV(...)       \
+    printf("VERBOSE: "); \
+    printf(__VA_ARGS__); \
+    printf("\n")
 #endif
 
 /*
@@ -670,6 +686,16 @@ void Framebuffer::Clear() {
     Elements = nullptr;
 }
 
+static void* GlGetExtensionProc(const char* functionName) {
+#if defined(ANDROID)
+    return (void*)eglGetProcAddress(functionName);
+#elif defined(WIN32)
+    return (void*)wglGetProcAddress(functionName);
+#else
+    static_assert(false);
+#endif
+}
+
 bool Framebuffer::Create(
     const GLenum colorFormat,
     const int width,
@@ -678,10 +704,10 @@ bool Framebuffer::Create(
     const int swapChainLength,
     GLuint* colorTextures) {
     PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC glFramebufferTextureMultiviewOVR =
-        (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)eglGetProcAddress(
+        (PFNGLFRAMEBUFFERTEXTUREMULTIVIEWOVRPROC)GlGetExtensionProc(
             "glFramebufferTextureMultiviewOVR");
     PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC glFramebufferTextureMultisampleMultiviewOVR =
-        (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)eglGetProcAddress(
+        (PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)GlGetExtensionProc(
             "glFramebufferTextureMultisampleMultiviewOVR");
 
     Width = width;
@@ -731,7 +757,7 @@ bool Framebuffer::Create(
                 multisamples /* samples */,
                 0 /* baseViewIndex */,
                 2 /* numViews */));
-        } else {
+        } else if (glFramebufferTextureMultiviewOVR != nullptr) {
             GL(glFramebufferTextureMultiviewOVR(
                 GL_DRAW_FRAMEBUFFER,
                 GL_DEPTH_ATTACHMENT,

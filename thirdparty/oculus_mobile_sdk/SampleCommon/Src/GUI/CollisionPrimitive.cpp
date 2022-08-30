@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   CollisionPrimitive.cpp
 Content     :   Generic collision class supporting ray / triangle intersection.
 Created     :   September 10, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -271,7 +270,7 @@ bool OvrTriCollisionPrimitive::IntersectRay(
                 localDir.z,
                 localDir.Length(),
                 diff);
-            assert(!"IsNormalized()");
+            assert(!(bool)"IsNormalized()");
         }
 
         if (Intersect_RayTriangle(localStart, localDir, verts[0], verts[1], verts[2], t_, u_, v_)) {

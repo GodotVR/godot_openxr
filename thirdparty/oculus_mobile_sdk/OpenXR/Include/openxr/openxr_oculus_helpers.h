@@ -1,10 +1,10 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   openxr_oculus_helpers.h
 Content     :   OpenXR Helper routines
 Language    :   C99
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

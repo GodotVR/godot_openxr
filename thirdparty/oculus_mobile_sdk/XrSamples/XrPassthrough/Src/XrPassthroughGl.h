@@ -1,6 +1,11 @@
 #pragma once
 
+#if defined(ANDROID)
 #include <GLES3/gl3.h>
+#else
+#include "Render/GlWrapperWin32.h"
+#endif // defined(ANDROID)
+
 #include "OVR_Math.h"
 
 #ifndef NUM_EYES

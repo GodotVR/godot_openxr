@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   Skeleton.h
@@ -5,9 +7,8 @@ Content     :   Skeleton for arm and hand model implementation
 Created     :   2/20/2017
 Authors     :   Jonathan E. Wright, Federico Schliemann
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 ************************************************************************************/
+
 #pragma once
 
 #include <vector>

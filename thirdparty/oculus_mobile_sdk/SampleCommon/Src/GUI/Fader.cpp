@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   Fader.cpp
 Content     :   Utility classes for animation based on alpha values
 Created     :   July 25, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 

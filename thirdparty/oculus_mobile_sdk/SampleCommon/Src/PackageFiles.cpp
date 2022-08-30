@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   PackageFiles.cpp
 Content     :   Read files from the application package zip
 Created     :   August 18, 2014
 Authors     :   John Carmack
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -20,7 +19,10 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+
+#if !defined(OVR_OS_WIN32)
 #include <unistd.h>
+#endif
 
 #include <thread>
 #include <mutex>
@@ -113,6 +115,7 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal(
         return false;
     }
 
+#if !defined(OVR_OS_WIN32)
     std::lock_guard<std::mutex> mutex(PackageFileMutex);
 
     const int locateRet = unzLocateFile(zipFile, nameInZip, 2 /* case insensitive */);
@@ -214,6 +217,10 @@ static bool ovr_ReadFileFromOtherApplicationPackageInternal(
     }
 
     return true;
+#else
+    // No equivalent of other application package on windows.
+    return false;
+#endif // !defined(OVR_OS_WIN32)
 }
 
 bool ovr_ReadFileFromOtherApplicationPackage(

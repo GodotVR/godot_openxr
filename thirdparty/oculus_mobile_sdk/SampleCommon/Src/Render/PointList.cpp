@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   PointList.cpp
 Content     :   Abstract base class for a list of points.
 Created     :   6/16/2017
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 

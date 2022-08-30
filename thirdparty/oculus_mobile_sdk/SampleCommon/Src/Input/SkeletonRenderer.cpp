@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SkeletonRenderer.cpp
@@ -5,9 +7,8 @@ Content     :   A rendering component for sample skeletons
 Created     :   April 2020
 Authors     :   Federico Schliemann
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 ************************************************************************************/
+
 #include "SkeletonRenderer.h"
 #include "Misc/Log.h"
 

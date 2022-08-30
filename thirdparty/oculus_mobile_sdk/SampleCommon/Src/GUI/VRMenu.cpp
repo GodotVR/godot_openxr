@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   VRMenu.cpp
@@ -6,9 +8,6 @@ Content     :   Class that implements the basic framework for a VR menu, holds a
                 process menu events for a single menu.
 Created     :   June 30, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -367,7 +366,7 @@ void VRMenu::Frame(
                 Close_Impl(guiSys);
             } break;
             default:
-                assert(!"Unhandled menu state!");
+                assert(!(bool)"Unhandled menu state!");
                 break;
         }
         CurMenuState = NextMenuState;
@@ -393,7 +392,7 @@ void VRMenu::Frame(
             /// OVR_PERF_TIMER_STOP_MSG( VRMenu_Frame, Name.c_str() );
             return;
         default:
-            assert(!"Unhandled menu state!");
+            assert(!(bool)"Unhandled menu state!");
             break;
     }
 

@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename	:	Egl.cpp
@@ -6,8 +8,6 @@ Content		: 	EGL utility functions. Originally part of the VrCubeWorld_NativeActi
 Created		: 	March, 2015
 Authors		: 	J.M.P. van Waveren
 Language 	:	C99
-
-Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
  *************************************************************************************/
 
@@ -20,11 +20,14 @@ Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 // Implementation
 //==============================================================================
 
+#if defined(ANDROID)
 PFNEGLCREATESYNCKHRPROC eglCreateSyncKHR_;
 PFNEGLDESTROYSYNCKHRPROC eglDestroySyncKHR_;
 PFNEGLCLIENTWAITSYNCKHRPROC eglClientWaitSyncKHR_;
 PFNEGLSIGNALSYNCKHRPROC eglSignalSyncKHR_;
 PFNEGLGETSYNCATTRIBKHRPROC eglGetSyncAttribKHR_;
+#endif // defined(ANDROID)
+
 PFNGLINVALIDATEFRAMEBUFFER_ glInvalidateFramebuffer_;
 
 /*
@@ -37,8 +40,12 @@ PFNGLINVALIDATEFRAMEBUFFER_ glInvalidateFramebuffer_;
 
 OpenGLExtensions_t glExtensions;
 
-void* GetExtensionProc(const char* functionName) {
+void* EglGetExtensionProc(const char* functionName) {
+#if defined(ANDROID)
     void* ptr = (void*)eglGetProcAddress(functionName);
+#elif defined(WIN32)
+    void* ptr = (void*)wglGetProcAddress(functionName);
+#endif // defined(ANDROID)
     if (ptr == NULL) {
         ALOG("NOT FOUND: %s", functionName);
     }
@@ -59,14 +66,19 @@ void EglInitExtensions() {
             strstr(allExtensions, "GL_EXT_texture_filter_anisotropic");
     }
 
-    eglCreateSyncKHR_ = (PFNEGLCREATESYNCKHRPROC)GetExtensionProc("eglCreateSyncKHR");
-    eglDestroySyncKHR_ = (PFNEGLDESTROYSYNCKHRPROC)GetExtensionProc("eglDestroySyncKHR");
-    eglClientWaitSyncKHR_ = (PFNEGLCLIENTWAITSYNCKHRPROC)GetExtensionProc("eglClientWaitSyncKHR");
-    eglSignalSyncKHR_ = (PFNEGLSIGNALSYNCKHRPROC)GetExtensionProc("eglSignalSyncKHR");
-    eglGetSyncAttribKHR_ = (PFNEGLGETSYNCATTRIBKHRPROC)GetExtensionProc("eglGetSyncAttribKHR");
+#if defined(ANDROID)
+    eglCreateSyncKHR_ = (PFNEGLCREATESYNCKHRPROC)EglGetExtensionProc("eglCreateSyncKHR");
+    eglDestroySyncKHR_ = (PFNEGLDESTROYSYNCKHRPROC)EglGetExtensionProc("eglDestroySyncKHR");
+    eglClientWaitSyncKHR_ =
+        (PFNEGLCLIENTWAITSYNCKHRPROC)EglGetExtensionProc("eglClientWaitSyncKHR");
+    eglSignalSyncKHR_ = (PFNEGLSIGNALSYNCKHRPROC)EglGetExtensionProc("eglSignalSyncKHR");
+    eglGetSyncAttribKHR_ = (PFNEGLGETSYNCATTRIBKHRPROC)EglGetExtensionProc("eglGetSyncAttribKHR");
+#endif // defined(ANDROID)
     glInvalidateFramebuffer_ =
-        (PFNGLINVALIDATEFRAMEBUFFER_)eglGetProcAddress("glInvalidateFramebuffer");
+        (PFNGLINVALIDATEFRAMEBUFFER_)EglGetExtensionProc("glInvalidateFramebuffer");
 }
+
+#if defined(ANDROID)
 
 const char* EglErrorString(const EGLint error) {
     switch (error) {
@@ -104,6 +116,14 @@ const char* EglErrorString(const EGLint error) {
             return "unknown";
     }
 }
+
+#else
+
+const char* EglErrorString(const GLint err) {
+    return ovrGl_ErrorString_Windows(err);
+}
+
+#endif // defined(ANDROID)
 
 const char* GlFrameBufferStatusString(GLenum status) {
     switch (status) {
@@ -176,6 +196,8 @@ bool GLCheckErrorsWithTitle(const char* logTitle) {
     } while (1);
     return hadError;
 }
+
+#if defined(ANDROID)
 
 EGLint GL_FlushSync(int timeout) {
     // if extension not present, return NO_SYNC
@@ -387,3 +409,15 @@ void ovrEgl_DestroyContext(ovrEgl* egl) {
         egl->Display = 0;
     }
 }
+
+#else
+
+void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl) {
+    ovrGl_CreateContext_Windows(&egl->hDC, &egl->hGLRC);
+}
+
+void ovrEgl_DestroyContext(ovrEgl* egl) {
+    ovrGl_DestroyContext_Windows();
+}
+
+#endif // defined(ANDROID)

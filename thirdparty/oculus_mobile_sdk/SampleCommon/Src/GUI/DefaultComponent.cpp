@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   DefaultComponent.h
 Content     :   A default menu component that handles basic actions most menu items need.
 Created     :   July 25, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -77,7 +76,7 @@ eMsgStatus OvrDefaultComponent::OnEvent_Impl(
             UpSoundLimiter.PlaySoundEffect(guiSys, "sv_panel_touch_up", 0.1);
             return MSG_STATUS_ALIVE;
         default:
-            assert(!"Event flags mismatch!");
+            assert(!(bool)"Event flags mismatch!");
             return MSG_STATUS_ALIVE;
     }
 }
@@ -192,7 +191,7 @@ eMsgStatus OvrSurfaceToggleComponent::OnEvent_Impl(
         case VRMENU_EVENT_FRAME_UPDATE:
             return Frame(guiSys, vrFrame, self, event);
         default:
-            assert(!"Event flags mismatch!");
+            assert(!(bool)"Event flags mismatch!");
             return MSG_STATUS_ALIVE;
     }
 }

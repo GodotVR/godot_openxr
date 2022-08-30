@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GlGeometry.h
@@ -5,9 +7,8 @@ Content     :   OpenGL geometry setup.
 Created     :   October 8, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 ************************************************************************************/
+
 #pragma once
 
 #include <vector>

@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_Uri.h
@@ -5,9 +7,8 @@ Content     :   URI parser.
 Created     :   July 1, 2015
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include <stddef.h> // for size_t

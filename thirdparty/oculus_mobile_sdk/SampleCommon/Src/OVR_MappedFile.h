@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_MappedFile.h
 Content     :   Cross-platform memory-mapped file wrapper.
 Created     :   May 12, 2014
 Authors     :   Chris Taylor
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 

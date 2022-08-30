@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ModelTrace.cpp
 Content     :   Ray tracer using a KD-Tree.
 Created     :   May, 2014
 Authors     :   J.M.P. van Waveren
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

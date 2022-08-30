@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename    :   GeometryRenderer.h
@@ -5,7 +7,6 @@ Content     :   Simple rendering for geometry-based types
 Created     :   Mar 2021
 Authors     :   Federico Schliemann
 Language    :   C++
-Copyright:  Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *******************************************************************************/
 
@@ -32,8 +33,14 @@ class GeometryRenderer {
     void SetPose(const OVR::Posef& pose) {
         ModelPose_ = pose;
     }
+    OVR::Posef GetPose() {
+        return ModelPose_;
+    }
     void SetScale(OVR::Vector3f v) {
         ModelScale_ = v;
+    }
+    OVR::Vector3f GetScale() {
+        return ModelScale_;
     }
 
    public:

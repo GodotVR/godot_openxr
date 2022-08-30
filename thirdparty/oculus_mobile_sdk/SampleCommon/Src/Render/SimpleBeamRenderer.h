@@ -1,12 +1,14 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SimpleBeamRenderer.h
 Content     :   Helper for beam and particle rendering
 Created     :   July 2020
 Authors     :   Matthew Langille
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
+
 #pragma once
 
 #include "OVR_Math.h"

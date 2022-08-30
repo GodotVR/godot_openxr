@@ -1,10 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ControllerRenderer.h
 Content     :   A one stop for rendering controllers
 Created     :   July 2020
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 

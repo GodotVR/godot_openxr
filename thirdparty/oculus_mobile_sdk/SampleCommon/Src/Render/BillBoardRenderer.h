@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   BillBoardRenderer.h
@@ -5,9 +7,8 @@ Content     :   Class that manages and renders view-oriented billboards.
 Created     :   October 23, 2015
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include <vector>

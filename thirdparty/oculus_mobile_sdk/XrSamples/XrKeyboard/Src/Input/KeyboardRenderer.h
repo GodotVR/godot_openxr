@@ -19,8 +19,15 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "OVR_FileSys.h"
 #include "OVR_Math.h"
 
+#if defined(ANDROID)
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
+#else
+#include "unknwn.h"
+#define XR_USE_GRAPHICS_API_OPENGL 1
+#define XR_USE_PLATFORM_WIN32 1
+#endif
+
 #include <openxr/openxr.h>
 #include <openxr/openxr_oculus.h>
 #include <openxr/openxr_oculus_helpers.h>
@@ -48,7 +55,7 @@ class KeyboardRenderer {
    private:
     float AlphaBlendFactor = 1.0f;
     GlProgram ProgKeyboard;
-    ModelFile* KeyboardModel;
+    ModelFile* KeyboardModel = nullptr;
     GlTexture KeyboardTextureSolid;
     OVR::Matrix4f Transform;
 };

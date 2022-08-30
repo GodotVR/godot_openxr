@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename    :   XrApp.h
@@ -5,7 +7,6 @@ Content     :   OpenXR application base class.
 Created     :   July 2020
 Authors     :   Federico Schliemann
 Language    :   c++
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *******************************************************************************/
 
@@ -23,6 +24,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "FrameParams.h"
 #include "OVR_FileSys.h"
 
+#if defined(ANDROID)
 #include <android/window.h>
 #include <android/native_window_jni.h>
 #include <android_native_app_glue.h>
@@ -36,6 +38,9 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
 #define EGL_OPENGL_ES3_BIT_KHR 0x0040
 #endif
+#elif defined(WIN32)
+#include "windows.h"
+#endif // defined(ANDROID)
 
 // EXT_texture_border_clamp
 #ifndef GL_CLAMP_TO_BORDER
@@ -73,7 +78,7 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)(
 #elif defined(WIN32)
 #include <unknwn.h>
 #define XR_USE_GRAPHICS_API_OPENGL 1
-#define XR_USE_PLATFORM_WINDOWS 1
+#define XR_USE_PLATFORM_WIN32 1
 #endif // defined(ANDROID)
 
 #include <openxr/openxr.h>
@@ -88,7 +93,7 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)(
 
 void OXR_CheckErrors(XrInstance instance, XrResult result, const char* function, bool failOnError);
 
-#if defined(DEBUG)
+#if defined(DEBUG) || defined(_DEBUG)
 #define OXR(func) OXR_CheckErrors(Instance, func, #func, true);
 #else
 #define OXR(func) OXR_CheckErrors(Instance, func, #func, false);
@@ -208,7 +213,11 @@ class XrApp {
     virtual ~XrApp() = default;
 
     // App entry point
+#if defined(ANDROID)
     void Run(struct android_app* app);
+#else
+    void Run();
+#endif // defined(ANDROID)
 
     //============================
     // public context interface
@@ -233,21 +242,19 @@ class XrApp {
         RunWhilePaused = b;
     }
 
+#if defined(ANDROID)
     void HandleAndroidCmd(struct android_app* app, int32_t cmd);
+#endif // defined(ANDROID)
 
    protected:
-    uint64_t GetFrameIndex() const {
-        return FrameIndex;
-    }
-    double GetDisplayTime() const {
-        return DisplayTime;
-    }
     int GetNumFramebuffers() const {
         return NumFramebuffers;
     }
     ovrFramebuffer* GetFrameBuffer(int eye) {
         return &FrameBuffer[eye];
     }
+
+    std::vector<XrExtensionProperties> GetXrExtensionProperties() const;
 
     //============================
     // App functions
@@ -357,7 +364,7 @@ class XrApp {
 
     /// XR Input state overrides
     virtual void AttachActionSets();
-    virtual void SyncActionSets(ovrApplFrameIn& in, XrFrameState& frameState);
+    virtual void SyncActionSets(ovrApplFrameIn& in);
 
     // Called to deal with lifetime
     void HandleSessionStateChanges(XrSessionState state);
@@ -384,7 +391,7 @@ class XrApp {
     virtual void HandleXrEvents();
 
     // Internal Input
-    void HandleInput(ovrApplFrameIn& in, XrFrameState& frameState);
+    void HandleInput(ovrApplFrameIn& in);
 
     // Internal Render
     void RenderFrame(const ovrApplFrameIn& in, ovrRendererOutput& out);
@@ -397,29 +404,41 @@ class XrApp {
     xrJava Context;
     ovrLifecycle Lifecycle = LIFECYCLE_UNKNOWN;
     ovrEgl Egl = {
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
         0,
         0,
         EGL_NO_DISPLAY,
         EGL_CAST(EGLConfig, 0),
         EGL_NO_SURFACE,
         EGL_NO_SURFACE,
-        EGL_NO_CONTEXT};
+        EGL_NO_CONTEXT
+#endif // defined(XR_USE_GRAPHICS_API_OPENGL_ES)
+    };
 
+#if defined(ANDROID)
     ANativeWindow* NativeWindow;
-    bool Resumed;
-    bool Focused;
+    bool Resumed = false;
+#endif // defined(ANDROID)
+    bool ShouldExit = false;
+    bool Focused = false;
 
-    XrInstance Instance;
-    XrSession Session;
+    // When set the framework will skip calling
+    // SyncActionSets(), this is useful if an app
+    // wants control over xrSyncAction
+    // Note: This means input in ovrApplFrameIn won't be set
+    bool SkipSyncActions = false;
+
+    XrInstance Instance = XR_NULL_HANDLE;
+    XrSession Session = XR_NULL_HANDLE;
     XrViewConfigurationProperties ViewportConfig;
     XrViewConfigurationView ViewConfigurationView[MAX_NUM_EYES];
     XrView Projections[MAX_NUM_EYES];
-    XrSystemId SystemId;
-    XrSpace HeadSpace;
-    XrSpace LocalSpace;
-    XrSpace StageSpace;
-    XrSpace CurrentSpace;
-    bool SessionActive;
+    XrSystemId SystemId = XR_NULL_SYSTEM_ID;
+    XrSpace HeadSpace = XR_NULL_HANDLE;
+    XrSpace LocalSpace = XR_NULL_HANDLE;
+    XrSpace StageSpace = XR_NULL_HANDLE;
+    XrSpace CurrentSpace = XR_NULL_HANDLE;
+    bool SessionActive = false;
 
     XrActionSet BaseActionSet = XR_NULL_HANDLE;
     XrPath LeftHandPath = XR_NULL_PATH;
@@ -453,8 +472,7 @@ class XrApp {
     std::unique_ptr<OVRFW::ModelFile> SceneModel;
 
    private:
-    uint64_t FrameIndex = 0;
-    double DisplayTime = 0.0;
+    XrTime PrevDisplayTime = 0.0;
     int SwapInterval;
     int CpuLevel = CPU_LEVEL;
     int GpuLevel = GPU_LEVEL;
@@ -481,12 +499,23 @@ class XrApp {
         appl->Run(app);                           \
     }
 
+#elif defined(WIN32)
+
+#define ENTRY_POINT(appClass)                               \
+    __pragma(comment(linker, "/SUBSYSTEM:WINDOWS"));        \
+    int APIENTRY WinMain(HINSTANCE, HINSTANCE, PSTR, int) { \
+        auto appl = std::make_unique<appClass>();           \
+        appl->Run();                                        \
+        return 0;                                           \
+    }
+
 #else
 
 #define ENTRY_POINT(appClass)                     \
-    int main(int argv, const char** argc) {       \
+    int main(int, const char**) {                 \
         auto appl = std::make_unique<appClass>(); \
-        appl->Run(argv, argc);                    \
+        appl->Run();                              \
+        return 0;                                 \
     }
 
 #endif // defined(ANDROID)

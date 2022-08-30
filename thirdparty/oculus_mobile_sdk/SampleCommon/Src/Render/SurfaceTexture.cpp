@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SurfaceTexture.cpp
 Content     :   Interface to Android SurfaceTexture objects
 Created     :   September 17, 2013
 Authors     :   John Carmack
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -23,10 +23,14 @@ SurfaceTexture::SurfaceTexture(JNIEnv* jni_)
     : textureId(0),
       javaObject(NULL),
       jni(NULL),
-      nanoTimeStamp(0),
+      nanoTimeStamp(0)
+#if defined(OVR_OS_ANDROID)
+      ,
       updateTexImageMethodId(NULL),
       getTimestampMethodId(NULL),
-      setDefaultBufferSizeMethodId(NULL) {
+      setDefaultBufferSizeMethodId(NULL)
+#endif // defined(OVR_OS_ANDROID)
+{
     jni = jni_;
 
     glGenTextures(1, &textureId);
@@ -37,6 +41,7 @@ SurfaceTexture::SurfaceTexture(JNIEnv* jni_)
     glTexParameterf(GL_TEXTURE_EXTERNAL_OES, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
     glBindTexture(GL_TEXTURE_EXTERNAL_OES, 0);
 
+#if defined(OVR_OS_ANDROID)
     static const char* className = "android/graphics/SurfaceTexture";
     JavaClass surfaceTextureClass(jni, jni->FindClass(className));
     if (0 == surfaceTextureClass.GetJClass()) {
@@ -75,6 +80,7 @@ SurfaceTexture::SurfaceTexture(JNIEnv* jni_)
     if (javaObject == 0) {
         ALOGE_FAIL("NewGlobalRef() failed");
     }
+#endif // defined(OVR_OS_ANDROID)
 }
 
 SurfaceTexture::~SurfaceTexture() {
@@ -82,17 +88,22 @@ SurfaceTexture::~SurfaceTexture() {
         glDeleteTextures(1, &textureId);
         textureId = 0;
     }
+#if defined(OVR_OS_ANDROID)
     if (javaObject) {
         jni->DeleteGlobalRef(javaObject);
         javaObject = 0;
     }
+#endif // defined(OVR_OS_ANDROID)
 }
 
 void SurfaceTexture::SetDefaultBufferSize(const int width, const int height) {
+#if defined(OVR_OS_ANDROID)
     jni->CallVoidMethod(javaObject, setDefaultBufferSizeMethodId, width, height);
+#endif // defined(OVR_OS_ANDROID)
 }
 
 void SurfaceTexture::Update() {
+#if defined(OVR_OS_ANDROID)
     // latch the latest movie frame to the texture
     if (!javaObject) {
         return;
@@ -100,6 +111,7 @@ void SurfaceTexture::Update() {
 
     jni->CallVoidMethod(javaObject, updateTexImageMethodId);
     nanoTimeStamp = jni->CallLongMethod(javaObject, getTimestampMethodId);
+#endif // defined(OVR_OS_ANDROID)
 }
 
 unsigned int SurfaceTexture::GetTextureId() {

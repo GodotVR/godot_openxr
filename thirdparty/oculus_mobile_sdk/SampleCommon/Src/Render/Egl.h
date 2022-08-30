@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename	: 	Egl.h
@@ -6,7 +8,6 @@ Content		: 	EGL utility functions. Originally part of the VrCubeWorld_NativeActi
 Created		: 	March, 2015
 Authors		: 	J.M.P. van Waveren
 Language	:	C99
-Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
  *************************************************************************************/
 
@@ -15,10 +16,14 @@ Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include <string.h>
 #include <stdbool.h>
 
+#if !defined(WIN32)
 #include <EGL/egl.h>
 #include <EGL/eglext.h>
 #include <GLES3/gl3.h>
 #include <GLES3/gl3ext.h>
+#else
+#include "GlWrapperWin32.h"
+#endif // !defined(WIN32)
 
 #if defined(__cplusplus)
 extern "C" {
@@ -104,6 +109,7 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTUREMULTISAMPLEMULTIVIEWOVRPROC)(
 #endif /* GL_OES_EGL_image_external */
 
 typedef struct ovrEgl_s {
+#if !defined(WIN32)
     EGLint MajorVersion;
     EGLint MinorVersion;
     EGLDisplay Display;
@@ -111,6 +117,10 @@ typedef struct ovrEgl_s {
     EGLSurface TinySurface;
     EGLSurface MainSurface;
     EGLContext Context;
+#else
+    HDC hDC;
+    HGLRC hGLRC;
+#endif // defined(WIN32)
 } ovrEgl;
 
 typedef struct {
@@ -125,17 +135,20 @@ extern OpenGLExtensions_t glExtensions;
 // forward declarations
 //==============================================================================
 
+void* EglGetExtensionProc(const char* functionName);
 void EglInitExtensions();
 void ovrEgl_Clear(ovrEgl* egl);
 void ovrEgl_CreateContext(ovrEgl* egl, const ovrEgl* shareEgl);
 void ovrEgl_DestroyContext(ovrEgl* egl);
 
+#if defined(ANDROID)
 // EGL_KHR_reusable_sync
 extern PFNEGLCREATESYNCKHRPROC eglCreateSyncKHR_;
 extern PFNEGLDESTROYSYNCKHRPROC eglDestroySyncKHR_;
 extern PFNEGLCLIENTWAITSYNCKHRPROC eglClientWaitSyncKHR_;
 extern PFNEGLSIGNALSYNCKHRPROC eglSignalSyncKHR_;
 extern PFNEGLGETSYNCATTRIBKHRPROC eglGetSyncAttribKHR_;
+#endif // defined(ANDROID)
 
 typedef void(GL_APIENTRYP PFNGLINVALIDATEFRAMEBUFFER_)(
     GLenum target,
@@ -157,7 +170,11 @@ void GL_InvalidateFramebuffer(
     const bool depthBuffer);
 
 const char* GlFrameBufferStatusString(GLenum status);
+#if defined(ANDROID)
 const char* EglErrorString(const EGLint error);
+#else
+const char* EglErrorString(const GLint error);
+#endif // defined(ANDROID)
 
 #ifdef OVR_BUILD_DEBUG
 #define CHECK_GL_ERRORS 1

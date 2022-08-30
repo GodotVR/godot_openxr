@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   VRMenuObject.cpp
 Content     :   Menuing system for VR apps.
 Created     :   May 23, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -80,9 +79,6 @@ inline bool Intersect_RayBounds(
 }
 
 namespace OVRFW {
-
-float const VRMenuObject::TEXELS_PER_METER = 500.0f;
-float const VRMenuObject::DEFAULT_TEXEL_SCALE = 1.0f / TEXELS_PER_METER;
 
 const float VRMenuSurface::Z_BOUNDS = 0.05f;
 
@@ -1077,6 +1073,12 @@ void VRMenuObject::AddChild(OvrVRMenuMgr& menuMgr, menuHandle_t const handle) {
         child->SetParentHandle(this->Handle);
     }
     // NOTE: bounds will be incorrect until submitted for rendering
+}
+void VRMenuObject::AddChild(VRMenuObject* child) {
+    Children.push_back(child->GetHandle());
+    if (child != nullptr) {
+        child->SetParentHandle(this->Handle);
+    }
 }
 
 //==============================

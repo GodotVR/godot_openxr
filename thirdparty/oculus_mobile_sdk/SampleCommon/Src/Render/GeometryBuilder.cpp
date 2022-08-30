@@ -1,12 +1,14 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GeometryBuilder.cpp
 Content     :   OpenGL geometry setup.
 Created     :   July 2020
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
+
 #include "GeometryBuilder.h"
 
 namespace OVRFW {

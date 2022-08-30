@@ -57,6 +57,8 @@ void main()
 )glsl";
 
 static const char* FragmentShaderSrc = R"glsl(
+precision lowp float;
+
 uniform sampler2D Texture0;
 uniform lowp vec3 SpecularLightDirection;
 uniform lowp vec3 SpecularLightColor;
@@ -174,8 +176,10 @@ bool KeyboardRenderer::Init(std::vector<uint8_t>& keyboardBuffer) {
 
 void KeyboardRenderer::Shutdown() {
     OVRFW::GlProgram::Free(ProgKeyboard);
-    delete KeyboardModel;
-    KeyboardModel = nullptr;
+    if (KeyboardModel != nullptr) {
+        delete KeyboardModel;
+        KeyboardModel = nullptr;
+    }
 }
 
 void KeyboardRenderer::Update(const OVR::Posef& pose, const OVR::Vector3f& scale) {
@@ -186,11 +190,13 @@ void KeyboardRenderer::Update(const OVR::Posef& pose, const OVR::Vector3f& scale
 void KeyboardRenderer::Render(std::vector<ovrDrawSurface>& surfaceList) {
     /// toggle alpha override
     AlphaBlendFactor = UseSolidTexture ? 1.0f : 0.0f;
-    for (auto& model : KeyboardModel->Models) {
-        ovrDrawSurface controllerSurface;
-        controllerSurface.surface = &(model.surfaces[0].surfaceDef);
-        controllerSurface.modelMatrix = Transform;
-        surfaceList.push_back(controllerSurface);
+    if (KeyboardModel != nullptr) {
+        for (auto& model : KeyboardModel->Models) {
+            ovrDrawSurface controllerSurface;
+            controllerSurface.surface = &(model.surfaces[0].surfaceDef);
+            controllerSurface.modelMatrix = Transform;
+            surfaceList.push_back(controllerSurface);
+        }
     }
 }
 

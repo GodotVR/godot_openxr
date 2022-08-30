@@ -21,6 +21,12 @@ class XrKeyboardHelper : public XrHelper {
             (PFN_xrVoidFunction*)(&xrQuerySystemTrackedKeyboardFB_)));
         oxr(xrGetInstanceProcAddr(
             instance, "xrCreateKeyboardSpaceFB", (PFN_xrVoidFunction*)(&xrCreateKeyboardSpaceFB_)));
+
+        fakeLocation_.locationFlags =
+            XR_SPACE_LOCATION_ORIENTATION_TRACKED_BIT |
+            XR_SPACE_LOCATION_POSITION_TRACKED_BIT |
+            XR_SPACE_LOCATION_ORIENTATION_VALID_BIT |
+            XR_SPACE_LOCATION_POSITION_VALID_BIT;
     }
 
     ~XrKeyboardHelper() override {
@@ -127,7 +133,10 @@ class XrKeyboardHelper : public XrHelper {
    public:
     /// Own interface
     const XrSpaceLocation& Location() const {
-        return location_;
+        if (IsLocationActive() || trackingRequired_) {
+            return location_;
+        }
+        return fakeLocation_;
     }
     bool IsTracking() const {
         return (keyboardSpace_ != XR_NULL_HANDLE);
@@ -138,7 +147,7 @@ class XrKeyboardHelper : public XrHelper {
         const XrSpaceLocationFlags isValid =
             XR_SPACE_LOCATION_ORIENTATION_VALID_BIT | XR_SPACE_LOCATION_POSITION_VALID_BIT;
         XrSpaceLocationFlags flags = isTracked | isValid;
-        return IsTracking() && (location_.locationFlags & flags);
+        return (IsTracking() && (location_.locationFlags & flags)) || !trackingRequired_;
     }
 
     void ResetSystemKeyboardTracking() {
@@ -234,6 +243,19 @@ class XrKeyboardHelper : public XrHelper {
         return false;
     }
 
+    bool TrackingRequired() {
+        return trackingRequired_;
+    }
+
+    bool SetTrackingRequired(bool state) {
+        if (state != trackingRequired_) {
+            trackingRequired_ = state;
+            ResetSystemKeyboardTracking();
+            return true;
+        }
+        return false;
+    }
+
     bool TrackingSystemKeyboard() {
         return trackingSystemKeyboard_;
     }
@@ -270,6 +292,7 @@ class XrKeyboardHelper : public XrHelper {
     XrSpace keyboardSpace_ = XR_NULL_HANDLE;
     /// Keyboard - data
     XrSpaceLocation location_{XR_TYPE_SPACE_LOCATION};
+    XrSpaceLocation fakeLocation_{XR_TYPE_SPACE_LOCATION};
 
     XrVector3f size_;
     // mapping the system level active tracked keyboard
@@ -280,5 +303,6 @@ class XrKeyboardHelper : public XrHelper {
     bool systemKeyboardStateChanged_ = false;
     bool requireKeyboardConnectedToTrack_ = true;
     bool useRemoteKeyboard_ = false;
+    bool trackingRequired_ = false;
     XrKeyboardTrackingDescriptionFB systemKeyboardDesc_;
 };

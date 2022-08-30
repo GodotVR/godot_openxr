@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SurfaceTexture.h
@@ -5,9 +7,8 @@ Content     :   Interface to Android SurfaceTexture objects
 Created     :   September 17, 2013
 Authors		:	John Carmack
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include "JniUtils.h"
@@ -56,9 +57,11 @@ class SurfaceTexture {
     // to be processed / mipmapped by other code.
     long long nanoTimeStamp;
 
+#if defined(OVR_OS_ANDROID)
     jmethodID updateTexImageMethodId;
     jmethodID getTimestampMethodId;
     jmethodID setDefaultBufferSizeMethodId;
+#endif // defined(OVR_OS_ANDROID)
 };
 
 } // namespace OVRFW

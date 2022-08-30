@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SurfaceRender.cpp
 Content     :   Optimized OpenGL rendering path
 Created     :   August 9, 2013
 Authors     :   John Carmack
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -112,7 +112,7 @@ ChangeGpuState(const ovrGpuState oldState, const ovrGpuState newState, bool forc
         (newState.depthRange[1] != oldState.depthRange[1])) {
         GL(glDepthRangef(newState.depthRange[0], newState.depthRange[1]));
     }
-#if GL_ES_VERSION_2_0 == 0
+#if !defined(GL_ES_VERSION_2_0) || GL_ES_VERSION_2_0 == 0
     if (force || newState.polygonMode != oldState.polygonMode) {
         GL(glPolygonMode(GL_FRONT_AND_BACK, newState.polygonMode));
     }

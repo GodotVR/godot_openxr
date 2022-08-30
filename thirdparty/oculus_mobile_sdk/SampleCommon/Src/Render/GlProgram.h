@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GlProgram.h
@@ -5,9 +7,8 @@ Content     :   Shader program compilation.
 Created     :   October 11, 2013
 Authors     :   John Carmack
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include "Egl.h"

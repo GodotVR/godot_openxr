@@ -8,8 +8,15 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 ************************************************************************************************/
 #pragma once
 
+#if defined(ANDROID)
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
+#else
+#include "unknwn.h"
+#define XR_USE_GRAPHICS_API_OPENGL 1
+#define XR_USE_PLATFORM_WIN32 1
+#endif
+
 #include <openxr/openxr.h>
 #include <openxr/openxr_oculus.h>
 #include <openxr/openxr_platform.h>
@@ -41,7 +48,7 @@ class XrHelper {
         if (XR_FAILED(xr)) {
             char errorBuffer[XR_MAX_RESULT_STRING_SIZE];
             xrResultToString(instance_, xr, errorBuffer);
-            XRLOG("XR FAIL: `%s` -> `%s` 0x%08X", func, errorBuffer, (uint)xr);
+            XRLOG("XR FAIL: `%s` -> `%s` 0x%08X", func, errorBuffer, (uint64_t)xr);
             lastError_ = xr;
             return false;
         }

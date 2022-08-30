@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   PackageFiles.h
@@ -5,10 +7,8 @@ Content     :   Read files from the application package zip
 Created     :   August 18, 2014
 Authors     :   John Carmack
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-
 *************************************************************************************/
+
 #pragma once
 
 #include <vector>

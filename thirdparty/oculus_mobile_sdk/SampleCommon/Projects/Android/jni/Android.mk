@@ -72,7 +72,6 @@ LOCAL_SRC_FILES := \
   ../../../Src/Render/GlBuffer.cpp \
   ../../../Src/Render/GlGeometry.cpp \
   ../../../Src/Render/GlProgram.cpp \
-  ../../../Src/Render/GlSetup.cpp \
   ../../../Src/Render/GlTexture.cpp \
   ../../../Src/Render/PanelRenderer.cpp \
   ../../../Src/Render/ParticleSystem.cpp	\

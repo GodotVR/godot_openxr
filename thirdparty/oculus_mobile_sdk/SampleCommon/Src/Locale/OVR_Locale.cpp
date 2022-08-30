@@ -1,15 +1,18 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
 /************************************************************************************
 
 Filename    :   OVR_Locale.cpp
 Content     :   Implementation of string localization for strings loaded at run-time.
 Created     :   April 6, 2015
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-This source code is licensed under the BSD-style license found in the
-LICENSE file in the Oculus360Photos/ directory. An additional grant
-of patent rights can be found in the PATENTS file in the same directory.
 
 ************************************************************************************/
 
@@ -68,8 +71,10 @@ class ovrLocaleInternal : public ovrLocale {
     virtual void ReplaceLocalizedText(char const* inText, char* out, size_t const outSize) const;
 
    private:
+#if defined(OVR_OS_ANDROID)
     JNIEnv& jni;
     jobject activityObject;
+#endif
 
     std::string Name; // user-specified locale name
     std::string LanguageCode; // system-specific locale name
@@ -85,12 +90,17 @@ OVR::UPInt ovrLocaleInternal::LOCALIZED_KEY_PREFIX_LEN = OVR::OVR_strlen(LOCALIZ
 
 //==============================
 // ovrLocaleInternal::ovrLocaleInternal
+#if defined(OVR_OS_ANDROID)
 ovrLocaleInternal::ovrLocaleInternal(
     JNIEnv& jni_,
     jobject activity_,
     char const* name,
     char const* languageCode)
     : jni(jni_), activityObject(activity_), Name(name), LanguageCode(languageCode) {}
+#else
+ovrLocaleInternal::ovrLocaleInternal(char const* name, char const* languageCode)
+    : Name(name), LanguageCode(languageCode) {}
+#endif
 
 //==============================
 // ovrLocaleInternal::~ovrLocaleInternal
@@ -222,6 +232,7 @@ bool ovrLocaleInternal::LoadStringsFromAndroidFormatXMLFile(
 // Get's a localized UTF-8-encoded string from the Android application's string table.
 bool ovrLocaleInternal::GetStringJNI(char const* key, char const* defaultOut, std::string& out)
     const {
+#if defined(OVR_OS_ANDROID)
     // ALOG( "Localizing key '%s'", key );
     // if the key doesn't start with KEY_PREFIX then it's not a valid key, just return
     // the key itself as the output text.
@@ -247,8 +258,8 @@ bool ovrLocaleInternal::GetStringJNI(char const* key, char const* defaultOut, st
 			// 0 is not a valid resource id
 			Log.v("VrLocale", name + " is not a valid resource id!!" );
 			return outString;
-		} 
-		if ( id != 0 ) 
+		}
+		if ( id != 0 )
 		{
 			outString = resources.getText( id ).toString();
 			//Log.v("VrLocale", "getLocalizedString resolved " + name + " to " + outString);
@@ -377,6 +388,10 @@ bool ovrLocaleInternal::GetStringJNI(char const* key, char const* defaultOut, st
     const char* textObjectString_ch = jni.GetStringUTFChars(textObjectString.GetJString(), 0);
     out = textObjectString_ch;
     jni.ReleaseStringUTFChars(textObjectString.GetJString(), textObjectString_ch);
+#else
+    out = defaultOut;
+#endif // defined(OVR_OS_ANDROID)
+
     return true;
 }
 
@@ -504,6 +519,7 @@ ovrLocale::Create(JNIEnv& jni_, jobject activity_, char const* name, ovrFileSys*
 	}
 #endif
 
+#if defined(OVR_OS_ANDROID)
     JavaClass localeClass(&jni_, jni_.FindClass("java/util/Locale")); // class pointer of Locale
     if (localeClass.GetJClass() == NULL) {
         ALOG("ovrLocale::Create - localeClass == NULL");
@@ -537,6 +553,9 @@ ovrLocale::Create(JNIEnv& jni_, jobject activity_, char const* name, ovrFileSys*
     }
 
     localePtr = new ovrLocaleInternal(jni_, activity_, name, languageCode.c_str());
+#else
+    localePtr = new ovrLocaleInternal(name, languageCode.c_str());
+#endif // defined(OVR_OS_ANDROID)
 
     ALOG("ovrLocale::Create - exited");
     return localePtr;

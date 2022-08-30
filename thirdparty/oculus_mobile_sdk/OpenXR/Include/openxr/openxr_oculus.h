@@ -1,10 +1,10 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   openxr_oculus.h
 Content     :   Oculus OpenXR Extensions.
 Language    :   C99
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

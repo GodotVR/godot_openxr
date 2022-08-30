@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GlBuffer.h
@@ -5,9 +7,8 @@ Content     :   OpenGL Buffer Management.
 Created     :
 Authors     :
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include "Egl.h"

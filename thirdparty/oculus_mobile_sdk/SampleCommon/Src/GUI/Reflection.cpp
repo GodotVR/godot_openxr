@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   Reflection.cpp
 Content     :   Functions and declarations for introspection and reflection of C++ objects.
 Created     :   11/16/2015
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -17,7 +17,12 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 
 #include "OVR_TypesafeNumber.h"
 
+#if !defined(WIN32)
 #include <alloca.h>
+#else
+#include <malloc.h>
+#endif // !defined(WIN32)
+
 #include <cstdlib> // for strtoll
 
 namespace OVRFW {

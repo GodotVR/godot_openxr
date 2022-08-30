@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_BinaryFile2.cpp
 Content     :   Simple helper class to read a binary file.
 Created     :   Jun, 2014
 Authors     :   J.M.P. van Waveren
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 

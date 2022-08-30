@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   CollisionPrimitive.h
@@ -5,10 +7,8 @@ Content     :   Generic collision class supporting ray / triangle intersection.
 Created     :   September 10, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-
 *************************************************************************************/
+
 #pragma once
 
 #include <vector>

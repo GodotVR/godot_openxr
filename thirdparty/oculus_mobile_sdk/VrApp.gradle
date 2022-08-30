@@ -280,6 +280,13 @@ project.task('genDebugKeystore', type: GenDebugKeystore ) {
   description 'generate debug keystore'
 }
 
+// Workaround to fix issue in Android Studio Chipmunk 2021.2.1 and later
+// where opening a project would result in a 'prepareKotlinBuildScriptModel'
+// not found error
+if (!tasks.findByName("prepareKotlinBuildScriptModel")) {
+    tasks.register("prepareKotlinBuildScriptModel") {}
+}
+
 
 // **************************************************************
 // Task interceptor to add dependant tasks

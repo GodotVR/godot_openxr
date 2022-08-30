@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ParticleSystem.h
 Content     :   A simple particle system for System Activities.
 Created     :   October 12, 2015
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -53,6 +53,8 @@ void main()
 )glsl";
 
 static const char* particleGeoFragmentSrc = R"glsl(
+precision highp float;
+
 varying highp vec2 oTexCoord;
 varying lowp vec4 oColor;
 void main()

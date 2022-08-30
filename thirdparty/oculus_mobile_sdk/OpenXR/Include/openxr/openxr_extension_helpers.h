@@ -1,10 +1,10 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   openxr_extension_helpers.h
 Content     :   Helpers for private and experimental extension definition headers.
 Language    :   C99
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

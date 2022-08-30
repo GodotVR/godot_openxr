@@ -1,10 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   AxisRenderer.cpp
 Content     :   A rendering component for axis
 Created     :   September 2020
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -45,10 +46,10 @@ static const char* AxisFragmentShaderSrc = R"glsl(
 
 namespace OVRFW {
 
-bool ovrAxisRenderer::Init(size_t count) {
+bool ovrAxisRenderer::Init(size_t count, float size) {
     /// Defaults
     Count = count;
-    AxisSize = 0.025f;
+    AxisSize = size;
 
     /// Create Axis program
     static ovrProgramParm AxisUniformParms[] = {

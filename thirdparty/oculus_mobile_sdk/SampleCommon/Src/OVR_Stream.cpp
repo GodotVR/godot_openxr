@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_Stream.cpp
@@ -5,9 +7,8 @@ Content     :   Abstraction for file streams.
 Created     :   July 1, 2015
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #include "OVR_Stream.h"
 
 #include "Misc/Log.h"

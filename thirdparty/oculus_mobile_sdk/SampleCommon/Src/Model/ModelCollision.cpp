@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ModelCollision.cpp
 Content     :   Basic collision detection for scene walkthroughs.
 Created     :   May 2014
 Authors     :   J.M.P. van Waveren
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

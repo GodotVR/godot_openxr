@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   HandRenderer.h
 Content     :   A one stop for rendering hands
 Created     :   April 2020
 Authors     :   Federico Schliemann
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -29,7 +29,7 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #elif defined(WIN32)
 #include <unknwn.h>
 #define XR_USE_GRAPHICS_API_OPENGL 1
-#define XR_USE_PLATFORM_WINDOWS 1
+#define XR_USE_PLATFORM_WIN32 1
 #endif // defined(ANDROID)
 
 #include <openxr/openxr.h>

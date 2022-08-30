@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GlTexture.cpp
 Content     :   OpenGL texture loading.
 Created     :   September 30, 2013
 Authors     :   John Carmack
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -205,7 +205,7 @@ static void ScanFilePath(const char* url, const char** pfilename, const char** p
 static std::string GetExtension(const std::string& s) {
     const char* ext = nullptr;
     ScanFilePath(s.c_str(), nullptr, &ext);
-    return std::string(ext);
+    return ext != nullptr ? std::string(ext) : "";
 }
 
 namespace OVRFW {

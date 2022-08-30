@@ -1,5 +1,5 @@
 #!/usr/bin/python
-# Copyright 2004-present Facebook. All Rights Reserved.
+# (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 # This first bit of code is common bootstrapping code
 # to determine the SDK root, and to set up the import

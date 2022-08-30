@@ -139,17 +139,17 @@ bool isValid(const XrUuidEXT& uuid) {
 }
 
 static const std::map<std::string, XrColor4f> SemanticLabelToColorMap = {
-    {"DESK", {1.f, 0.f, 0.f, 0.2f}},
-    {"COUCH", {0.f, 1.f, 0.f, 0.2f}},
+    {"DESK", {1.0f, 0.0f, 0.0f, 0.2f}},
+    {"COUCH", {0.0f, 1.0f, 0.0f, 0.2f}},
     {"FLOOR", {0.2f, 0.2f, 0.8f, 1.0f}},
     {"CEILING", {0.3f, 0.3f, 0.3f, 1.0f}},
-    {"WALL_FACE", {0.5f, 0.5f, 0.f, 1.0f}},
-    {"WINDOW_FRAME", {0.f, 0.5f, 0.6f, 0.8f}},
-    {"DOOR_FRAME", {0.f, 0.2f, 0.2f, 1.0f}},
-    {"OTHER", {1.f, 0.f, 1.f, 0.2f}}};
+    {"WALL_FACE", {0.5f, 0.5f, 0.0f, 1.0f}},
+    {"WINDOW_FRAME", {0.0f, 0.5f, 0.6f, 0.8f}},
+    {"DOOR_FRAME", {0.0f, 0.2f, 0.2f, 1.0f}},
+    {"OTHER", {1.0f, 0.0f, 1.0f, 0.2f}}};
 
 XrColor4f GetColorForSemanticLabels(const std::string& labels) {
-    const XrColor4f defaultColor = {0.2f, 0.2f, 0.f, 0.2f};
+    const XrColor4f defaultColor = {0.2f, 0.2f, 0.0f, 0.2f};
     if (labels.empty()) {
         return defaultColor;
     }
@@ -698,11 +698,11 @@ std::string GetSemanticLabels(ovrApp& app, const XrSpace space) {
 bool UpdateOvrPlane(ovrApp& app, ovrPlane& plane) {
     const auto labels = GetSemanticLabels(app, plane.Space);
     const auto color = GetColorForSemanticLabels(labels);
-    float zOffset = 0.0f;
+
     // Move windows and doors so they appear in front of the walls
     if (labels.find("WINDOW_FRAME") != std::string::npos ||
         labels.find("DOOR_FRAME") != std::string::npos) {
-        zOffset = 0.01f; // move 1cm on Z+
+        plane.SetZOffset(0.01f); // move 1cm on Z+
     }
 
     if (app.CurrentPlaneVisualizationMode == ovrApp::PlaneVisualizationMode::BoundingBox) {
@@ -715,7 +715,7 @@ bool UpdateOvrPlane(ovrApp& app, ovrPlane& plane) {
             ALOGE("Failed getting bounding box 2D!");
             return false;
         }
-        plane.Update(boundingBox2D, color, zOffset);
+        plane.Update(boundingBox2D, color);
         return true;
     } else if (app.CurrentPlaneVisualizationMode == ovrApp::PlaneVisualizationMode::Boundary) {
         XrResult res;
@@ -737,7 +737,7 @@ bool UpdateOvrPlane(ovrApp& app, ovrPlane& plane) {
             ALOGE("Failed getting boundary 2D!");
             return false;
         }
-        plane.Update(boundary2D, color, zOffset);
+        plane.Update(boundary2D, color);
         return true;
     }
     return false;
@@ -1531,6 +1531,9 @@ void android_main(struct android_app* androidApp) {
     }
 
     auto projections = new XrView[NUM_EYES];
+    for (int eye = 0; eye < NUM_EYES; eye++) {
+        projections[eye] = XrView{XR_TYPE_VIEW};
+    }
 
     GLenum format = GL_SRGB8_ALPHA8;
     int width = app.ViewConfigurationView[0].recommendedImageRectWidth;

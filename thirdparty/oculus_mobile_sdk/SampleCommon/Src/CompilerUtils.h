@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename    :   CompilerUtils.h
@@ -5,8 +7,6 @@ Content     :   Macros and utilities for compile-time validation.
 Created     :   March 20, 2018
 Authors     :   Jonathan Wright
 Language    :   C++
-
-Copyright:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *******************************************************************************/
 

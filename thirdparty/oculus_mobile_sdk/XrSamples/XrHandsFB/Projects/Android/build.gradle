@@ -43,6 +43,7 @@ android {
       jniLibs.srcDir 'libs'
 
       assets.srcDirs = ['../../assets']
+      res.srcDirs = ['../../res']
     }
   }
 

@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   HandRenderer.cpp
 Content     :   A one stop for rendering hands
 Created     :   April 2020
 Authors     :   Federico Schliemann
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -67,7 +67,7 @@ const char* VertexShaderSrc = R"glsl(
                           + localPos4 * JointWeights.w;
       gl_Position = TransformVertex( localPos );
 
-      vec3 eye = transposeMultiply( sm.ViewMatrix[VIEW_ID], -vec3( sm.ViewMatrix[VIEW_ID][3] ) );
+      highp vec3 eye = transposeMultiply( sm.ViewMatrix[VIEW_ID], -vec3( sm.ViewMatrix[VIEW_ID][3] ) );
       oEye = eye - vec3( ModelMatrix * Position );
 
       highp vec3 localNormal1 = multiply(jb.Joints[int(JointIndices.x)], Normal);
@@ -85,6 +85,8 @@ const char* VertexShaderSrc = R"glsl(
 )glsl";
 
 static const char* FragmentShaderSrc = R"glsl(
+  precision lowp float;
+
   uniform sampler2D Texture0;
   uniform lowp vec3 SpecularLightDirection;
   uniform lowp vec3 SpecularLightColor;
@@ -147,7 +149,7 @@ static const char* FragmentShaderSrc = R"glsl(
                                 + fresnelValue
                                 ;
       gl_FragColor.xyz = controllerColor;
-      gl_FragColor.w = clamp( fresnel, 0.0, 1.0 ) * Confidence;
+      gl_FragColor.w = ( clamp( fresnel, 0.0, 0.7 ) + 0.3 ) * Confidence;
   }
 )glsl";
 /// clang-format on

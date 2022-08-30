@@ -1,12 +1,14 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   AxisRenderer.h
 Content     :   A rendering component for axis
 Created     :   September 2020
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
+
 #pragma once
 
 #include <vector>
@@ -23,7 +25,7 @@ class ovrAxisRenderer {
     ovrAxisRenderer() = default;
     ~ovrAxisRenderer() = default;
 
-    bool Init(size_t count = 64);
+    bool Init(size_t count = 64, float size = 0.025f);
     void Shutdown();
     void Update(const std::vector<OVR::Posef>& points);
     void Update(const OVR::Posef* points, size_t count);
@@ -32,10 +34,8 @@ class ovrAxisRenderer {
         const OVRFW::ovrApplFrameIn& in,
         OVRFW::ovrRendererOutput& out);
 
-   public:
-    float AxisSize;
-
    private:
+    float AxisSize;
     GlProgram ProgAxis;
     ovrSurfaceDef AxisSurfaceDef;
     ovrDrawSurface AxisSurface;

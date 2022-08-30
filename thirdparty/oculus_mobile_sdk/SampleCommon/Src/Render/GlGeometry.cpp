@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GlGeometry.cpp
 Content     :   OpenGL geometry setup.
 Created     :   October 8, 2013
 Authors     :   John Carmack, J.M.P. van Waveren
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

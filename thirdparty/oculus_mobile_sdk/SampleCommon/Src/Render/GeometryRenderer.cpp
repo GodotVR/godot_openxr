@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename    :   GeometryRenderer.cpp
@@ -5,9 +7,9 @@ Content     :   Simple rendering for geometry-based types
 Created     :   Mar 2021
 Authors     :   Federico Schliemann
 Language    :   C++
-Copyright:  Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *******************************************************************************/
+
 #include "GeometryRenderer.h"
 #include "Misc/Log.h"
 
@@ -52,13 +54,15 @@ const char* GeometryVertexShaderSrc = R"glsl(
 #ifdef HAS_VERTEX_COLORS
         oColor = VertexColor;
 #endif /// HAS_VERTEX_COLORS
-        vec3 eye = transposeMultiply( sm.ViewMatrix[VIEW_ID], -vec3( sm.ViewMatrix[VIEW_ID][3] ) );
+        lowp vec3 eye = transposeMultiply( sm.ViewMatrix[VIEW_ID], -vec3( sm.ViewMatrix[VIEW_ID][3] ) );
         oEye = eye - vec3( ModelMatrix * Position );
         oNormal = multiply( ModelMatrix, Normal );
     }
 )glsl";
 
 static const char* GeometryFragmentShaderSrc = R"glsl(
+    precision lowp float;
+
     uniform lowp vec4 ChannelControl;
     uniform lowp vec4 DiffuseColor;
     uniform lowp vec3 SpecularLightDirection;

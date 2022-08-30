@@ -1,7 +1,8 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /********************************************************************************/ /**
  \file      OVR_Pose.h
  \brief     Implementation of 3D primitives such as vectors, matrices.
- \copyright Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
  *************************************************************************************/
 
 #ifndef OVR_Pose_h

@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   DebugLines.cpp
 Content     :   Class that manages and renders debug lines.
 Created     :   April 22, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -30,8 +30,8 @@ using OVR::Vector4f;
 namespace OVRFW {
 
 static const char* DebugLineVertexSrc = R"glsl(
-	attribute vec4 Position;
-	attribute vec4 VertexColor;
+	attribute highp vec4 Position;
+	attribute lowp vec4 VertexColor;
 	varying lowp vec4 outColor;
 	void main()
 	{

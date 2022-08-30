@@ -1,4 +1,4 @@
-// Facebook Technologies, LLC Proprietary and Confidential.
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
 
 #include <OVR_LogUtils.h>
 

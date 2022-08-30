@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   VRMenuEventHandler.cpp
 Content     :   Menu component for handling hit tests and dispatching events.
 Created     :   June 23, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -293,7 +293,7 @@ void VRMenuEventHandler::HandleEvents(
                 DispatchToPath(guiSys, vrFrame, event, targetPath, false);
                 break;
             default:
-                assert(!"unknown dispatch type");
+                assert(!(bool)"unknown dispatch type");
                 break;
         }
     }

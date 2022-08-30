@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   fb_scene.h
 Content     :   This header defines spatial entity components and functions used to obtain
                 information from Scene Model.
 Language    :   C99
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -95,6 +95,7 @@ typedef struct XrBoundary2DFB {
 
     // Output, size of the vertex buffer.
     uint32_t vertexCountOutput;
+
     // Vertices of the polygonal boundary in the coordinate frame of the associated space.
     // Currently only support outer bounds.
     XrVector2f* vertices;
@@ -164,9 +165,9 @@ xrGetSpaceBoundary2DFB(XrSession session, XrSpace space, XrBoundary2DFB* boundar
 
 // Get room layout associated with space that has room layout component enabled.
 // Note: This functions uses two-call idiom:
-// 1) When uuidWallsCapacityInput == 0, only uuidWallsCountOutput will be updated and no UUIDs will
+// 1) When wallUuidCapacityInput == 0, only wallUuidCountOutput will be updated and no UUIDs will
 // be copied;
-// 2) When uuidWallsCapacityInput >= uuidWallsCountOutput, UUIDs will be copied to
+// 2) When wallUuidCapacityInput >= wallUuidCountOutput, UUIDs will be copied to
 // entityContainerOutput;
 // 3) Otherwise returns XR_ERROR_SIZE_INSUFFICIENT.
 XRAPI_ATTR XrResult XRAPI_CALL

@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_LogUtils.h (Previously Log.h)
@@ -5,9 +7,8 @@ Content     :   Macros and helpers for Android logging.
 Created     :   4/15/2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #if !defined(OVRLib_Log_h)
 #define OVRLib_Log_h
 

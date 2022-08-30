@@ -1,16 +1,31 @@
 // Simple Xr Input
 
+#if defined(ANDROID)
 #include <android/log.h>
+#endif
+
 #include <inttypes.h>
 #include <vector>
 
 #include "SimpleXrInput.h"
 
+#if defined(ANDROID)
 #define DEBUG 1
 #define OVR_LOG_TAG "SimpleXrInput"
 
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, OVR_LOG_TAG, __VA_ARGS__)
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, OVR_LOG_TAG, __VA_ARGS__)
+#else
+#define DEBUG 1
+#define ALOGE(...)       \
+    printf("ERROR: ");   \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#define ALOGV(...)       \
+    printf("VERBOSE: "); \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#endif
 
 /*
 ================================================================================
@@ -46,7 +61,6 @@ struct SimpleXrInputImpl : public SimpleXrInput {
 
     XrPath leftHandPath;
     XrPath rightHandPath;
-    std::vector<XrPath> handSubactionPaths;
 
     XrActionSet actionSet = XR_NULL_HANDLE;
     XrAction a = XR_NULL_HANDLE;
@@ -88,7 +102,7 @@ struct SimpleXrInputImpl : public SimpleXrInput {
 
         OXR(xrStringToPath(instance, "/user/hand/left", &leftHandPath));
         OXR(xrStringToPath(instance, "/user/hand/right", &rightHandPath));
-        handSubactionPaths = {leftHandPath, rightHandPath};
+        XrPath handSubactionPaths[2] = {leftHandPath, rightHandPath};
 
         actionSet = CreateActionSet(1, "main_action_set", "main ActionSet");
         a = CreateAction(actionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "a", "A button");
@@ -97,9 +111,9 @@ struct SimpleXrInputImpl : public SimpleXrInput {
         y = CreateAction(actionSet, XR_ACTION_TYPE_BOOLEAN_INPUT, "y", "Y button");
 
         aim = CreateAction(
-            actionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", nullptr, 2, &handSubactionPaths[0]);
+            actionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", nullptr, 2, handSubactionPaths);
         grip = CreateAction(
-            actionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", nullptr, 2, &handSubactionPaths[0]);
+            actionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", nullptr, 2, handSubactionPaths);
 
         std::vector<XrActionSuggestedBinding> bindings;
         bindings.push_back(Suggest(a, "/user/hand/right/input/a/click"));

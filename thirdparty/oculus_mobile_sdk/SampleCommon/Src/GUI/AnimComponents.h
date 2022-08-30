@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SurfaceAnim_Component.h
@@ -5,10 +7,8 @@ Content     :   A reusable component for animating VR menu object surfaces.
 Created     :   Sept 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-
 *************************************************************************************/
+
 #pragma once
 
 #include "VRMenuComponent.h"

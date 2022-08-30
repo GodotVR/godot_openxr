@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_MappedFile.cpp
@@ -5,11 +7,12 @@ Content     :   Cross-platform memory-mapped file wrapper.
 Created     :   May 12, 2014
 Authors     :   Chris Taylor
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
 
 #include "OVR_MappedFile.h"
+#include "OVR_Types.h"
+
+#if defined(OVR_OS_ANDROID)
 
 #if defined(OVR_OS_ANDROID)
 // disable warnings on implicit type conversion where value may be changed by conversion for
@@ -211,3 +214,5 @@ void MappedView::Close() {
 }
 
 } // namespace OVRFW
+
+#endif // defined(OVR_OS_ANDROID)

@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_FileSys.cpp
 Content     :   Abraction layer for file systems.
 Created     :   July 1, 2015
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -21,6 +21,13 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 #include "OVR_Uri.h"
 #include "OVR_Std.h"
 #include "JniUtils.h"
+
+#if defined(OVR_OS_WIN32)
+#include <io.h> // _access
+#include "windows.h"
+#include <Shlwapi.h>
+#pragma comment(lib, "shlwapi.lib")
+#endif
 
 namespace OVRFW {
 
@@ -40,6 +47,7 @@ bool HasPermission(const char* fileOrDirName, const permissionFlags_t flags) {
     }
 
     int mode = 0;
+#if !defined(OVR_OS_WIN32)
     if (flags & PERMISSION_WRITE) {
         mode |= W_OK;
     }
@@ -50,6 +58,19 @@ bool HasPermission(const char* fileOrDirName, const permissionFlags_t flags) {
         mode |= X_OK;
     }
     return access(s.c_str(), mode) == 0;
+#else
+    if (flags & PERMISSION_WRITE) {
+        mode |= 0x2;
+    }
+    if (flags & PERMISSION_READ) {
+        mode |= 0x4;
+    }
+    if (flags & PERMISSION_EXECUTE) {
+        // No execute permission
+        mode |= 0x4;
+    }
+    return _access(s.c_str(), mode) == 0;
+#endif // !defined(OVR_OS_WIN32)
 }
 
 static const char* StorageName[EST_COUNT] = {
@@ -86,6 +107,31 @@ bool ovrFileSys::GetPathIfValidPermission(
     std::string checkPath = storageBasePath + subfolder;
     return HasPermission(checkPath.c_str(), permission);
 }
+
+#if defined(OVR_OS_WIN32)
+static std::string exeDirAsUri() {
+    char path[MAX_PATH];
+    if (::GetModuleFileNameA(NULL, path, MAX_PATH) == 0) {
+        return std::string();
+    }
+    if (::PathRemoveFileSpecA(path) == 0) {
+        // 0 return indicates nothing was removed which should not be possible.
+        return std::string();
+    }
+    size_t pathLen = strlen(path);
+    for (int i = 0; i < pathLen; ++i) {
+        if (path[i] == '\\') {
+            path[i] = '/';
+        }
+    }
+    char uri[MAX_PATH];
+    DWORD uriSize = MAX_PATH;
+    if (::UrlCreateFromPathA(path, uri, &uriSize, NULL) != S_OK) {
+        return std::string();
+    }
+    return std::string(uri);
+}
+#endif // defined(OVR_OS_WIN32)
 
 void ovrFileSys::PushBackSearchPathIfValid(
     xrJava const& java,
@@ -150,6 +196,7 @@ ovrFileSysLocal::ovrFileSysLocal(xrJava const& javaContext) : Jvm(javaContext.Vm
     // always do unit tests on startup to assure nothing has been broken
     ovrUri::DoUnitTest();
 
+#if defined(OVR_OS_ANDROID)
     ActivityObject = javaContext.Env->NewGlobalRef(javaContext.ActivityObject);
 
     // add the apk scheme
@@ -241,6 +288,26 @@ ovrFileSysLocal::ovrFileSysLocal(xrJava const& javaContext) : Jvm(javaContext.Vm
 
     ALOG("ovrFileSysLocal - apk scheme OpenHost done uri '%s'", curPackageUri);
     Schemes.push_back(scheme);
+#elif defined(OVR_OS_WIN32)
+    // On windows we will treat "apk" as relative to the exe
+    std::string exeDirUri = exeDirAsUri();
+    std::string fontUri = exeDirAsUri() + "/font";
+
+    ovrUriScheme_File* scheme = new ovrUriScheme_File("apk");
+    if (!scheme->OpenHost("localhost", exeDirUri.c_str())) {
+        ALOG(
+            "Failed to OpenHost for file_scheme host '%s', uri '%s'",
+            "localhost",
+            exeDirUri.c_str());
+        assert(false);
+    }
+    if (!scheme->OpenHost("font", fontUri.c_str())) {
+        ALOG(
+            "Failed to OpenHost for file_scheme host '%s', uri '%s'", "localhost", fontUri.c_str());
+        assert(false);
+    }
+    Schemes.push_back(scheme);
+#endif
 
     ovrUriScheme_File* file_scheme = new ovrUriScheme_File("file");
     if (!file_scheme->OpenHost("localhost", "")) {

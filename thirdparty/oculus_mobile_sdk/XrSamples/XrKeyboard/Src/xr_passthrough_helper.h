@@ -158,7 +158,9 @@ class XrPassthroughHelper : public XrHelper {
         /// also create a hand layer
         layerInfo.purpose = XR_PASSTHROUGH_LAYER_PURPOSE_TRACKED_KEYBOARD_HANDS_FB;
         if (!oxr(xrCreatePassthroughLayerFB_(session_, &layerInfo, &layerHands_))) {
-            return false;
+            // If the runtime does not support passthrough keyboard hands, that's ok
+            // we will keep going with the layer we have.
+            // return false;
         }
 
         /// style

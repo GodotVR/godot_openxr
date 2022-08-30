@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename    :   FrameParams.h
@@ -5,7 +7,6 @@ Content     :   Common frame parameters
 Created     :   July 2020
 Authors     :   Federico Schliemann
 Language    :   C++
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *******************************************************************************/
 

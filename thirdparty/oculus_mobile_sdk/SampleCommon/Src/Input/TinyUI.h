@@ -1,12 +1,14 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   TinyUI.h
 Content     :   Componentized wrappers for GuiSys
 Created     :   July 2020
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
+
 #pragma once
 
 #include "OVR_Math.h"

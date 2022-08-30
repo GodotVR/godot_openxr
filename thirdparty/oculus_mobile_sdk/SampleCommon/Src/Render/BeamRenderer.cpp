@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   BeamRenderer.cpp
 Content     :   Class that manages and renders view-oriented beams.
 Created     :   October 23; 2015
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -28,9 +28,9 @@ inline Vector3f GetViewMatrixPosition(Matrix4f const& m) {
 namespace OVRFW {
 
 static const char* BeamVertexSrc = R"glsl(
-attribute vec4 Position;
-attribute vec4 VertexColor;
-attribute vec2 TexCoord;
+attribute highp vec4 Position;
+attribute lowp vec4 VertexColor;
+attribute highp vec2 TexCoord;
 
 varying lowp vec4 outColor;
 varying highp vec2 oTexCoord;
@@ -56,6 +56,8 @@ void main()
 )glsl";
 
 static const char* ParametricFragmentSrc = R"glsl(
+precision highp float;
+
 varying lowp vec4 outColor;
 varying highp vec2 oTexCoord;
 

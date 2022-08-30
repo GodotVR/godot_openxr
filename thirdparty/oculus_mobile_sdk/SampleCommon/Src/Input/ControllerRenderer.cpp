@@ -1,10 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ControllerRenderer.cpp
 Content     :   A one stop for rendering controllers
 Created     :   July 2020
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -56,7 +57,7 @@ vec3 transposeMultiply( mat4 m, vec3 v )
 void main()
 {
   gl_Position = TransformVertex( Position );
-  vec3 eye = transposeMultiply( sm.ViewMatrix[VIEW_ID], -vec3( sm.ViewMatrix[VIEW_ID][3] ) );
+  highp vec3 eye = transposeMultiply( sm.ViewMatrix[VIEW_ID], -vec3( sm.ViewMatrix[VIEW_ID][3] ) );
   oEye = eye - vec3( ModelMatrix * Position );
 
   oNormal = multiply( ModelMatrix, Normal );

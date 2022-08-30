@@ -203,7 +203,7 @@ class XrHandsApp : public OVRFW::XrApp {
                     auto& handTracker = isLeft ? handTrackerL_ : handTrackerR_;
                     auto& handRenderer = isLeft ? handRendererL_ : handRendererR_;
                     auto& handJointRenderers = isLeft ? handJointRenderersL_ : handJointRenderersR_;
-                    auto& jointLocations = isLeft ? jointLocationsL_ : jointLocationsR_;
+                    auto* jointLocations = isLeft ? jointLocationsL_ : jointLocationsR_;
                     auto& handCapsuleRenderers =
                         isLeft ? handCapsuleRenderersL_ : handCapsuleRenderersR_;
 
@@ -370,7 +370,7 @@ class XrHandsApp : public OVRFW::XrApp {
         }
 
         /// Hands
-        {
+        if (xrLocateHandJointsEXT_) {
             /// L
             XrHandTrackingScaleFB scaleL{XR_TYPE_HAND_TRACKING_SCALE_FB};
             scaleL.next = nullptr;

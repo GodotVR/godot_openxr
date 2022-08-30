@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ModelTrace.h
@@ -5,9 +7,8 @@ Content     :   Ray tracer using a KD-Tree.
 Created     :   May, 2014
 Authors     :   J.M.P. van Waveren
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include "OVR_Math.h"

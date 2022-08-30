@@ -1,10 +1,12 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 Filename    :   fb_composition_layer_depth_test.h
 Content     :   Extension to control if a layer will participate in depth testing. If
                 extension is not used no layer will participate in depth testing.
 Language    :   C99 Copyright
-Copyright(c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 *************************************************************************************/
+
 #pragma once
 
 #include <openxr/openxr_extension_helpers.h>

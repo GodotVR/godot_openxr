@@ -1,7 +1,8 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /********************************************************************************/ /**
  \file      OVR_Math.h
  \brief     Implementation of 3D primitives such as vectors, matrices.
- \copyright Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
  *************************************************************************************/
 
 #ifndef OVR_Math_h
@@ -100,7 +101,7 @@ inline T clamp(T v, T lo, T hi) {
 //
 // Independent OVR_MATH_UNUSED implementation for OVR_Math.h.
 
-#if defined(__GNUC__)
+#if defined(__GNUC__) || defined(__clang__)
 #define OVR_MATH_UNUSED(a)                                 \
     do {                                                   \
         __typeof__(&a) __attribute__((unused)) __tmp = &a; \

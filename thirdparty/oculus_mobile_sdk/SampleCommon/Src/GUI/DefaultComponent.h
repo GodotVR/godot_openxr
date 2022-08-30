@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   DefaultComponent.h
@@ -5,10 +7,8 @@ Content     :   A default menu component that handles basic actions most menu it
 Created     :   July 25, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-
 *************************************************************************************/
+
 #pragma once
 
 #include "VRMenuComponent.h"

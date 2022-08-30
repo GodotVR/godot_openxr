@@ -3183,6 +3183,10 @@ void android_main(struct android_app* app) {
     }
 
     XrView* projections = (XrView*)(malloc(ovrMaxNumEyes * sizeof(XrView)));
+    for (int eye = 0; eye < ovrMaxNumEyes; eye++) {
+        memset(&projections[eye], 0, sizeof(XrView));
+        projections[eye].type = XR_TYPE_VIEW;
+    }
 
     // Actions
     XrActionSet runningActionSet =
@@ -3239,9 +3243,9 @@ void android_main(struct android_app* app) {
     XrPath handSubactionPaths[2] = {leftHandPath, rightHandPath};
 
     XrAction aimPoseAction = CreateAction(
-        runningActionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", NULL, 2, &handSubactionPaths[0]);
+        runningActionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", NULL, 2, handSubactionPaths);
     XrAction gripPoseAction = CreateAction(
-        runningActionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", NULL, 2, &handSubactionPaths[0]);
+        runningActionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", NULL, 2, handSubactionPaths);
 
     XrPath interactionProfilePath = XR_NULL_PATH;
     XrPath interactionProfilePathTouch = XR_NULL_PATH;

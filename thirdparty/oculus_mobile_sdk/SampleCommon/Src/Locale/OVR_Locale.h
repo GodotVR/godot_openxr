@@ -1,3 +1,12 @@
+/*
+ * Copyright (c) Meta Platforms, Inc. and affiliates.
+ * All rights reserved.
+ *
+ * This source code is licensed under the BSD-style license found in the
+ * LICENSE file in the root directory of this source tree. An additional grant
+ * of patent rights can be found in the PATENTS file in the same directory.
+ */
+
 /************************************************************************************
 
 Filename    :   OVR_Locale.h
@@ -5,13 +14,8 @@ Content     :   Header file for string localization interface.
 Created     :   April 6, 2015
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-This source code is licensed under the BSD-style license found in the
-LICENSE file in the Oculus360Photos/ directory. An additional grant
-of patent rights can be found in the PATENTS file in the same directory.
-
 ************************************************************************************/
+
 #pragma once
 
 #include <stdint.h>

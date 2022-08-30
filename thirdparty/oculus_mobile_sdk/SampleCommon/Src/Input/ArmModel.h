@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ArmModel.h
@@ -5,9 +7,8 @@ Content     :   An arm model for the tracked remote
 Created     :   2/20/2017
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 ************************************************************************************/
+
 #pragma once
 
 #include <vector>

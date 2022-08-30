@@ -1,0 +1,5 @@
+rootProject.projectDir = new File(settingsDir, '../../../..')
+rootProject.name = "XrColorSpaceFB"
+
+include ':', \
+    ':XrSamples:XrColorSpaceFB:Projects:Android'

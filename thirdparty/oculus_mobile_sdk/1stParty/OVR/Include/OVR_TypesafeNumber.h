@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 PublicHeader:   OVR_Kernel.h
@@ -5,8 +7,6 @@ Filename    :   OVR_TypesafeNumber.h
 Content     :   Template for typesafe number types.
 Created     :   March 2, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

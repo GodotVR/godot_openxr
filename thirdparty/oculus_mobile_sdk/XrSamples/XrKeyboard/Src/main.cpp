@@ -10,16 +10,10 @@ Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All
 *******************************************************************************/
 
 #include <openxr/openxr.h>
-#include <stdlib.h> // for exit()
-#include <unistd.h> // for sleep()
 #include <cstdint>
 #include <cstdio>
 #include <iomanip>
 #include <sstream>
-
-#include <android/native_window_jni.h>
-#include <android/window.h>
-#include <android_native_app_glue.h>
 
 #include "XrApp.h"
 
@@ -127,6 +121,16 @@ class XrKeyboardApp : public OVRFW::XrApp {
 
         SetSwitchUseRemoteKeyboard(
             bigText_, connectionRequiredButton_, useRemoteKeyboardButton_, false);
+
+        trackingRequiredButton_ = ui_.AddButton(
+            "Show Untracked Keyboard", {0.1f, 0.75f, -1.9f}, {500.0f, 100.0f}, [=]() {
+            bool currentState = keyboard_->TrackingRequired();
+            bool newState = !currentState;
+            SetTrackingRequired(
+                bigText_, connectionRequiredButton_, trackingRequiredButton_, newState);
+            });
+
+        SetTrackingRequired(bigText_, connectionRequiredButton_, trackingRequiredButton_, true);
 
         return true;
     }
@@ -248,7 +252,7 @@ class XrKeyboardApp : public OVRFW::XrApp {
         if (keyboard_->GetAndClearSystemKeyboardStateChanged()) {
             // update the render model
             if (keyboard_->SystemKeyboardExists()) {
-                std::vector<uint8_t> keyboardBuffer = renderModel_->LoadRenderModel();
+                std::vector<uint8_t> keyboardBuffer = renderModel_->LoadRenderModel(keyboard_->UseRemoteKeyboard());
                 if (keyboardBuffer.size() > 0) {
                     ALOG("### Keyboard Render Model Size: %u", (uint32_t)keyboardBuffer.size());
                     keyboardRenderer_.Init(keyboardBuffer);
@@ -592,6 +596,25 @@ class XrKeyboardApp : public OVRFW::XrApp {
                                         : passthrough_->GetProjectedLayer();
     }
 
+    void SetTrackingRequired(
+        OVRFW::VRMenuObject* bigText,
+        OVRFW::VRMenuObject* connectionRequiredButton,
+        OVRFW::VRMenuObject* toggleButton,
+        bool state) {
+        if (state) {
+            keyboard_->SetTrackingRequired(true);
+            toggleButton->SetSurfaceColor(0, OVR::Vector4f(0.25f, 0.25f, 1.0f, 1.0f));
+            toggleButton->SetText("Show Untracked Keyboard");
+        } else {
+            // set connection required to false since if we aren't tracking we are likely in debug
+            // mode and connection isn't necessary
+            SetSwitchConnectionRequired(bigText, connectionRequiredButton, false);
+            keyboard_->SetTrackingRequired(false);
+            toggleButton->SetSurfaceColor(0, OVR::Vector4f(1.0f, 0.25f, 0.25f, 1.0f));
+            toggleButton->SetText("Do Not Show Untracked Keyboard");
+        }
+    }
+
     void SetSwitchConnectionRequired(
         OVRFW::VRMenuObject* bigText,
         OVRFW::VRMenuObject* toggleButton,
@@ -675,6 +698,7 @@ class XrKeyboardApp : public OVRFW::XrApp {
     OVRFW::VRMenuObject* systemText_ = nullptr;
     OVRFW::VRMenuObject* connectionRequiredButton_ = nullptr;
     OVRFW::VRMenuObject* useRemoteKeyboardButton_ = nullptr;
+    OVRFW::VRMenuObject* trackingRequiredButton_ = nullptr;
 
     /// fade heuristic to match VrShell
     float keyboardOpacity_ = 0.0f;

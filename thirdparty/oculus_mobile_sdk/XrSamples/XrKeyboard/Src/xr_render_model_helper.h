@@ -60,9 +60,16 @@ class XrRenderModelHelper : public XrHelper {
         return properties_;
     }
 
-    std::vector<uint8_t> LoadRenderModel() {
+    std::vector<uint8_t> LoadRenderModel(bool remote) {
         std::vector<uint8_t> buffer;
         XrInstance instance = GetInstance();
+        std::string strToCheck;
+        if (remote) {
+            strToCheck = "/model_fb/keyboard/remote";
+        } else {
+            strToCheck = "/model_fb/keyboard/local";
+        }
+
         for (const auto& p : paths_) {
             char buf[256];
             uint32_t bufCount = 0;
@@ -71,7 +78,7 @@ class XrRenderModelHelper : public XrHelper {
             oxr(xrPathToString(instance, p.path, bufCount, &bufCount, nullptr));
             oxr(xrPathToString(instance, p.path, bufCount, &bufCount, &buf[0]));
             std::string pathString = buf;
-            if (pathString.rfind("/model_fb/keyboard", 0) == 0) {
+            if (pathString.rfind(strToCheck, 0) == 0) {
                 XrRenderModelPropertiesFB prop{XR_TYPE_RENDER_MODEL_PROPERTIES_FB};
                 XrResult result = xrGetRenderModelPropertiesFB_(session_, p.path, &prop);
                 if (result == XR_SUCCESS) {
@@ -101,6 +108,7 @@ class XrRenderModelHelper : public XrHelper {
                                     "XrRenderModelHelper: loaded modelKey %u buffer size is %u",
                                     prop.modelKey,
                                     buffer.size());
+                                return buffer;
                             }
                         } else {
                             XRLOG(
@@ -131,7 +139,7 @@ class XrRenderModelHelper : public XrHelper {
             oxr(xrEnumerateRenderModelPathsFB_(session_, pathCount, &pathCount, nullptr));
             if (pathCount > 0) {
                 XRLOG("XrRenderModelHelper: found %u models ", pathCount);
-                paths_.resize(pathCount);
+                paths_.resize(pathCount, { XR_TYPE_RENDER_MODEL_PATH_INFO_FB });
                 /// Fill in the path data
                 oxr(xrEnumerateRenderModelPathsFB_(session_, pathCount, &pathCount, &paths_[0]));
                 /// Print paths for debug purpose

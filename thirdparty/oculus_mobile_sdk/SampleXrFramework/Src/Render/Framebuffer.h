@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename  	: 	Framebuffer.h
@@ -6,16 +8,10 @@ Content		: 	Frame buffer utilities. Originally part of the VrCubeWorld_NativeAct
 Created		: 	March, 2015
 Authors		:	J.M.P. van Waveren
 
-Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
  *************************************************************************************/
 
 #pragma once
 
-#include <EGL/egl.h>
-#include <EGL/eglext.h>
-#include <GLES3/gl3.h>
-#include <GLES3/gl3ext.h>
 #include "Render/Egl.h"
 
 #if !defined(EGL_OPENGL_ES3_BIT_KHR)
@@ -52,15 +48,14 @@ typedef void(GL_APIENTRY* PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)(
 #define GL_TEXTURE_CUBE_MAP_ARRAY 0x9009
 #endif
 
-#include <jni.h>
-
 #if defined(ANDROID)
+#include <jni.h>
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
 #elif defined(WIN32)
 #include <unknwn.h>
 #define XR_USE_GRAPHICS_API_OPENGL 1
-#define XR_USE_PLATFORM_WINDOWS 1
+#define XR_USE_PLATFORM_WIN32 1
 #endif // defined(ANDROID)
 
 #include <openxr/openxr.h>

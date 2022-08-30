@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   ui_default.h
@@ -5,9 +7,8 @@ Content     :   Embedded default texture for UI.
 Created     :
 Authors     :
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 // clang-format off
 static const size_t uiDefaultTgaSize = 24910;
 static unsigned char uiDefaultTgaData[] = {

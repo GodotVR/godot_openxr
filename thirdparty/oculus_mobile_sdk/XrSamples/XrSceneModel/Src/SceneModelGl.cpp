@@ -113,6 +113,13 @@ struct OpenGLExtensions_t {
 };
 
 OpenGLExtensions_t glExtensions;
+
+Matrix4f ZOffsetTransform(const float zOffset) {
+    Matrix4f transform = Matrix4f::Identity();
+    transform(2, 3) = zOffset;
+    return transform;
+}
+
 } // namespace
 
 static void EglInitExtensions() {
@@ -743,27 +750,28 @@ ovrPlane
 
 ovrPlane::ovrPlane(const XrSpace space) : Space(space) {}
 
-void ovrPlane::Update(const XrRect2Df& boundingBox2D, const XrColor4f& color, const float zOffset) {
+void ovrPlane::Update(const XrRect2Df& boundingBox2D, const XrColor4f& color) {
     const auto& offset = boundingBox2D.offset;
     const auto& extent = boundingBox2D.extent;
     const std::vector<XrVector3f> vertices = {
-        XrVector3f{offset.x, offset.y, zOffset},
-        XrVector3f{offset.x + extent.width, offset.y, zOffset},
-        XrVector3f{offset.x + extent.width, offset.y + extent.height, zOffset},
-        XrVector3f{offset.x, offset.y + extent.height, zOffset}};
+        XrVector3f{offset.x, offset.y, 0.0f},
+        XrVector3f{offset.x + extent.width, offset.y, 0.0f},
+        XrVector3f{offset.x + extent.width, offset.y + extent.height, 0.0f},
+        XrVector3f{offset.x, offset.y + extent.height, 0.0f}};
     Geometry.CreatePlane(vertices, color);
 }
 
-void ovrPlane::Update(
-    const XrBoundary2DFB& boundary2D,
-    const XrColor4f& color,
-    const float zOffset) {
+void ovrPlane::Update(const XrBoundary2DFB& boundary2D, const XrColor4f& color) {
     std::vector<XrVector3f> vertices;
     vertices.reserve(boundary2D.vertexCountOutput);
     for (uint32_t i = 0; i < boundary2D.vertexCountOutput; ++i) {
-        vertices.push_back(XrVector3f{boundary2D.vertices[i].x, boundary2D.vertices[i].y, zOffset});
+        vertices.push_back(XrVector3f{boundary2D.vertices[i].x, boundary2D.vertices[i].y, 0.0f});
     }
     Geometry.CreatePlane(vertices, color);
+}
+
+void ovrPlane::SetZOffset(const float zOffset) {
+    ZOffset = zOffset;
 }
 
 void ovrPlane::SetPose(const XrPosef& T_World_Plane_Xr) {
@@ -1132,7 +1140,10 @@ void ovrAppRenderer::RenderFrame(const FrameIn& frameIn) {
             continue;
         }
         if (Scene.PlaneProgram.UniformLocation[ovrUniform::Index::MODEL_MATRIX] >= 0) {
-            const Matrix4f transform = Matrix4f(plane.T_World_Plane);
+            Matrix4f transform = Matrix4f(plane.T_World_Plane);
+            if (plane.ZOffset != 0.0f) {
+                transform *= ZOffsetTransform(plane.ZOffset);
+            }
             GL(glUniformMatrix4fv(
                 Scene.PlaneProgram.UniformLocation[ovrUniform::Index::MODEL_MATRIX],
                 1,
@@ -1163,8 +1174,11 @@ void ovrAppRenderer::RenderFrame(const FrameIn& frameIn) {
             continue;
         }
         if (Scene.AxesProgram.UniformLocation[ovrUniform::Index::MODEL_MATRIX] >= 0) {
-            const Matrix4f transform =
-                Matrix4f(plane.T_World_Plane) * Matrix4f::Scaling(0.1, 0.1, 0.1);
+            Matrix4f transform = Matrix4f(plane.T_World_Plane);
+            if (plane.ZOffset != 0.0f) {
+                transform *= ZOffsetTransform(plane.ZOffset);
+            }
+            transform *= Matrix4f::Scaling(0.1, 0.1, 0.1);
             GL(glUniformMatrix4fv(
                 Scene.AxesProgram.UniformLocation[ovrUniform::Index::MODEL_MATRIX],
                 1,

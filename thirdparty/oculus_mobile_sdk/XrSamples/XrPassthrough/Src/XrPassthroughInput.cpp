@@ -15,10 +15,14 @@ Copyright : Copyright (c) Facebook Technologies, LLC and its affiliates. All rig
 #include <string.h> // for memset
 #include <math.h>
 #include <time.h>
+
+#if defined(ANDROID)
 #include <unistd.h>
 #include <android/log.h>
 #include <android/native_window_jni.h> // for native window JNI
 #include <android_native_app_glue.h>
+#endif // defined(ANDROID)
+
 #include <assert.h>
 
 #include <vector>
@@ -35,8 +39,20 @@ using namespace OVR;
 #define DEBUG 1
 #define LOG_TAG "XrPassthrough"
 
+#if defined(ANDROID)
 #define ALOGE(...) __android_log_print(ANDROID_LOG_ERROR, LOG_TAG, __VA_ARGS__)
 #define ALOGV(...) __android_log_print(ANDROID_LOG_VERBOSE, LOG_TAG, __VA_ARGS__)
+#else
+#include <cinttypes>
+#define ALOGE(...)       \
+    printf("ERROR: ");   \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#define ALOGV(...)       \
+    printf("VERBOSE: "); \
+    printf(__VA_ARGS__); \
+    printf("\n")
+#endif
 
 namespace {
 
@@ -153,19 +169,10 @@ void AppInput_init(App& app) {
     XrPath handSubactionPaths[2] = {leftHandPath, rightHandPath};
 
     aimPoseAction = CreateAction(
-        runningActionSet,
-        XR_ACTION_TYPE_POSE_INPUT,
-        "aim_pose",
-        nullptr,
-        2,
-        &handSubactionPaths[0]);
+        runningActionSet, XR_ACTION_TYPE_POSE_INPUT, "aim_pose", nullptr, 2, handSubactionPaths);
+
     gripPoseAction = CreateAction(
-        runningActionSet,
-        XR_ACTION_TYPE_POSE_INPUT,
-        "grip_pose",
-        nullptr,
-        2,
-        &handSubactionPaths[0]);
+        runningActionSet, XR_ACTION_TYPE_POSE_INPUT, "grip_pose", nullptr, 2, handSubactionPaths);
 
     XrPath interactionProfilePath = XR_NULL_PATH;
 

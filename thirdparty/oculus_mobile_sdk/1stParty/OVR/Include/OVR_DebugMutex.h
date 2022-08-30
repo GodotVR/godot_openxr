@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_DebugMutex.h
@@ -10,8 +12,6 @@ Content     :   Implements wrappers for std::mutex and that allows tracking of w
                 - destructed while locked
 Created     :   May 12, 2020
 Authors     :   Jonathan Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 

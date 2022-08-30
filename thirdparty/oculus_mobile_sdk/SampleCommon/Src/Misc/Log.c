@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /*******************************************************************************
 
 Filename	:   Log.c
@@ -6,14 +8,16 @@ Created		:   February 21, 2018
 Authors		:   J.M.P. van Waveren, Jonathan Wright
 Language	:   C++
 
-Copyright	:	Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *******************************************************************************/
 
 #include "Log.h"
 
 #include <stdio.h>
 #include <string.h>
+
+#if defined(WIN32)
+#include "windows.h"
+#endif
 
 #if defined(__cplusplus)
 extern "C" {
@@ -53,7 +57,32 @@ void LogWithFilenameTag(const int priority, const char* filename, const char* fm
     vsnprintf(msg, sizeof(msg), fmt, argPtr);
     va_end(argPtr);
 
+#if defined(ANDROID)
     __android_log_write(priority, tag, msg);
+#elif defined(WIN32)
+    OutputDebugStringA("[");
+    OutputDebugStringA(tag);
+    switch (priority) {
+        case SAMPLES_LOG_ERROR:
+            OutputDebugStringA("] {ERROR} ");
+            break;
+        case SAMPLES_LOG_WARN:
+            OutputDebugStringA("] {WARN} ");
+            break;
+        case SAMPLES_LOG_INFO:
+            OutputDebugStringA("] {INFO} ");
+            break;
+        case SAMPLES_LOG_VERBOSE:
+        default:
+            OutputDebugStringA("] {VERBOSE} ");
+            break;
+    }
+    OutputDebugStringA(msg);
+    OutputDebugStringA("\n");
+#else
+    (void)priority;
+    printf("[%s] %s\n", tag, msg);
+#endif // defined(ANDROID)
 }
 
 #if defined(__cplusplus)

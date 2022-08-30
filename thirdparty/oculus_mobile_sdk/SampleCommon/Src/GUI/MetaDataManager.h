@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   MetaDataManager.h
 Content     :   A class to manage metadata used by FolderBrowser
 Created     :   January 26, 2015
 Authors     :   Jonathan E. Wright, Warsam Osman, Madhu Kalva
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 

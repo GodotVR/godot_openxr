@@ -42,10 +42,10 @@ bool ovrFramebuffer_Create(
     const int height,
     const int multisamples) {
     PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC glRenderbufferStorageMultisampleEXT =
-        (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)eglGetProcAddress(
+        (PFNGLRENDERBUFFERSTORAGEMULTISAMPLEEXTPROC)EglGetExtensionProc(
             "glRenderbufferStorageMultisampleEXT");
     PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC glFramebufferTexture2DMultisampleEXT =
-        (PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)eglGetProcAddress(
+        (PFNGLFRAMEBUFFERTEXTURE2DMULTISAMPLEEXTPROC)EglGetExtensionProc(
             "glFramebufferTexture2DMultisampleEXT");
 
     frameBuffer->Width = width;
@@ -111,8 +111,13 @@ bool ovrFramebuffer_Create(
 
     // Populate the swapchain image array.
     for (uint32_t i = 0; i < frameBuffer->TextureSwapChainLength; i++) {
-        frameBuffer->ColorSwapChainImage[i].type = XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR;
-        frameBuffer->ColorSwapChainImage[i].next = NULL;
+#if defined(XR_USE_GRAPHICS_API_OPENGL_ES)
+        frameBuffer->ColorSwapChainImage[i] =
+            XrSwapchainImageOpenGLESKHR{XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_ES_KHR};
+#elif defined(XR_USE_GRAPHICS_API_OPENGL)
+        frameBuffer->ColorSwapChainImage[i] =
+            XrSwapchainImageOpenGLKHR{XR_TYPE_SWAPCHAIN_IMAGE_OPENGL_KHR};
+#endif //
     }
     OXR(xrEnumerateSwapchainImages(
         frameBuffer->ColorSwapChain.Handle,

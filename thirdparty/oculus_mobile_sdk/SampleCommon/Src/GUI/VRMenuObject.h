@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   VRMenuObject.h
@@ -5,10 +7,8 @@ Content     :   Menuing system for VR apps.
 Created     :   May 23, 2014
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
-
 *************************************************************************************/
+
 #pragma once
 
 #include <vector>
@@ -941,8 +941,8 @@ class VRMenuObject {
         virtual void AtNode(VRMenuObject* obj) = 0;
     };
 
-    static float const TEXELS_PER_METER;
-    static float const DEFAULT_TEXEL_SCALE;
+    static float constexpr TEXELS_PER_METER{500.0f};
+    static float constexpr DEFAULT_TEXEL_SCALE{1.0f / TEXELS_PER_METER};
 
     // Initialize the object after creation
     void Init(OvrGuiSys& guiSys, VRMenuObjectParms const& parms);
@@ -952,6 +952,8 @@ class VRMenuObject {
 
     // Adds a child to this menu object
     void AddChild(OvrVRMenuMgr& menuMgr, menuHandle_t const handle);
+    // Adds a child to this menu object
+    void AddChild(VRMenuObject* child);
     // Removes a child from this menu object, but does not free the child object.
     void RemoveChild(OvrVRMenuMgr& menuMgr, menuHandle_t const handle);
     // Removes a child from tis menu object and frees it, along with any children it may have.
@@ -1031,6 +1033,7 @@ class VRMenuObject {
         return ParentHandle;
     }
     void SetParentHandle(menuHandle_t const h) {
+        assert(h != Handle);
         ParentHandle = h;
     }
 
@@ -1059,6 +1062,21 @@ class VRMenuObject {
         return Text;
     }
     void SetText(char const* text);
+
+    template <typename... Args>
+    void SetText(const std::string& text, Args... args) {
+        int size_s = std::snprintf(nullptr, 0, text.c_str(), args...) + 1; // Extra space for '\0'
+        if (size_s <= 0) {
+            ALOGE("VRGUI SetText formatting error!");
+            return;
+        }
+        auto buf = std::vector<char>(size_s);
+        std::snprintf(buf.data(), buf.size(), text.c_str(), args...);
+
+        Text = std::string(buf.data());
+        TextDirty = true;
+    }
+
     void
     SetTextWordWrapped(char const* text, class BitmapFont const& font, float const widthInMeters);
 

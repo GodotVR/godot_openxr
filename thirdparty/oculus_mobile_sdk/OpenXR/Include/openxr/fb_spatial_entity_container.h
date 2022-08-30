@@ -1,10 +1,10 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   fb_spatial_entity_container.h
 Content     :   Spatial entity container functionality.
 Language    :   C99
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -54,9 +54,9 @@ typedef XrResult(XRAPI_PTR* PFN_xrGetSpaceContainerFB)(
 
 // Get space container component.
 // Note: This functions uses two-call idiom:
-// 1) When uuidsCapacityInput == 0, only uuidsCountOutput will be updated and no UUIDs will be
+// 1) When uuidCapacityInput == 0, only uuidCountOutput will be updated and no UUIDs will be
 // copied;
-// 2) When uuidsCapacityInput >= uuidsCountOutput, UUIDs will be copied to
+// 2) When uuidCapacityInput >= uuidCountOutput, UUIDs will be copied to
 // spaceContainerOutput;
 // 3) Otherwise returns XR_ERROR_SIZE_INSUFFICIENT.
 XRAPI_ATTR XrResult XRAPI_CALL

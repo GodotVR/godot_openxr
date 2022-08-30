@@ -1,10 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   HandMaskRenderer.cpp
 Content     :   A one stop for rendering hand masks
 Created     :   May 2021
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 ************************************************************************************/
 
@@ -46,6 +47,8 @@ const char* VertexShaderSrc = R"glsl(
 )glsl";
 
 static const char* FragmentShaderSrc = R"glsl(
+    precision highp float;
+
     varying highp vec2 oTexCoord;
     varying highp vec3 oInstanceColor;
 

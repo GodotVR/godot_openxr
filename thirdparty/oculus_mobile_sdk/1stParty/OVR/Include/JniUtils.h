@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   JniUtils.h
@@ -5,9 +7,8 @@ Content     :   JNI utility functions
 Created     :   October 21, 2014
 Authors     :   J.M.P. van Waveren, Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #ifndef OVR_JniUtils_h
 #define OVR_JniUtils_h
 

@@ -22,23 +22,23 @@
 
 @IF NOT exist "%ANDROID_NDK_HOME%" (
 
-	@echo Cannot find the Android NDK
+    @echo Cannot find the Android NDK
 
-	goto :End
+    goto :End
 )
 
 
 @if exist "%ANDROID_NDK_HOME%\prebuilt\windows\bin\python.exe" (
 
-	@"%ANDROID_NDK_HOME%\prebuilt\windows\bin\python.exe" %1 %2 %3 %4 %5 %6
+    @"%ANDROID_NDK_HOME%\prebuilt\windows\bin\python.exe" %1 %2 %3 %4 %5 %6
 ) else (
 
-	@if exist "%ANDROID_NDK_HOME%\prebuilt\windows-x86_64\bin\python.exe" (
-		@"%ANDROID_NDK_HOME%\prebuilt\windows-x86_64\bin\python.exe" %1 %2 %3 %4 %5 %6
-	) else (
-		@echo Cannot find python.exe in the NDK.
-		goto :End
-	)
+    @if exist "%ANDROID_NDK_HOME%\prebuilt\windows-x86_64\bin\python.exe" (
+        @"%ANDROID_NDK_HOME%\prebuilt\windows-x86_64\bin\python.exe" %1 %2 %3 %4 %5 %6
+    ) else (
+        @echo Cannot find python.exe in the NDK.
+        goto :End
+    )
 )
 
 :End

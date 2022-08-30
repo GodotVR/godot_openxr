@@ -1,12 +1,14 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   PanelRenderer.h
 Content     :   Class that manages and renders quad-based panels with custom shaders.
 Created     :   September 19, 2019
 Authors     :   Federico Schliemann
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
+
 #pragma once
 
 #include <vector>

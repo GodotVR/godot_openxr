@@ -9,6 +9,7 @@
 
 #define XR_USE_GRAPHICS_API_OPENGL_ES 1
 #define XR_USE_PLATFORM_ANDROID 1
+
 #include <openxr/openxr.h>
 #include <openxr/openxr_oculus.h>
 #include <openxr/openxr_oculus_helpers.h>
@@ -108,12 +109,13 @@ struct ovrFramebuffer {
 struct ovrPlane {
     explicit ovrPlane(const XrSpace space);
 
-    void Update(const XrRect2Df& boundingBox2D, const XrColor4f& color, const float zOffset = 0.0f);
+    void Update(const XrRect2Df& boundingBox2D, const XrColor4f& color);
 
-    void
-    Update(const XrBoundary2DFB& boundary2D, const XrColor4f& color, const float zOffset = 0.0f);
+    void Update(const XrBoundary2DFB& boundary2D, const XrColor4f& color);
 
     void SetPose(const XrPosef& T_World_Plane);
+
+    void SetZOffset(const float zOffset);
 
     bool IsRenderable() const {
         return IsPoseSet_ && Geometry.IsRenderable();
@@ -122,6 +124,7 @@ struct ovrPlane {
     XrSpace Space;
     OVR::Posef T_World_Plane;
     ovrGeometry Geometry;
+    float ZOffset = 0.0f; // Z offset in the plane frame
 
    private:
     bool IsPoseSet_ = false;

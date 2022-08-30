@@ -1,12 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   SurfaceAnim_Component.cpp
 Content     :   A reusable component for animating VR menu object surfaces.
 Created     :   Sept 23, 2014
 Authors     :   Jonathan E. Wright
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 
 *************************************************************************************/
 
@@ -118,8 +117,8 @@ eMsgStatus OvrAnimComponent::OnEvent_Impl(
         case VRMENU_EVENT_FRAME_UPDATE:
             return Frame(guiSys, vrFrame, self, event);
         default:
-            assert(!"Event flags mismatch!"); // the constructor is specifying a flag that's not
-                                              // handled
+            assert(!(bool)"Event flags mismatch!"); // the constructor is specifying a flag that's
+                                                    // not handled
             return MSG_STATUS_ALIVE;
     }
 }

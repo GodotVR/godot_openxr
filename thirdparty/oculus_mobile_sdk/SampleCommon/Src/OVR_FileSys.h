@@ -1,3 +1,5 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   OVR_FileSys.h
@@ -5,20 +7,23 @@ Content     :   Abraction layer for file systems.
 Created     :   July 1, 2015
 Authors     :   Jonathan E. Wright
 
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
-
 *************************************************************************************/
+
 #pragma once
 
 #include "OVR_Stream.h"
 #include "OVR_BitFlags.h"
 #include "OVR_Std.h"
+#include "OVR_Types.h"
 
 #include <vector>
 #include <sys/stat.h>
 #include <assert.h>
 
+#if defined(OVR_OS_ANDROID)
 #include <jni.h>
+#endif // defined(OVR_OS_ANDROID)
+
 typedef struct xrJava_ {
     JavaVM* Vm = nullptr; //< Java Virtual Machine
     JNIEnv* Env = nullptr; //< Thread specific environment

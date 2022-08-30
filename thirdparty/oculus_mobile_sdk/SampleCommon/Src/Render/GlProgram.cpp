@@ -1,11 +1,11 @@
+// (c) Meta Platforms, Inc. and affiliates. Confidential and proprietary.
+
 /************************************************************************************
 
 Filename    :   GlProgram.cpp
 Content     :   Shader program compilation.
 Created     :   October 11, 2013
 Authors     :   John Carmack
-
-Copyright   :   Copyright (c) Facebook Technologies, LLC and its affiliates. All rights reserved.
 
 *************************************************************************************/
 
@@ -107,6 +107,7 @@ CompileShader(GLenum shaderType, const char* directives, const char* src, GLint 
 
     if (directives != NULL) {
         srcString.append(directives);
+        srcString.append("\n");
     }
 
     // TODO: If a c string isn't passed here, the previous contents of srcString (ie version info)

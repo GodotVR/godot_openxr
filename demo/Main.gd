@@ -50,4 +50,5 @@ func _on_FPController_initialised():
 
 func _on_FPController_failed_initialisation():
 	# exit our app
-	get_tree().quit()
+	#get_tree().quit()
+	print("Failed VR initialization, but not quitting!!!")

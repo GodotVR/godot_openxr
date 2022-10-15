@@ -20,9 +20,11 @@ func set_motion_range(value):
 func _update_motion_range():
 	# for some reason not consistantly named between the two hands..
 	if $HandModel.find_node("Armature001"):
-		$HandModel/Armature001/Skeleton.motion_range = motion_range
+		if "motion_range" in $HandModel/Armature001/Skeleton:
+			$HandModel/Armature001/Skeleton.motion_range = motion_range
 	else:
-		$HandModel/Armature/Skeleton.motion_range = motion_range
+		if "motion_range" in $HandModel/Armature/Skeleton:
+			$HandModel/Armature/Skeleton.motion_range = motion_range
 
 func set_albedo_texture(value):
 	albedo_texture = value
@@ -48,6 +50,14 @@ func _ready():
 		material = $HandModel/Armature001/Skeleton/vr_glove_left_slim.mesh.surface_get_material(0)
 	else:
 		material = $HandModel/Armature/Skeleton/vr_glove_right_slim.mesh.surface_get_material(0)
+
+		# repair gdns parameters that may have been reset, see https://github.com/GodotVR/godot_openxr/issues/234 
+		if "path" in $HandModel:
+			print("RESETTING PATH from ", $HandModel.path)
+			$HandModel.path = "/user/hand/right"
+		if "hand" in $HandModel/Armature/Skeleton:
+			print("RESETTING HAND from ", $HandModel/Armature/Skeleton.hand)
+			$HandModel/Armature/Skeleton.hand = 1
 
 	_update_motion_range()
 	_update_albedo_texture()

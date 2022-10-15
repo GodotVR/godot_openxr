@@ -38,7 +38,7 @@ func _process(_delta : float):
 		$Container/TriggerButton/Value.pressed = controller.is_button_pressed(JOY_VR_TRIGGER)
 		$Container/SideButton/Value.pressed = controller.is_button_pressed(JOY_VR_GRIP)
 
-		if configuration:
+		if configuration and configuration.has_method("get_tracking_confidence"):
 			var confidence = configuration.get_tracking_confidence(controller.controller_id)
 			if confidence == 0:
 				$Container/Tracking.text = "Not tracking"

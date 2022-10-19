@@ -1891,8 +1891,8 @@ bool OpenXRApi::initialiseSession() {
 	graphics_binding_gl.visualid = 0;
 	graphics_binding_gl.glxFBConfig = 0;
 
-	Godot::print("OpenXR Graphics: Display %p, Context %" PRIxPTR ", Drawable %" PRIxPTR,
-			graphics_binding_gl.xDisplay,
+	Godot::print("OpenXR Graphics: Display {0}, Context {1} Drawable {2}",
+			(uintptr_t)graphics_binding_gl.xDisplay,
 			(uintptr_t)graphics_binding_gl.glxContext,
 			(uintptr_t)graphics_binding_gl.glxDrawable);
 #endif

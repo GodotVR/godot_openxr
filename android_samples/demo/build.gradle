@@ -33,7 +33,7 @@ android {
         targetCompatibility versions.javaVersion
     }
     kotlinOptions {
-        jvmTarget = '1.8'
+        jvmTarget = versions.javaVersion
     }
 
     flavorDimensions "xrMode"

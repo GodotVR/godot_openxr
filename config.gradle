@@ -1,16 +1,16 @@
 ext {
     versions = [
             gradlePluginVersion: '7.0.3',
-            compileSdk         : 30,
+            compileSdk         : 32,
             minSdk             : 19, // Also update 'android/src/main/AndroidManifest.xml#minSdkVersion' value
-            targetSdk          : 30, // Also update 'android/src/main/AndroidManifest.xml#targetSdkVersion' value
-            buildTools         : '30.0.3',
-            kotlinVersion      : '1.6.10',
-            ndkVersion         : "21.4.7075529",
-            javaVersion        : JavaVersion.VERSION_1_8,
-            versionCode        : 10300, // Also update 'src/main/AndroidManifest.xml#versionCode' value
-            versionName        : '1.3.0', // Also update 'src/main/AndroidManifest.xml#versionName' value
-            godotVersion       : '3.4.4.stable',
+            targetSdk          : 32, // Also update 'android/src/main/AndroidManifest.xml#targetSdkVersion' value
+            buildTools         : '32.0.0',
+            kotlinVersion      : '1.6.21',
+            ndkVersion         : "23.2.8568313",
+            javaVersion        : JavaVersion.VERSION_11,
+            versionCode        : 10400, // Also update 'src/main/AndroidManifest.xml#versionCode' value
+            versionName        : '1.4.0-dev1', // Also update 'src/main/AndroidManifest.xml#versionName' value
+            godotVersion       : '3.5.1.stable',
     ]
 
     PUBLISH_ARTIFACT_ID = 'godot-openxr'

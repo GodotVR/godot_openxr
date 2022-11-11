@@ -60,15 +60,24 @@ task generateSharedLibs(type: Copy) {
     from("android/build/intermediates/cmake/fullDebug/obj") {
         into("debug")
     }
+    from("android/src/fullDebug/jniLibs") {
+        into("debug")
+    }
 
     // Copy the generated release shared libs into the outputs directory
     from("android/build/intermediates/cmake/fullRelease/obj") {
+        into("release")
+    }
+    from("android/src/fullRelease/jniLibs") {
         into("release")
     }
 
     // Copy the 64bit generated debug shared libs into our plugin
     // Note that our CI will distribute the runtime versions
     from("android/build/intermediates/cmake/fullDebug/obj/arm64-v8a") {
+        into("../../../../demo/addons/godot-openxr/bin/android")
+    }
+    from("android/src/fullDebug/jniLibs/arm64-v8a") {
         into("../../../../demo/addons/godot-openxr/bin/android")
     }
 }

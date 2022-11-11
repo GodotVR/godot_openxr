@@ -56,18 +56,17 @@ android {
         }
     }
 
-    // TODO: Enable when issues with AGP 7.1+ are resolved (https://github.com/GodotVR/godot_openxr/issues/187).
-//    publishing {
-//        singleVariant("fullRelease") {
-//            withSourcesJar()
-//            withJavadocJar()
-//        }
+    publishing {
+        singleVariant("fullRelease") {
+            withSourcesJar()
+            withJavadocJar()
+        }
 
-    //singleVariant("stubRelease") {
-//            withSourcesJar()
-//            withJavadocJar()
-//        }
-//    }
+    singleVariant("stubRelease") {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
 }
 
 dependencies {
@@ -90,4 +89,21 @@ task copyAddonsConfig(type: Copy) {
     into targetDir
 }
 
+final soRootDir = "../thirdparty/oculus_mobile_sdk/OpenXR/Libs/Android"
+final supportedBuildTypes = ["debug", "release"]
+final supportedAbis = ["arm64-v8a", "armeabi-v7a"]
+
+task copyOpenXrLoaderSo(type: Copy) {
+    into("src")
+
+    for (String targetBuildType : supportedBuildTypes) {
+        for (String targetAbi : supportedAbis) {
+            from("${soRootDir}/${targetAbi}/${targetBuildType.capitalize()}") {
+                into("full${targetBuildType.capitalize()}/jniLibs/${targetAbi}")
+            }
+        }
+    }
+}
+
 preBuild.dependsOn(copyAddonsConfig)
+preBuild.dependsOn(copyOpenXrLoaderSo)

@@ -1,11 +1,7 @@
 <?xml version="1.0" encoding="utf-8" ?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
         xmlns:tools="http://schemas.android.com/tools"
-        package="org.godotengine.plugin.vr.openxr"
-        android:versionCode="10400"
-        android:versionName="1.4.0-dev1">
-
-    <uses-sdk android:minSdkVersion="19" android:targetSdkVersion="32" />
+        package="org.godotengine.plugin.vr.openxr">
 
     <uses-feature
         android:name="android.hardware.vr.headtracking"

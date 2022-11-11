@@ -134,7 +134,7 @@ file(GLOB_RECURSE ANDROID_HEADERS ${CMAKE_SOURCE_DIR}/src/main/cpp/*.h**)
 
 add_library(${PROJECT_NAME}
         SHARED
-        ${SOURCES} ${HEADERS} ${ANDROID_SOURCES} ${ANDROID_HEADERS} OPENXR_MOBILE_LOADER_SO_LIB)
+        ${SOURCES} ${HEADERS} ${ANDROID_SOURCES} ${ANDROID_HEADERS})
 
 target_include_directories(${PROJECT_NAME}
         PRIVATE
@@ -167,11 +167,6 @@ target_link_libraries(${PROJECT_NAME}
 # Add the compile flags
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY COMPILE_FLAGS ${GODOT_COMPILE_FLAGS})
 set_property(TARGET ${PROJECT_NAME} APPEND_STRING PROPERTY LINK_FLAGS ${GODOT_LINKER_FLAGS})
-
-# Copy the VrApi shared library to the output directory.
-add_custom_command(OUTPUT OPENXR_MOBILE_LOADER_SO_LIB
-        COMMAND ${CMAKE_COMMAND} -E make_directory $<TARGET_FILE_DIR:${PROJECT_NAME}>
-        COMMAND ${CMAKE_COMMAND} -E copy_if_different ${OPENXR_MOBILE_LIB_PATH} $<TARGET_FILE_DIR:${PROJECT_NAME}>)
 
 set(BITS 32)
 if (CMAKE_SIZEOF_VOID_P EQUAL 8)

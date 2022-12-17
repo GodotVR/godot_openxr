@@ -35,15 +35,17 @@ void XRFbPassthroughExtensionWrapper::on_instance_initialized(const XrInstance i
 #ifdef DEBUG
 		Godot::print("OpenXR: Initializing passthrough extension...");
 #endif
-		XrResult result = initialize_fb_passthrough_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialize fb_passthrough extension")) {
+		bool result = initialize_fb_passthrough_extension(instance);
+		if (!result) {
+			Godot::print("Failed to initialize fb_passthrough extension");
 			fb_passthrough_ext = false;
 		}
 	}
 
 	if (fb_triangle_mesh_ext) {
-		XrResult result = initialize_fb_triangle_mesh_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialize fb_triangle_mesh extension")) {
+		bool result = initialize_fb_triangle_mesh_extension(instance);
+		if (!result) {
+			Godot::print("Failed to initialize fb_triangle_mesh extension");
 			fb_triangle_mesh_ext = false;
 		}
 	}
@@ -176,34 +178,36 @@ void XRFbPassthroughExtensionWrapper::on_instance_destroyed() {
 	cleanup();
 }
 
-XrResult XRFbPassthroughExtensionWrapper::initialize_fb_passthrough_extension(XrInstance instance) {
-	std::map<const char *, PFN_xrVoidFunction *> function_infos;
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrCreatePassthroughFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrDestroyPassthroughFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrPassthroughStartFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrPassthroughPauseFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrCreatePassthroughLayerFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrDestroyPassthroughLayerFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrPassthroughLayerPauseFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrPassthroughLayerResumeFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrPassthroughLayerSetStyleFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrCreateGeometryInstanceFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrDestroyGeometryInstanceFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrGeometryInstanceSetTransformFB);
+bool XRFbPassthroughExtensionWrapper::initialize_fb_passthrough_extension(const XrInstance p_instance) {
+	ERR_FAIL_NULL_V(openxr_api, false);
 
-	return initialize_function_pointer_map(instance, function_infos);
+	EXT_INIT_XR_FUNC_V(xrCreatePassthroughFB);
+	EXT_INIT_XR_FUNC_V(xrDestroyPassthroughFB);
+	EXT_INIT_XR_FUNC_V(xrPassthroughStartFB);
+	EXT_INIT_XR_FUNC_V(xrPassthroughPauseFB);
+	EXT_INIT_XR_FUNC_V(xrCreatePassthroughLayerFB);
+	EXT_INIT_XR_FUNC_V(xrDestroyPassthroughLayerFB);
+	EXT_INIT_XR_FUNC_V(xrPassthroughLayerPauseFB);
+	EXT_INIT_XR_FUNC_V(xrPassthroughLayerResumeFB);
+	EXT_INIT_XR_FUNC_V(xrPassthroughLayerSetStyleFB);
+	EXT_INIT_XR_FUNC_V(xrCreateGeometryInstanceFB);
+	EXT_INIT_XR_FUNC_V(xrDestroyGeometryInstanceFB);
+	EXT_INIT_XR_FUNC_V(xrGeometryInstanceSetTransformFB);
+
+	return true;
 }
 
-XrResult XRFbPassthroughExtensionWrapper::initialize_fb_triangle_mesh_extension(XrInstance instance) {
-	std::map<const char *, PFN_xrVoidFunction *> function_infos;
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrCreateTriangleMeshFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrDestroyTriangleMeshFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrTriangleMeshGetVertexBufferFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrTriangleMeshGetIndexBufferFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrTriangleMeshBeginUpdateFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrTriangleMeshEndUpdateFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrTriangleMeshBeginVertexBufferUpdateFB);
-	LOAD_FUNC_POINTER_IN_MAP(function_infos, xrTriangleMeshEndVertexBufferUpdateFB);
+bool XRFbPassthroughExtensionWrapper::initialize_fb_triangle_mesh_extension(const XrInstance p_instance) {
+	ERR_FAIL_NULL_V(openxr_api, false);
 
-	return initialize_function_pointer_map(instance, function_infos);
+	EXT_INIT_XR_FUNC_V(xrCreateTriangleMeshFB);
+	EXT_INIT_XR_FUNC_V(xrDestroyTriangleMeshFB);
+	EXT_INIT_XR_FUNC_V(xrTriangleMeshGetVertexBufferFB);
+	EXT_INIT_XR_FUNC_V(xrTriangleMeshGetIndexBufferFB);
+	EXT_INIT_XR_FUNC_V(xrTriangleMeshBeginUpdateFB);
+	EXT_INIT_XR_FUNC_V(xrTriangleMeshEndUpdateFB);
+	EXT_INIT_XR_FUNC_V(xrTriangleMeshBeginVertexBufferUpdateFB);
+	EXT_INIT_XR_FUNC_V(xrTriangleMeshEndVertexBufferUpdateFB);
+
+	return true;
 }

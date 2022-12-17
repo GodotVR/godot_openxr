@@ -25,18 +25,6 @@ protected:
 	~XRFbColorSpaceExtensionWrapper();
 
 private:
-	XRAPI_ATTR XrResult XRAPI_CALL xrEnumerateColorSpacesFB(
-			XrSession session,
-			uint32_t colorSpaceCapacityInput,
-			uint32_t *colorSpaceCountOutput,
-			XrColorSpaceFB *colorSpaces);
-
-	XRAPI_ATTR XrResult XRAPI_CALL xrSetColorSpaceFB(
-			XrSession session,
-			const XrColorSpaceFB colorspace);
-
-	static XrResult initialise_fb_color_space_extension(XrInstance instance);
-
 	void cleanup();
 
 	static XRFbColorSpaceExtensionWrapper *singleton;
@@ -46,6 +34,10 @@ private:
 	OpenXRApi *openxr_api = nullptr;
 	bool fb_color_space_ext = false;
 	XrSystemColorSpacePropertiesFB color_space_properties;
+
+	// OpenXR API call wrappers
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateColorSpacesFB, (XrSession), session, (uint32_t), colorSpaceCapacityInput, (uint32_t *), colorSpaceCountOutput, (XrColorSpaceFB *), colorSpaces);
+	EXT_PROTO_XRRESULT_FUNC2(xrSetColorSpaceFB, (XrSession), session, (const XrColorSpaceFB), colorspace);
 };
 
 #endif // !XR_FB_COLOR_SPACE_EXTENSION_WRAPPER_H

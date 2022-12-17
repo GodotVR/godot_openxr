@@ -17,7 +17,7 @@ android {
 
         externalNativeBuild {
             cmake {
-                cppFlags "-std=c++14"
+                cppFlags "-std=c++14 -DXR_NO_PROTOTYPES=1"
             }
         }
     }
@@ -89,7 +89,8 @@ task copyAddonsConfig(type: Copy) {
     into targetDir
 }
 
-final soRootDir = "../thirdparty/oculus_mobile_sdk/OpenXR/Libs/Android"
+final soRootDirMeta = "../thirdparty/oculus_mobile_sdk/OpenXR/Libs/Android"
+final soRootDirPico = "../thirdparty/pico_openxr_sdk/OpenXR/Libs/Android"
 final supportedBuildTypes = ["debug", "release"]
 final supportedAbis = ["arm64-v8a", "armeabi-v7a"]
 
@@ -98,8 +99,13 @@ task copyOpenXrLoaderSo(type: Copy) {
 
     for (String targetBuildType : supportedBuildTypes) {
         for (String targetAbi : supportedAbis) {
-            from("${soRootDir}/${targetAbi}/${targetBuildType.capitalize()}") {
+            from("${soRootDirMeta}/${targetAbi}/${targetBuildType.capitalize()}") {
                 into("full${targetBuildType.capitalize()}/jniLibs/${targetAbi}")
+                rename ('libopenxr_loader.so', 'libopenxr_loader_meta.so')
+            }
+            from("${soRootDirPico}/${targetAbi}/${targetBuildType.capitalize()}") {
+                into("full${targetBuildType.capitalize()}/jniLibs/${targetAbi}")
+                rename ('libopenxr_loader.so', 'libopenxr_loader_pico.so')
             }
         }
     }

@@ -31,8 +31,6 @@ protected:
 	~XRFbSwapchainUpdateStateExtensionWrapper();
 
 private:
-	XrResult initialize_fb_swapchain_update_state_extension(XrInstance instance);
-
 	void cleanup();
 
 	static XRFbSwapchainUpdateStateExtensionWrapper *singleton;

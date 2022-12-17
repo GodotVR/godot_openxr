@@ -53,9 +53,6 @@ project(godot_openxr VERSION 2.0.0)
 ## The variables below should be updated based on the setup instructions
 ## in the project README.
 
-# Sets the path to the OpenXR mobile library containing directory. Update this variable if the api is in another location.
-set(OPENXR_MOBILE_ROOT_DIR "${CMAKE_SOURCE_DIR}/../thirdparty/oculus_mobile_sdk/OpenXR")
-
 # Location to the Godot-cpp directory.
 set(GODOT_CPP_DIR "${CMAKE_SOURCE_DIR}/../thirdparty/godot-cpp")
 set(GODOT_HEADERS_DIR "${GODOT_CPP_DIR}/godot-headers")
@@ -64,7 +61,6 @@ set(GODOT_HEADERS_DIR "${GODOT_CPP_DIR}/godot-headers")
 add_definitions(-DANDROID)
 
 set(OPENXR_HEADERS_DIR "${CMAKE_SOURCE_DIR}/../thirdparty/openxr_loader/include")
-set(OPENXR_MOBILE_HEADERS_DIR "${OPENXR_MOBILE_ROOT_DIR}/Include" CACHE STRING "")
 
 set(GODOT_COMPILE_FLAGS)
 set(GODOT_LINKER_FLAGS)
@@ -92,11 +88,6 @@ if (CMAKE_BUILD_TYPE MATCHES Debug)
 else ()
     set(GODOT_COMPILE_FLAGS "${GODOT_COMPILE_FLAGS} -O3")
 endif (CMAKE_BUILD_TYPE MATCHES Debug)
-
-## OpenXR Mobile loader library
-set(OPENXR_MOBILE_LIB_PATH "${OPENXR_MOBILE_ROOT_DIR}/Libs/Android/${ANDROID_ABI}/${OPENXR_MOBILE_LIB_BUILD_TYPE}/libopenxr_loader.so")
-add_library(openxr_mobile_loader SHARED IMPORTED GLOBAL)
-set_target_properties(openxr_mobile_loader PROPERTIES IMPORTED_LOCATION ${OPENXR_MOBILE_LIB_PATH})
 
 ## godot-cpp library
 set(GODOT-CPP "godot-cpp")
@@ -153,7 +144,6 @@ target_include_directories(${PROJECT_NAME}
         SYSTEM PUBLIC
         ${GODOT_HEADERS_DIR}
         ${OPENXR_HEADERS_DIR}
-        ${OPENXR_MOBILE_HEADERS_DIR}
         )
 
 target_link_libraries(${PROJECT_NAME}
@@ -161,7 +151,6 @@ target_link_libraries(${PROJECT_NAME}
         log
         EGL
         GLESv3
-        openxr_mobile_loader
         ${GODOT-CPP})
 
 # Add the compile flags

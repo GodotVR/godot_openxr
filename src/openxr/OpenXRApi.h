@@ -47,6 +47,7 @@
 #include "openxr/extensions/xr_composition_layer_provider.h"
 #include "openxr/extensions/xr_extension_wrapper.h"
 #include "openxr/include/openxr_inc.h"
+#include "openxr/include/util.h"
 #include <openxr/openxr_platform.h>
 
 // forward declare this
@@ -173,6 +174,9 @@ private:
 
 	// extensions
 	bool monado_stick_on_ball_ext = false;
+#if ANDROID
+	bool android_thread_settings_ext = false;
+#endif
 
 	std::vector<const char *> enabled_extensions;
 	std::set<XRExtensionWrapper *> registered_extension_wrappers;
@@ -220,6 +224,16 @@ private:
 	XrSpace view_space = XR_NULL_HANDLE;
 	bool view_pose_valid = false;
 	bool head_pose_valid = false;
+
+#ifdef ANDROID
+	// On Android we keep tracker of our external OpenXR loader
+	void *openxr_loader_library_handle = nullptr;
+	// On non-Android platforms we use the OpenXR symbol linked into the engine binary.
+	PFN_xrGetInstanceProcAddr xrGetInstanceProcAddr = nullptr;
+#endif
+
+	bool openxr_loader_init();
+	bool resolve_instance_openxr_symbols();
 
 	// config
 	/*
@@ -287,6 +301,54 @@ public:
 	OpenXRApi();
 	~OpenXRApi();
 
+	EXT_PROTO_XRRESULT_FUNC3(xrAcquireSwapchainImage, (XrSwapchain), swapchain, (const XrSwapchainImageAcquireInfo *), acquireInfo, (uint32_t *), index)
+	EXT_PROTO_XRRESULT_FUNC3(xrApplyHapticFeedback, (XrSession), session, (const XrHapticActionInfo *), hapticActionInfo, (const XrHapticBaseHeader *), hapticFeedback)
+	EXT_PROTO_XRRESULT_FUNC2(xrAttachSessionActionSets, (XrSession), session, (const XrSessionActionSetsAttachInfo *), attachInfo)
+	EXT_PROTO_XRRESULT_FUNC2(xrBeginFrame, (XrSession), session, (const XrFrameBeginInfo *), frameBeginInfo)
+	EXT_PROTO_XRRESULT_FUNC2(xrBeginSession, (XrSession), session, (const XrSessionBeginInfo *), beginInfo)
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateAction, (XrActionSet), actionSet, (const XrActionCreateInfo *), createInfo, (XrAction *), action)
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateActionSet, (XrInstance), instance, (const XrActionSetCreateInfo *), createInfo, (XrActionSet *), actionSet)
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateActionSpace, (XrSession), session, (const XrActionSpaceCreateInfo *), createInfo, (XrSpace *), space)
+	EXT_PROTO_XRRESULT_FUNC2(xrCreateInstance, (const XrInstanceCreateInfo *), createInfo, (XrInstance *), instance)
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateReferenceSpace, (XrSession), session, (const XrReferenceSpaceCreateInfo *), createInfo, (XrSpace *), space)
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateSession, (XrInstance), instance, (const XrSessionCreateInfo *), createInfo, (XrSession *), session)
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateSwapchain, (XrSession), session, (const XrSwapchainCreateInfo *), createInfo, (XrSwapchain *), swapchain)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroyAction, (XrAction), action)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroyActionSet, (XrActionSet), actionSet)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroyInstance, (XrInstance), instance)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroySession, (XrSession), session)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroySpace, (XrSpace), space)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroySwapchain, (XrSwapchain), swapchain)
+	EXT_PROTO_XRRESULT_FUNC2(xrEndFrame, (XrSession), session, (const XrFrameEndInfo *), frameEndInfo)
+	EXT_PROTO_XRRESULT_FUNC1(xrEndSession, (XrSession), session)
+	EXT_PROTO_XRRESULT_FUNC3(xrEnumerateApiLayerProperties, (uint32_t), propertyCapacityInput, (uint32_t *), propertyCountOutput, (XrApiLayerProperties *), properties)
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateInstanceExtensionProperties, (const char *), layerName, (uint32_t), propertyCapacityInput, (uint32_t *), propertyCountOutput, (XrExtensionProperties *), properties)
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateReferenceSpaces, (XrSession), session, (uint32_t), spaceCapacityInput, (uint32_t *), spaceCountOutput, (XrReferenceSpaceType *), spaces)
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateSwapchainFormats, (XrSession), session, (uint32_t), formatCapacityInput, (uint32_t *), formatCountOutput, (int64_t *), formats)
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateSwapchainImages, (XrSwapchain), swapchain, (uint32_t), imageCapacityInput, (uint32_t *), imageCountOutput, (XrSwapchainImageBaseHeader *), images)
+	EXT_PROTO_XRRESULT_FUNC5(xrEnumerateViewConfigurations, (XrInstance), instance, (XrSystemId), systemId, (uint32_t), viewConfigurationTypeCapacityInput, (uint32_t *), viewConfigurationTypeCountOutput, (XrViewConfigurationType *), viewConfigurationTypes)
+	EXT_PROTO_XRRESULT_FUNC6(xrEnumerateViewConfigurationViews, (XrInstance), instance, (XrSystemId), systemId, (XrViewConfigurationType), viewConfigurationType, (uint32_t), viewCapacityInput, (uint32_t *), viewCountOutput, (XrViewConfigurationView *), views)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetActionStateBoolean, (XrSession), session, (const XrActionStateGetInfo *), getInfo, (XrActionStateBoolean *), state)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetActionStateFloat, (XrSession), session, (const XrActionStateGetInfo *), getInfo, (XrActionStateFloat *), state)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetActionStateVector2f, (XrSession), session, (const XrActionStateGetInfo *), getInfo, (XrActionStateVector2f *), state)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetActionStatePose, (XrSession), session, (const XrActionStateGetInfo *), getInfo, (XrActionStatePose *), state)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetCurrentInteractionProfile, (XrSession), session, (XrPath), topLevelUserPath, (XrInteractionProfileState *), interactionProfile)
+	EXT_PROTO_XRRESULT_FUNC2(xrGetInstanceProperties, (XrInstance), instance, (XrInstanceProperties *), instanceProperties)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetSystem, (XrInstance), instance, (const XrSystemGetInfo *), getInfo, (XrSystemId *), systemId)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetSystemProperties, (XrInstance), instance, (XrSystemId), systemId, (XrSystemProperties *), properties)
+	EXT_PROTO_XRRESULT_FUNC3(xrGetReferenceSpaceBoundsRect, (XrSession), session, (XrReferenceSpaceType), referenceSpaceType, (XrExtent2Df *), bounds)
+	EXT_PROTO_XRRESULT_FUNC4(xrLocateSpace, (XrSpace), space, (XrSpace), baseSpace, (XrTime), time, (XrSpaceLocation *), location)
+	EXT_PROTO_XRRESULT_FUNC6(xrLocateViews, (XrSession), session, (const XrViewLocateInfo *), viewLocateInfo, (XrViewState *), viewState, (uint32_t), viewCapacityInput, (uint32_t *), viewCountOutput, (XrView *), views)
+	EXT_PROTO_XRRESULT_FUNC5(xrPathToString, (XrInstance), instance, (XrPath), path, (uint32_t), bufferCapacityInput, (uint32_t *), bufferCountOutput, (char *), buffer)
+	EXT_PROTO_XRRESULT_FUNC2(xrPollEvent, (XrInstance), instance, (XrEventDataBuffer *), eventData)
+	EXT_PROTO_XRRESULT_FUNC2(xrReleaseSwapchainImage, (XrSwapchain), swapchain, (const XrSwapchainImageReleaseInfo *), releaseInfo)
+	EXT_PROTO_XRRESULT_FUNC3(xrResultToString, (XrInstance), instance, (XrResult), value, (char *), buffer)
+	EXT_PROTO_XRRESULT_FUNC3(xrStringToPath, (XrInstance), instance, (const char *), pathString, (XrPath *), path)
+	EXT_PROTO_XRRESULT_FUNC2(xrSuggestInteractionProfileBindings, (XrInstance), instance, (const XrInteractionProfileSuggestedBinding *), suggestedBindings)
+	EXT_PROTO_XRRESULT_FUNC2(xrSyncActions, (XrSession), session, (const XrActionsSyncInfo *), syncInfo)
+	EXT_PROTO_XRRESULT_FUNC3(xrWaitFrame, (XrSession), session, (const XrFrameWaitInfo *), frameWaitInfo, (XrFrameState *), frameState)
+	EXT_PROTO_XRRESULT_FUNC2(xrWaitSwapchainImage, (XrSwapchain), swapchain, (const XrSwapchainImageWaitInfo *), waitInfo)
+
 	template <class T>
 	void register_extension_wrapper() {
 		register_extension_wrapper(T::get_singleton());
@@ -307,6 +369,8 @@ public:
 	void unregister_composition_layer_provider(XRCompositionLayerProvider *provider) {
 		composition_layer_providers.erase(provider);
 	}
+
+	XrResult get_instance_proc_addr(const char *p_name, PFN_xrVoidFunction *p_addr);
 
 	bool is_initialised();
 	bool initialize();

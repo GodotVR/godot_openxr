@@ -62,21 +62,6 @@ protected:
 	~XRExtHandTrackingExtensionWrapper();
 
 private:
-	static XRAPI_ATTR XrResult XRAPI_CALL xrCreateHandTrackerEXT(
-			XrSession session,
-			const XrHandTrackerCreateInfoEXT *createInfo,
-			XrHandTrackerEXT *handTracker);
-
-	static XRAPI_ATTR XrResult XRAPI_CALL xrDestroyHandTrackerEXT(
-			XrHandTrackerEXT handTracker);
-
-	static XRAPI_ATTR XrResult XRAPI_CALL xrLocateHandJointsEXT(
-			XrHandTrackerEXT handTracker,
-			const XrHandJointsLocateInfoEXT *locateInfo,
-			XrHandJointLocationsEXT *locations);
-
-	static XrResult initialise_ext_hand_tracking_extension(XrInstance instance);
-
 	bool initialize_hand_tracking();
 
 	void update_handtracking();
@@ -94,6 +79,11 @@ private:
 	bool hand_tracking_supported = false;
 
 	HandTracker hand_trackers[MAX_TRACKED_HANDS]; // Fixed for left and right hand
+
+	// OpenXR API call wrappers
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateHandTrackerEXT, (XrSession), p_session, (const XrHandTrackerCreateInfoEXT *), p_createInfo, (XrHandTrackerEXT *), p_handTracker)
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroyHandTrackerEXT, (XrHandTrackerEXT), p_handTracker)
+	EXT_PROTO_XRRESULT_FUNC3(xrLocateHandJointsEXT, (XrHandTrackerEXT), p_handTracker, (const XrHandJointsLocateInfoEXT *), p_locateInfo, (XrHandJointLocationsEXT *), p_locations)
 };
 
 #endif // XR_EXT_HAND_TRACKING_EXTENSION_WRAPPER_H

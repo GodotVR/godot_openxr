@@ -108,7 +108,7 @@ bool OpenXRPose::check_action_and_path() {
 	}
 
 	if (_path == XR_NULL_PATH) {
-		XrResult res = xrStringToPath(openxr_api->get_instance(), path.utf8().get_data(), &_path);
+		XrResult res = openxr_api->xrStringToPath(openxr_api->get_instance(), path.utf8().get_data(), &_path);
 		if (!openxr_api->xr_result(res, "Couldn't obtain path {0}", path)) {
 			fail_cache = true;
 			return false;

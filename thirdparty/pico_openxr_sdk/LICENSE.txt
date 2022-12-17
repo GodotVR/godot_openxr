@@ -1,0 +1,3 @@
+Copyright (C), 2015-2021, PicoVR. Co., Ltd.
+
+Your use of this SDK or tool is subject to the Pico SDK License Agreement, available at https://developer.pico-interactive.com/sdk

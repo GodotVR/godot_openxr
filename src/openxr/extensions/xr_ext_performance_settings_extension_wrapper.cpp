@@ -26,20 +26,9 @@ void XRExtPerformanceSettingsExtensionWrapper::cleanup() {
 	gpu_level = DEFAULT_PERF_SETTINGS_LEVEL;
 }
 
-XrResult XRExtPerformanceSettingsExtensionWrapper::initialize_ext_performance_settings_extension(
-		XrInstance instance) {
-	std::map<const char *, PFN_xrVoidFunction *> func_pointer_map;
-	LOAD_FUNC_POINTER_IN_MAP(func_pointer_map, xrPerfSettingsSetPerformanceLevelEXT);
-
-	return initialize_function_pointer_map(instance, func_pointer_map);
-}
-
 void XRExtPerformanceSettingsExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (performance_settings_ext) {
-		XrResult result = initialize_ext_performance_settings_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialize performance settings extension")) {
-			performance_settings_ext = false;
-		}
+		EXT_INIT_XR_FUNC(xrPerfSettingsSetPerformanceLevelEXT);
 	}
 }
 

@@ -86,6 +86,60 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				]
 			},
 			{
+				"type": "float",
+				"name": "trigger",
+				"localised_name": "Trigger",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "trigger_click",
+				"localised_name": "Trigger click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "trigger_touch",
+				"localised_name": "Trigger touching",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "float",
+				"name": "grip",
+				"localised_name": "Grip",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "grip_click",
+				"localised_name": "Grip click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "grip_touch",
+				"localised_name": "Grip touching",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
 				"type": "vector2",
 				"name": "primary",
 				"localised_name": "Primary joystick/thumbstick/trackpad",
@@ -95,9 +149,45 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				]
 			},
 			{
+				"type": "bool",
+				"name": "primary_click",
+				"localised_name": "Primary joystick/thumbstick/trackpad click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "primary_touch",
+				"localised_name": "Primary joystick/thumbstick/trackpad touching",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
 				"type": "vector2",
 				"name": "secondary",
 				"localised_name": "Secondary joystick/thumbstick/trackpad",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "secondary_click",
+				"localised_name": "Secondary joystick/thumbstick/trackpad click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "secondary_touch",
+				"localised_name": "Secondary joystick/thumbstick/trackpad touching",
 				"paths": [
 					"/user/hand/left",
 					"/user/hand/right"
@@ -197,24 +287,6 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				"type": "bool",
 				"name": "secondary_button",
 				"localised_name": "Secondary joystick/thumbstick/trackpad click",
-				"paths": [
-					"/user/hand/left",
-					"/user/hand/right"
-				]
-			},
-			{
-				"type": "bool",
-				"name": "primary_touch",
-				"localised_name": "Primary joystick/thumbstick/trackpad touch",
-				"paths": [
-					"/user/hand/left",
-					"/user/hand/right"
-				]
-			},
-			{
-				"type": "bool",
-				"name": "secondary_touch",
-				"localised_name": "Secondary joystick/thumbstick/trackpad touch",
 				"paths": [
 					"/user/hand/left",
 					"/user/hand/right"
@@ -1195,6 +1267,195 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 			{
 				"set": "godot",
 				"action": "primary_button",
+				"paths": [
+					"/user/hand/left/input/thumbstick/click",
+					"/user/hand/right/input/thumbstick/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_touch",
+				"paths": [
+					"/user/hand/left/input/thumbstick/touch",
+					"/user/hand/right/input/thumbstick/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "haptic",
+				"paths": [
+					"/user/hand/left/output/haptic",
+					"/user/hand/right/output/haptic"
+				]
+			},
+		],
+	},)==="
+	R"===({
+		"path": "/interaction_profiles/pico/neo3_controller",
+		"bindings": [
+			{
+				"set": "godot",
+				"action": "aim_pose",
+				"paths": [
+					"/user/hand/left/input/aim/pose",
+					"/user/hand/right/input/aim/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip_pose",
+				"paths": [
+					"/user/hand/left/input/grip/pose",
+					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "select_button",
+				"paths": [
+					"/user/hand/left/input/system/click",
+					"/user/hand/right/input/system/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "menu_button",
+				"paths": [
+					"/user/hand/left/input/back/click",
+					"/user/hand/right/input/back/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_button",
+				"paths": [
+					"/user/hand/left/input/x/click",
+					"/user/hand/right/input/a/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_touch",
+				"paths": [
+					"/user/hand/left/input/x/touch",
+					"/user/hand/right/input/a/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_button",
+				"paths": [
+					"/user/hand/left/input/y/click",
+					"/user/hand/right/input/b/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_touch",
+				"paths": [
+					"/user/hand/left/input/y/touch",
+					"/user/hand/right/input/b/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "trigger",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "trigger_click",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "trigger_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip_click",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_trigger",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_trigger",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_button",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_button",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary",
+				"paths": [
+					"/user/hand/left/input/thumbstick",
+					"/user/hand/right/input/thumbstick"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_click",
 				"paths": [
 					"/user/hand/left/input/thumbstick/click",
 					"/user/hand/right/input/thumbstick/click"
@@ -3115,6 +3376,8 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 			Godot::print_warning(String("OpenXR Interaction profile ") + path_string + String(" is not supported on this runtime"), __FUNCTION__, __FILE__, __LINE__);
 		} else if (!xr_result(result, "failed to suggest bindings for {0}", path_string)) {
 			// reporting is enough...
+		} else {
+			Godot::print("OpenXR Suggested bindings for {0}", path_string);
 		}
 	}
 

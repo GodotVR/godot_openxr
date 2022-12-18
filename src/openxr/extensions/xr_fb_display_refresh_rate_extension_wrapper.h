@@ -27,28 +27,17 @@ protected:
 	~XRFbDisplayRefreshRateExtensionWrapper();
 
 private:
-	static XRAPI_ATTR XrResult XRAPI_CALL xrEnumerateDisplayRefreshRatesFB(
-			XrSession session,
-			uint32_t displayRefreshRateCapacityInput,
-			uint32_t *displayRefreshRateCountOutput,
-			float *displayRefreshRates);
-
-	static XRAPI_ATTR XrResult XRAPI_CALL xrGetDisplayRefreshRateFB(
-			XrSession session,
-			float *displayRefreshRate);
-
-	static XRAPI_ATTR XrResult XRAPI_CALL xrRequestDisplayRefreshRateFB(
-			XrSession session,
-			float displayRefreshRate);
-
-	static XrResult initialise_fb_display_refresh_rate_extension(XrInstance instance);
-
 	void cleanup();
 
 	static XRFbDisplayRefreshRateExtensionWrapper *singleton;
 
 	OpenXRApi *openxr_api = nullptr;
 	bool fb_display_refresh_rate_ext = false;
+
+	// OpenXR API call wrappers
+	EXT_PROTO_XRRESULT_FUNC4(xrEnumerateDisplayRefreshRatesFB, (XrSession), session, (uint32_t), displayRefreshRateCapacityInput, (uint32_t *), displayRefreshRateCountOutput, (float *), displayRefreshRates);
+	EXT_PROTO_XRRESULT_FUNC2(xrGetDisplayRefreshRateFB, (XrSession), session, (float *), display_refresh_rate);
+	EXT_PROTO_XRRESULT_FUNC2(xrRequestDisplayRefreshRateFB, (XrSession), session, (float), display_refresh_rate);
 };
 
 #endif // XR_FB_DISPLAY_REFRESH_RATE_EXTENSION_WRAPPER_H

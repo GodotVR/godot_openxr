@@ -164,9 +164,9 @@ private:
 	// after a call to `xrTriangleMeshBeginVertexBufferUpdateFB`.
 	EXT_PROTO_XRRESULT_FUNC1(xrTriangleMeshEndVertexBufferUpdateFB, (XrTriangleMeshFB), mesh)
 
-	XrResult initialize_fb_passthrough_extension(XrInstance instance);
+	bool initialize_fb_passthrough_extension(const XrInstance instance);
 
-	XrResult initialize_fb_triangle_mesh_extension(XrInstance instance);
+	bool initialize_fb_triangle_mesh_extension(const XrInstance instance);
 
 	void cleanup();
 

@@ -44,10 +44,8 @@ void XRFbColorSpaceExtensionWrapper::cleanup() {
 
 void XRFbColorSpaceExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (fb_color_space_ext) {
-		XrResult result = initialise_fb_color_space_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialise color space extension")) {
-			fb_color_space_ext = false; // I guess we don't support it...
-		}
+		EXT_INIT_XR_FUNC(xrEnumerateColorSpacesFB);
+		EXT_INIT_XR_FUNC(xrSetColorSpaceFB);
 	}
 }
 
@@ -132,45 +130,4 @@ const char *XRFbColorSpaceExtensionWrapper::get_color_space_enum_desc(XrColorSpa
 			return "Unknown";
 		}; break;
 	}
-}
-
-PFN_xrEnumerateColorSpacesFB xrEnumerateColorSpacesFB_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRFbColorSpaceExtensionWrapper::xrEnumerateColorSpacesFB(
-		XrSession session,
-		uint32_t colorSpaceCapacityInput,
-		uint32_t *colorSpaceCountOutput,
-		XrColorSpaceFB *colorSpaces) {
-	if (xrEnumerateColorSpacesFB_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrEnumerateColorSpacesFB_ptr)(session, colorSpaceCapacityInput, colorSpaceCountOutput, colorSpaces);
-}
-
-PFN_xrSetColorSpaceFB xrSetColorSpaceFB_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRFbColorSpaceExtensionWrapper::xrSetColorSpaceFB(
-		XrSession session,
-		const XrColorSpaceFB colorspace) {
-	if (xrSetColorSpaceFB_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrSetColorSpaceFB_ptr)(session, colorspace);
-}
-
-XrResult XRFbColorSpaceExtensionWrapper::initialise_fb_color_space_extension(XrInstance instance) {
-	XrResult result;
-
-	result = xrGetInstanceProcAddr(instance, "xrEnumerateColorSpacesFB", (PFN_xrVoidFunction *)&xrEnumerateColorSpacesFB_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-	result = xrGetInstanceProcAddr(instance, "xrSetColorSpaceFB", (PFN_xrVoidFunction *)&xrSetColorSpaceFB_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-
-	return XR_SUCCESS;
 }

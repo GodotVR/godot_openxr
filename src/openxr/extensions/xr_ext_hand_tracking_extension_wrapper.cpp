@@ -37,10 +37,11 @@ XRExtHandTrackingExtensionWrapper *XRExtHandTrackingExtensionWrapper::get_single
 
 void XRExtHandTrackingExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (hand_tracking_ext) {
-		XrResult result = initialise_ext_hand_tracking_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialise hand tracking extension")) {
-			hand_tracking_ext = false; // I guess we don't support it...
-		}
+		EXT_INIT_XR_FUNC(xrCreateHandTrackerEXT);
+		EXT_INIT_XR_FUNC(xrDestroyHandTrackerEXT);
+		EXT_INIT_XR_FUNC(xrLocateHandJointsEXT);
+
+		hand_tracking_ext = xrCreateHandTrackerEXT_ptr && xrDestroyHandTrackerEXT_ptr && xrLocateHandJointsEXT_ptr;
 	}
 }
 
@@ -58,64 +59,6 @@ void XRExtHandTrackingExtensionWrapper::on_state_stopping() {
 
 void XRExtHandTrackingExtensionWrapper::on_session_destroyed() {
 	cleanup();
-}
-
-PFN_xrCreateHandTrackerEXT xrCreateHandTrackerEXT_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRExtHandTrackingExtensionWrapper::xrCreateHandTrackerEXT(
-		XrSession session,
-		const XrHandTrackerCreateInfoEXT *createInfo,
-		XrHandTrackerEXT *handTracker) {
-	if (xrCreateHandTrackerEXT_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrCreateHandTrackerEXT_ptr)(session, createInfo, handTracker);
-}
-
-PFN_xrDestroyHandTrackerEXT xrDestroyHandTrackerEXT_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRExtHandTrackingExtensionWrapper::xrDestroyHandTrackerEXT(
-		XrHandTrackerEXT handTracker) {
-	if (xrDestroyHandTrackerEXT_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrDestroyHandTrackerEXT_ptr)(handTracker);
-}
-
-PFN_xrLocateHandJointsEXT xrLocateHandJointsEXT_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRExtHandTrackingExtensionWrapper::xrLocateHandJointsEXT(
-		XrHandTrackerEXT handTracker,
-		const XrHandJointsLocateInfoEXT *locateInfo,
-		XrHandJointLocationsEXT *locations) {
-	if (xrLocateHandJointsEXT_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrLocateHandJointsEXT_ptr)(handTracker, locateInfo, locations);
-}
-
-XrResult XRExtHandTrackingExtensionWrapper::initialise_ext_hand_tracking_extension(XrInstance instance) {
-	XrResult result;
-
-	result = xrGetInstanceProcAddr(instance, "xrCreateHandTrackerEXT", (PFN_xrVoidFunction *)&xrCreateHandTrackerEXT_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-
-	result = xrGetInstanceProcAddr(instance, "xrDestroyHandTrackerEXT", (PFN_xrVoidFunction *)&xrDestroyHandTrackerEXT_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-
-	result = xrGetInstanceProcAddr(instance, "xrLocateHandJointsEXT", (PFN_xrVoidFunction *)&xrLocateHandJointsEXT_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-
-	return XR_SUCCESS;
 }
 
 bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
@@ -138,7 +81,7 @@ bool XRExtHandTrackingExtensionWrapper::initialize_hand_tracking() {
 		.next = &handTrackingSystemProperties,
 	};
 
-	result = xrGetSystemProperties(openxr_api->get_instance(), openxr_api->get_system_id(), &systemProperties);
+	result = openxr_api->xrGetSystemProperties(openxr_api->get_instance(), openxr_api->get_system_id(), &systemProperties);
 	if (!openxr_api->xr_result(result, "Failed to obtain hand tracking information")) {
 		return false;
 	}

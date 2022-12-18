@@ -29,8 +29,8 @@ Action::Action(OpenXRApi *p_api, XrActionSet p_action_set, XrActionType p_type, 
 	strcpy(actionInfo.actionName, name.utf8().get_data());
 	strcpy(actionInfo.localizedActionName, p_localised_name.utf8().get_data());
 
-	XrResult result = xrCreateAction(p_action_set, &actionInfo, &handle);
-	if (!p_api->xr_result(result, "failed to create {0} action", name)) {
+	XrResult result = xr_api->xrCreateAction(p_action_set, &actionInfo, &handle);
+	if (!xr_api->xr_result(result, "failed to create {0} action", name)) {
 		return;
 	}
 }
@@ -40,14 +40,14 @@ Action::~Action() {
 	reset_spaces();
 
 	if (handle != XR_NULL_HANDLE) {
-		xrDestroyAction(handle);
+		xr_api->xrDestroyAction(handle);
 	}
 }
 
 void Action::reset_spaces() {
 	for (int i = 0; i < toplevel_paths.size(); i++) {
 		if (toplevel_paths[i].space != XR_NULL_HANDLE) {
-			xrDestroySpace(toplevel_paths[i].space);
+			xr_api->xrDestroySpace(toplevel_paths[i].space);
 			toplevel_paths[i].space = XR_NULL_HANDLE;
 		}
 	}
@@ -86,7 +86,7 @@ bool Action::get_as_bool(XrPath p_path) {
 		XrActionStateBoolean resultState;
 		resultState.type = XR_TYPE_ACTION_STATE_BOOLEAN,
 		resultState.next = nullptr;
-		XrResult result = xrGetActionStateBoolean(xr_api->session, &getInfo, &resultState);
+		XrResult result = xr_api->xrGetActionStateBoolean(xr_api->session, &getInfo, &resultState);
 		if (!xr_api->xr_result(result, "failed to get boolean value")) {
 			resultState.isActive = false;
 		}
@@ -118,7 +118,7 @@ float Action::get_as_float(XrPath p_path) {
 		XrActionStateFloat resultState;
 		resultState.type = XR_TYPE_ACTION_STATE_FLOAT,
 		resultState.next = nullptr;
-		XrResult result = xrGetActionStateFloat(xr_api->session, &getInfo, &resultState);
+		XrResult result = xr_api->xrGetActionStateFloat(xr_api->session, &getInfo, &resultState);
 		if (!xr_api->xr_result(result, "failed to get float value")) {
 			resultState.isActive = false;
 		}
@@ -157,7 +157,7 @@ Vector2 Action::get_as_vector(XrPath p_path) {
 		XrActionStateVector2f resultState;
 		resultState.type = XR_TYPE_ACTION_STATE_VECTOR2F,
 		resultState.next = nullptr;
-		XrResult result = xrGetActionStateVector2f(xr_api->session, &getInfo, &resultState);
+		XrResult result = xr_api->xrGetActionStateVector2f(xr_api->session, &getInfo, &resultState);
 		if (!xr_api->xr_result(result, "failed to get vector value")) {
 			resultState.isActive = false;
 		}
@@ -191,7 +191,7 @@ bool Action::is_pose_active(XrPath p_path) {
 		XrActionStatePose resultState;
 		resultState.type = XR_TYPE_ACTION_STATE_POSE,
 		resultState.next = nullptr;
-		XrResult result = xrGetActionStatePose(xr_api->session, &getInfo, &resultState);
+		XrResult result = xr_api->xrGetActionStatePose(xr_api->session, &getInfo, &resultState);
 		if (!xr_api->xr_result(result, "failed to get pose state")) {
 			resultState.isActive = false;
 		}
@@ -238,7 +238,7 @@ TrackingConfidence Action::get_as_pose(XrPath p_path, float p_world_scale, Trans
 
 			actionSpaceInfo.subactionPath = toplevel_paths[index].toplevel_path;
 
-			XrResult result = xrCreateActionSpace(xr_api->session, &actionSpaceInfo, &toplevel_paths[index].space);
+			XrResult result = xr_api->xrCreateActionSpace(xr_api->session, &actionSpaceInfo, &toplevel_paths[index].space);
 			if (!xr_api->xr_result(result, "failed to create pose space")) {
 				return TRACKING_CONFIDENCE_NONE;
 			}
@@ -250,7 +250,7 @@ TrackingConfidence Action::get_as_pose(XrPath p_path, float p_world_scale, Trans
 		location.next = nullptr;
 
 		XrTime time = xr_api->get_next_frame_time(); // This data will be used for the next frame we render
-		XrResult result = xrLocateSpace(toplevel_paths[index].space, xr_api->play_space, time, &location);
+		XrResult result = xr_api->xrLocateSpace(toplevel_paths[index].space, xr_api->play_space, time, &location);
 		if (!xr_api->xr_result(result, "failed to locate space!")) {
 			return TRACKING_CONFIDENCE_NONE;
 		}
@@ -308,7 +308,7 @@ void Action::do_haptic_pulse(const XrPath p_path, XrDuration p_duration, float p
 		vibration.frequency = p_frequency;
 		vibration.amplitude = p_amplitude;
 
-		XrResult res = xrApplyHapticFeedback(xr_api->get_session(), &action_info, (const XrHapticBaseHeader *)&vibration);
+		XrResult res = xr_api->xrApplyHapticFeedback(xr_api->get_session(), &action_info, (const XrHapticBaseHeader *)&vibration);
 		xr_api->xr_result(res, "Applying haptic pulse");
 	}
 }

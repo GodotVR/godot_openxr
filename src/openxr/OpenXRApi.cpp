@@ -17,6 +17,9 @@
 
 #ifdef ANDROID
 #include <jni/openxr_plugin_wrapper.h>
+#define META_OPENXR_LOADER_NAME "libopenxr_loader_meta.so"
+#define PICO_OPENXR_LOADER_NAME "libopenxr_loader_pico.so"
+#define DEFAULT_OPENXR_LOADER_NAME "libopenxr_loader.so"
 #endif
 
 #ifndef GL_FRAMEBUFFER_SRGB_EXT
@@ -83,6 +86,60 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				]
 			},
 			{
+				"type": "float",
+				"name": "trigger",
+				"localised_name": "Trigger",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "trigger_click",
+				"localised_name": "Trigger click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "trigger_touch",
+				"localised_name": "Trigger touching",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "float",
+				"name": "grip",
+				"localised_name": "Grip",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "grip_click",
+				"localised_name": "Grip click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "grip_touch",
+				"localised_name": "Grip touching",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
 				"type": "vector2",
 				"name": "primary",
 				"localised_name": "Primary joystick/thumbstick/trackpad",
@@ -92,9 +149,45 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				]
 			},
 			{
+				"type": "bool",
+				"name": "primary_click",
+				"localised_name": "Primary joystick/thumbstick/trackpad click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "primary_touch",
+				"localised_name": "Primary joystick/thumbstick/trackpad touching",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
 				"type": "vector2",
 				"name": "secondary",
 				"localised_name": "Secondary joystick/thumbstick/trackpad",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "secondary_click",
+				"localised_name": "Secondary joystick/thumbstick/trackpad click",
+				"paths": [
+					"/user/hand/left",
+					"/user/hand/right"
+				]
+			},
+			{
+				"type": "bool",
+				"name": "secondary_touch",
+				"localised_name": "Secondary joystick/thumbstick/trackpad touching",
 				"paths": [
 					"/user/hand/left",
 					"/user/hand/right"
@@ -194,24 +287,6 @@ const char *OpenXRApi::default_action_sets_json = R"===(
 				"type": "bool",
 				"name": "secondary_button",
 				"localised_name": "Secondary joystick/thumbstick/trackpad click",
-				"paths": [
-					"/user/hand/left",
-					"/user/hand/right"
-				]
-			},
-			{
-				"type": "bool",
-				"name": "primary_touch",
-				"localised_name": "Primary joystick/thumbstick/trackpad touch",
-				"paths": [
-					"/user/hand/left",
-					"/user/hand/right"
-				]
-			},
-			{
-				"type": "bool",
-				"name": "secondary_touch",
-				"localised_name": "Secondary joystick/thumbstick/trackpad touch",
 				"paths": [
 					"/user/hand/left",
 					"/user/hand/right"
@@ -1216,6 +1291,195 @@ const char *OpenXRApi::default_interaction_profiles_json = R"===(
 		],
 	},)==="
 	R"===({
+		"path": "/interaction_profiles/pico/neo3_controller",
+		"bindings": [
+			{
+				"set": "godot",
+				"action": "aim_pose",
+				"paths": [
+					"/user/hand/left/input/aim/pose",
+					"/user/hand/right/input/aim/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip_pose",
+				"paths": [
+					"/user/hand/left/input/grip/pose",
+					"/user/hand/right/input/grip/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "palm_pose",
+				"paths": [
+					"/user/hand/left/input/palm_ext/pose",
+					"/user/hand/right/input/palm_ext/pose"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "select_button",
+				"paths": [
+					"/user/hand/left/input/system/click",
+					"/user/hand/right/input/system/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "menu_button",
+				"paths": [
+					"/user/hand/left/input/back/click",
+					"/user/hand/right/input/back/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_button",
+				"paths": [
+					"/user/hand/left/input/x/click",
+					"/user/hand/right/input/a/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "ax_touch",
+				"paths": [
+					"/user/hand/left/input/x/touch",
+					"/user/hand/right/input/a/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_button",
+				"paths": [
+					"/user/hand/left/input/y/click",
+					"/user/hand/right/input/b/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "by_touch",
+				"paths": [
+					"/user/hand/left/input/y/touch",
+					"/user/hand/right/input/b/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "trigger",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "trigger_click",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "trigger_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "grip_click",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_trigger",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_trigger",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_button",
+				"paths": [
+					"/user/hand/left/input/trigger/value",
+					"/user/hand/right/input/trigger/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "front_touch",
+				"paths": [
+					"/user/hand/left/input/trigger/touch",
+					"/user/hand/right/input/trigger/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "side_button",
+				"paths": [
+					"/user/hand/left/input/squeeze/value",
+					"/user/hand/right/input/squeeze/value"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary",
+				"paths": [
+					"/user/hand/left/input/thumbstick",
+					"/user/hand/right/input/thumbstick"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_click",
+				"paths": [
+					"/user/hand/left/input/thumbstick/click",
+					"/user/hand/right/input/thumbstick/click"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "primary_touch",
+				"paths": [
+					"/user/hand/left/input/thumbstick/touch",
+					"/user/hand/right/input/thumbstick/touch"
+				]
+			},
+			{
+				"set": "godot",
+				"action": "haptic",
+				"paths": [
+					"/user/hand/left/output/haptic",
+					"/user/hand/right/output/haptic"
+				]
+			},
+		],
+	},)==="
+	R"===({
 		"path": "/interaction_profiles/valve/index_controller",
 		"bindings": [
 			{
@@ -1628,7 +1892,8 @@ bool OpenXRApi::initialiseInstance() {
 
 #ifdef ANDROID
 	request_extensions[XR_KHR_OPENGL_ES_ENABLE_EXTENSION_NAME] = nullptr;
-	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = nullptr;
+	// PicoVR may not support this, so we don't make it mandatory.
+	request_extensions[XR_KHR_ANDROID_THREAD_SETTINGS_EXTENSION_NAME] = &android_thread_settings_ext;
 #else
 	request_extensions[XR_KHR_OPENGL_ENABLE_EXTENSION_NAME] = nullptr;
 #endif
@@ -1663,6 +1928,15 @@ bool OpenXRApi::initialiseInstance() {
 		}
 	}
 
+#ifdef ANDROID
+	XrInstanceCreateInfoAndroidKHR instance_create_info = {
+		.type = XR_TYPE_INSTANCE_CREATE_INFO_ANDROID_KHR,
+		.next = nullptr,
+		.applicationVM = vm,
+		.applicationActivity = activity_object
+	};
+#endif
+
 // https://stackoverflow.com/a/55926503
 #if defined(__GNUC__) && !defined(__llvm__) && !defined(__INTEL_COMPILER)
 #define __GCC__
@@ -1671,7 +1945,11 @@ bool OpenXRApi::initialiseInstance() {
 	// Microsoft wants fields in definition to be in order or it will have a hissy fit!
 	XrInstanceCreateInfo instanceCreateInfo = {
 		.type = XR_TYPE_INSTANCE_CREATE_INFO,
+#ifdef ANDROID
+		.next = &instance_create_info,
+#else
 		.next = nullptr,
+#endif
 		.createFlags = 0,
 		.applicationInfo = {
 #ifdef __GCC__ // https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55227
@@ -1711,6 +1989,8 @@ bool OpenXRApi::initialiseInstance() {
 	if (!xr_result(result, "Failed to create XR instance.")) {
 		return false;
 	}
+
+	resolve_instance_openxr_symbols();
 
 	XrInstanceProperties instanceProps = {
 		.type = XR_TYPE_INSTANCE_PROPERTIES,
@@ -2382,6 +2662,16 @@ OpenXRApi::OpenXRApi() {
 	interaction_profiles_json = default_interaction_profiles_json;
 }
 
+XrResult OpenXRApi::get_instance_proc_addr(const char *p_name, PFN_xrVoidFunction *p_addr) {
+	XrResult result = xrGetInstanceProcAddr(instance, p_name, p_addr);
+
+	if (result != XR_SUCCESS) {
+		Godot::print_error(String("Symbol ") + p_name + " not found in OpenXR instance.", __FUNCTION__, __FILE__, __LINE__);
+	}
+
+	return result;
+}
+
 bool OpenXRApi::initialize() {
 	if (initialised) {
 		// Already initialised, shouldn't be called in this case..
@@ -2390,6 +2680,8 @@ bool OpenXRApi::initialize() {
 #endif
 		return true;
 	}
+
+	openxr_loader_init();
 
 #ifdef WIN32
 	if (!gladLoadGL()) {
@@ -2442,6 +2734,99 @@ OpenXRApi::~OpenXRApi() {
 	uninitialize();
 }
 
+bool OpenXRApi::openxr_loader_init() {
+#ifdef ANDROID
+	{
+		JNIEnv *env = android_api->godot_android_get_env();
+		jclass build_class = env->FindClass("android/os/Build");
+		jfieldID id = env->GetStaticFieldID(build_class, "BRAND", "Ljava/lang/String;");
+		jstring obj = (jstring)env->GetStaticObjectField(build_class, id);
+		const char *name = env->GetStringUTFChars(obj, 0);
+		Godot::print("Android Device Brand: {0}", name);
+
+		String loader_name = "";
+		String brand_name = String(name).to_lower();
+		if (brand_name == "pico") {
+			loader_name = PICO_OPENXR_LOADER_NAME;
+		} else if (brand_name == "oculus" || brand_name == "meta") {
+			loader_name = META_OPENXR_LOADER_NAME;
+		} else {
+			loader_name = DEFAULT_OPENXR_LOADER_NAME;
+		}
+		Error error_code = open_dynamic_library(loader_name, openxr_loader_library_handle);
+		if (error_code != Error::OK) {
+			Godot::print_error("OpenXR loader not found.", __FUNCTION__, __FILE__, __LINE__);
+			return false;
+		}
+	}
+	{
+		Error error_code = get_dynamic_library_symbol_handle(openxr_loader_library_handle, "xrGetInstanceProcAddr", (void *&)xrGetInstanceProcAddr);
+		if (error_code != Error::OK) {
+			Godot::print_error("Symbol xrGetInstanceProcAddr not found in OpenXR Loader library.", __FUNCTION__, __FILE__, __LINE__);
+			return false;
+		}
+	}
+#endif
+
+	// Resolve the symbols that don't require an instance
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateInstance);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateApiLayerProperties);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateInstanceExtensionProperties);
+
+	return true;
+}
+
+bool OpenXRApi::resolve_instance_openxr_symbols() {
+	ERR_FAIL_COND_V(instance == XR_NULL_HANDLE, false);
+
+	OPENXR_API_INIT_XR_FUNC_V(xrAcquireSwapchainImage);
+	OPENXR_API_INIT_XR_FUNC_V(xrApplyHapticFeedback);
+	OPENXR_API_INIT_XR_FUNC_V(xrAttachSessionActionSets);
+	OPENXR_API_INIT_XR_FUNC_V(xrBeginFrame);
+	OPENXR_API_INIT_XR_FUNC_V(xrBeginSession);
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateAction);
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateActionSet);
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateActionSpace);
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateReferenceSpace);
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateSession);
+	OPENXR_API_INIT_XR_FUNC_V(xrCreateSwapchain);
+	OPENXR_API_INIT_XR_FUNC_V(xrDestroyAction);
+	OPENXR_API_INIT_XR_FUNC_V(xrDestroyActionSet);
+	OPENXR_API_INIT_XR_FUNC_V(xrDestroyInstance);
+	OPENXR_API_INIT_XR_FUNC_V(xrDestroySession);
+	OPENXR_API_INIT_XR_FUNC_V(xrDestroySpace);
+	OPENXR_API_INIT_XR_FUNC_V(xrDestroySwapchain);
+	OPENXR_API_INIT_XR_FUNC_V(xrEndFrame);
+	OPENXR_API_INIT_XR_FUNC_V(xrEndSession);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateReferenceSpaces);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateSwapchainFormats);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateSwapchainImages);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateViewConfigurations);
+	OPENXR_API_INIT_XR_FUNC_V(xrEnumerateViewConfigurationViews);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetActionStateBoolean);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetActionStateFloat);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetActionStateVector2f);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetActionStatePose);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetCurrentInteractionProfile);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetInstanceProperties);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetSystem);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetSystemProperties);
+	OPENXR_API_INIT_XR_FUNC_V(xrGetReferenceSpaceBoundsRect);
+	OPENXR_API_INIT_XR_FUNC_V(xrLocateViews);
+	OPENXR_API_INIT_XR_FUNC_V(xrLocateSpace);
+	OPENXR_API_INIT_XR_FUNC_V(xrPathToString);
+	OPENXR_API_INIT_XR_FUNC_V(xrPollEvent);
+	OPENXR_API_INIT_XR_FUNC_V(xrReleaseSwapchainImage);
+	OPENXR_API_INIT_XR_FUNC_V(xrResultToString);
+	OPENXR_API_INIT_XR_FUNC_V(xrStringToPath);
+	OPENXR_API_INIT_XR_FUNC_V(xrSuggestInteractionProfileBindings);
+	OPENXR_API_INIT_XR_FUNC_V(xrSyncActions);
+	OPENXR_API_INIT_XR_FUNC_V(xrWaitFrame);
+	OPENXR_API_INIT_XR_FUNC_V(xrWaitSwapchainImage);
+
+	return true;
+}
+
 void OpenXRApi::uninitialize() {
 	if (running && session != XR_NULL_HANDLE) {
 		xrEndSession(session);
@@ -2482,6 +2867,13 @@ void OpenXRApi::uninitialize() {
 	monado_stick_on_ball_ext = false;
 	running = false;
 	initialised = false;
+
+#ifdef ANDROID
+	if (openxr_loader_library_handle) {
+		close_dynamic_library(openxr_loader_library_handle);
+		openxr_loader_library_handle = nullptr;
+	}
+#endif
 }
 
 bool OpenXRApi::is_running() {
@@ -2984,6 +3376,8 @@ bool OpenXRApi::parse_interaction_profiles(const godot::String &p_json) {
 			Godot::print_warning(String("OpenXR Interaction profile ") + path_string + String(" is not supported on this runtime"), __FUNCTION__, __FILE__, __LINE__);
 		} else if (!xr_result(result, "failed to suggest bindings for {0}", path_string)) {
 			// reporting is enough...
+		} else {
+			Godot::print("OpenXR Suggested bindings for {0}", path_string);
 		}
 	}
 

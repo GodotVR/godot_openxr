@@ -14,7 +14,7 @@ X11.64="res://addons/godot-openxr/bin/linux/libgodot_openxr.so"
 
 [dependencies]
 
-Android.arm64-v8a=[ "res://addons/godot-openxr/bin/android/libopenxr_loader.so" ]
-Android.armeabi-v7a=[ "res://addons/godot-openxr/bin/android/libopenxr_loader.so" ]
+Android.arm64-v8a=[ "res://addons/godot-openxr/bin/android/libopenxr_loader_meta.so", "res://addons/godot-openxr/bin/android/libopenxr_loader_pico.so" ]
+Android.armeabi-v7a=[ "res://addons/godot-openxr/bin/android/libopenxr_loader_meta.so", "res://addons/godot-openxr/bin/android/libopenxr_loader_pico.so" ]
 Windows.64=[ "res://addons/godot-openxr/bin/win64/openxr_loader.dll" ]
 X11.64=[  ]

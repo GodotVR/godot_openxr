@@ -36,16 +36,9 @@ protected:
 	~XRExtPerformanceSettingsExtensionWrapper();
 
 private:
-	EXT_PROTO_XRRESULT_FUNC3(xrPerfSettingsSetPerformanceLevelEXT,
-			(XrSession), session,
-			(XrPerfSettingsDomainEXT), domain,
-			(XrPerfSettingsLevelEXT), level);
-
 	bool update_perf_settings_level(XrPerfSettingsDomainEXT domain, XrPerfSettingsLevelEXT level);
 
 	void cleanup();
-
-	XrResult initialize_ext_performance_settings_extension(XrInstance instance);
 
 	static XRExtPerformanceSettingsExtensionWrapper *singleton;
 	static const XrPerfSettingsLevelEXT DEFAULT_PERF_SETTINGS_LEVEL = XR_PERF_SETTINGS_LEVEL_SUSTAINED_HIGH_EXT;
@@ -54,6 +47,9 @@ private:
 	bool performance_settings_ext = false;
 	XrPerfSettingsLevelEXT cpu_level = DEFAULT_PERF_SETTINGS_LEVEL;
 	XrPerfSettingsLevelEXT gpu_level = DEFAULT_PERF_SETTINGS_LEVEL;
+
+	// OpenXR API call wrappers
+	EXT_PROTO_XRRESULT_FUNC3(xrPerfSettingsSetPerformanceLevelEXT, (XrSession), session, (XrPerfSettingsDomainEXT), domain, (XrPerfSettingsLevelEXT), level);
 };
 
 #endif // XR_EXT_PERFORMANCE_SETTINGS_EXTENSION_WRAPPER_H

@@ -18,7 +18,7 @@ ActionSet::ActionSet(OpenXRApi *p_api, const godot::String &p_name, const godot:
 	strcpy(actionSetInfo.actionSetName, name.utf8().get_data());
 	strcpy(actionSetInfo.localizedActionSetName, p_localised_name.utf8().get_data());
 
-	XrResult result = xrCreateActionSet(xr_api->instance, &actionSetInfo, &handle);
+	XrResult result = xr_api->xrCreateActionSet(xr_api->instance, &actionSetInfo, &handle);
 	if (!xr_api->xr_result(result, "failed to create actionset {0}", name)) {
 		return;
 	}
@@ -33,7 +33,7 @@ ActionSet::~ActionSet() {
 	}
 
 	if (handle != XR_NULL_HANDLE) {
-		xrDestroyActionSet(handle);
+		xr_api->xrDestroyActionSet(handle);
 	}
 }
 
@@ -106,7 +106,7 @@ bool ActionSet::attach() {
 		.actionSets = &handle
 	};
 
-	XrResult result = xrAttachSessionActionSets(xr_api->session, &attachInfo);
+	XrResult result = xr_api->xrAttachSessionActionSets(xr_api->session, &attachInfo);
 	if (!xr_api->xr_result(result, "failed to attach action set")) {
 		return false;
 	}

@@ -30,10 +30,9 @@ void XRFbDisplayRefreshRateExtensionWrapper::cleanup() {
 
 void XRFbDisplayRefreshRateExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (fb_display_refresh_rate_ext) {
-		XrResult result = initialise_fb_display_refresh_rate_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialise display refresh rate extension")) {
-			fb_display_refresh_rate_ext = false; // I guess we don't support it...
-		}
+		EXT_INIT_XR_FUNC(xrEnumerateDisplayRefreshRatesFB);
+		EXT_INIT_XR_FUNC(xrGetDisplayRefreshRateFB);
+		EXT_INIT_XR_FUNC(xrRequestDisplayRefreshRateFB);
 	}
 }
 
@@ -102,61 +101,4 @@ godot::Array XRFbDisplayRefreshRateExtensionWrapper::get_available_refresh_rates
 	}
 
 	return arr;
-}
-
-PFN_xrEnumerateDisplayRefreshRatesFB xrEnumerateDisplayRefreshRatesFB_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRFbDisplayRefreshRateExtensionWrapper::xrEnumerateDisplayRefreshRatesFB(
-		XrSession session,
-		uint32_t displayRefreshRateCapacityInput,
-		uint32_t *displayRefreshRateCountOutput,
-		float *displayRefreshRates) {
-	if (xrEnumerateDisplayRefreshRatesFB_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrEnumerateDisplayRefreshRatesFB_ptr)(session, displayRefreshRateCapacityInput, displayRefreshRateCountOutput, displayRefreshRates);
-}
-
-PFN_xrGetDisplayRefreshRateFB xrGetDisplayRefreshRateFB_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRFbDisplayRefreshRateExtensionWrapper::xrGetDisplayRefreshRateFB(
-		XrSession session,
-		float *displayRefreshRate) {
-	if (xrGetDisplayRefreshRateFB_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrGetDisplayRefreshRateFB_ptr)(session, displayRefreshRate);
-}
-
-PFN_xrRequestDisplayRefreshRateFB xrRequestDisplayRefreshRateFB_ptr = nullptr;
-
-XRAPI_ATTR XrResult XRAPI_CALL XRFbDisplayRefreshRateExtensionWrapper::xrRequestDisplayRefreshRateFB(
-		XrSession session,
-		float displayRefreshRate) {
-	if (xrRequestDisplayRefreshRateFB_ptr == nullptr) {
-		return XR_ERROR_HANDLE_INVALID;
-	}
-
-	return (*xrRequestDisplayRefreshRateFB_ptr)(session, displayRefreshRate);
-}
-
-XrResult XRFbDisplayRefreshRateExtensionWrapper::initialise_fb_display_refresh_rate_extension(XrInstance instance) {
-	XrResult result;
-
-	result = xrGetInstanceProcAddr(instance, "xrEnumerateDisplayRefreshRatesFB", (PFN_xrVoidFunction *)&xrEnumerateDisplayRefreshRatesFB_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-	result = xrGetInstanceProcAddr(instance, "xrGetDisplayRefreshRateFB", (PFN_xrVoidFunction *)&xrGetDisplayRefreshRateFB_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-	result = xrGetInstanceProcAddr(instance, "xrRequestDisplayRefreshRateFB", (PFN_xrVoidFunction *)&xrRequestDisplayRefreshRateFB_ptr);
-	if (result != XR_SUCCESS) {
-		return result;
-	}
-
-	return XR_SUCCESS;
 }

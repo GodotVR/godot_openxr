@@ -24,15 +24,6 @@ protected:
 	~XRFbFoveationExtensionWrapper();
 
 private:
-	EXT_PROTO_XRRESULT_FUNC3(xrCreateFoveationProfileFB,
-			(XrSession), session,
-			(const XrFoveationProfileCreateInfoFB *), create_info,
-			(XrFoveationProfileFB *), profile);
-
-	EXT_PROTO_XRRESULT_FUNC1(xrDestroyFoveationProfileFB, (XrFoveationProfileFB), profile);
-
-	XrResult initialize_fb_foveation_extension(XrInstance instance);
-
 	void cleanup();
 
 	bool is_enabled();
@@ -48,6 +39,10 @@ private:
 	XRFbSwapchainUpdateStateExtensionWrapper *swapchain_update_state_wrapper = nullptr;
 	bool fb_foveation_ext = false;
 	bool fb_foveation_configuration_ext = false;
+
+	// OpenXR API call wrappers
+	EXT_PROTO_XRRESULT_FUNC3(xrCreateFoveationProfileFB, (XrSession), session, (const XrFoveationProfileCreateInfoFB *), create_info, (XrFoveationProfileFB *), profile);
+	EXT_PROTO_XRRESULT_FUNC1(xrDestroyFoveationProfileFB, (XrFoveationProfileFB), profile);
 };
 
 #endif // XR_FB_FOVEATION_EXTENSION_WRAPPER_H

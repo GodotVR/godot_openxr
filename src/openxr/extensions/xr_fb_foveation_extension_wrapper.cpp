@@ -30,21 +30,10 @@ bool XRFbFoveationExtensionWrapper::is_enabled() {
 	return swapchain_update_state_wrapper != nullptr && swapchain_update_state_wrapper->is_enabled() && fb_foveation_ext && fb_foveation_configuration_ext;
 }
 
-XrResult XRFbFoveationExtensionWrapper::initialize_fb_foveation_extension(XrInstance instance) {
-	std::map<const char *, PFN_xrVoidFunction *> func_pointer_map;
-	LOAD_FUNC_POINTER_IN_MAP(func_pointer_map, xrCreateFoveationProfileFB);
-	LOAD_FUNC_POINTER_IN_MAP(func_pointer_map, xrDestroyFoveationProfileFB);
-
-	return initialize_function_pointer_map(instance, func_pointer_map);
-}
-
 void XRFbFoveationExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (is_enabled()) {
-		XrResult result = initialize_fb_foveation_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialize foveation extension")) {
-			fb_foveation_ext = false;
-			return;
-		}
+		EXT_INIT_XR_FUNC(xrCreateFoveationProfileFB);
+		EXT_INIT_XR_FUNC(xrDestroyFoveationProfileFB);
 	}
 }
 

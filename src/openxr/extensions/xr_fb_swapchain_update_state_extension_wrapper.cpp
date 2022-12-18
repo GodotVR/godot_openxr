@@ -30,21 +30,10 @@ void XRFbSwapchainUpdateStateExtensionWrapper::cleanup() {
 #endif
 }
 
-XrResult XRFbSwapchainUpdateStateExtensionWrapper::initialize_fb_swapchain_update_state_extension(XrInstance instance) {
-	std::map<const char *, PFN_xrVoidFunction *> func_pointer_map;
-	LOAD_FUNC_POINTER_IN_MAP(func_pointer_map, xrUpdateSwapchainFB);
-	LOAD_FUNC_POINTER_IN_MAP(func_pointer_map, xrGetSwapchainStateFB);
-
-	return initialize_function_pointer_map(instance, func_pointer_map);
-}
-
 void XRFbSwapchainUpdateStateExtensionWrapper::on_instance_initialized(const XrInstance instance) {
 	if (fb_swapchain_update_state_ext) {
-		XrResult result = initialize_fb_swapchain_update_state_extension(instance);
-		if (!openxr_api->xr_result(result, "Failed to initialize swapchain update state extension")) {
-			fb_swapchain_update_state_ext = false;
-			return;
-		}
+		EXT_INIT_XR_FUNC(xrUpdateSwapchainFB);
+		EXT_INIT_XR_FUNC(xrGetSwapchainStateFB);
 	}
 }
 
